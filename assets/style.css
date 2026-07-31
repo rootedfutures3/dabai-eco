@@ -271,6 +271,12 @@ select option{color:var(--ink)}
   display:none;padding:28px;border-radius:var(--radius);
   background:rgba(90,125,82,.25);border:1px solid rgba(143,174,133,.5);font-size:1rem;
 }
+.form-error{
+  display:none;margin-top:16px;padding:18px 22px;border-radius:var(--radius);
+  background:rgba(190,90,80,.2);border:1px solid rgba(217,132,124,.55);
+  color:#ffd9d4;font-size:.92rem;
+}
+button[type="submit"]:disabled{opacity:.6;cursor:not-allowed;transform:none}
 
 /* ---------- CTA band ---------- */
 .cta-band{

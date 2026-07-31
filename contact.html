@@ -51,12 +51,10 @@
         <p class="sec-sub">此為 MVP 市場驗證登記，<b>不會收取任何費用</b>，也不會產生實際訂單。</p>
 
         <!--
-          目前為純前端驗證（GitHub Pages 為靜態託管，無後端）。
-          要真正收到資料，可將 <form> 改為指向表單服務，例如：
-            <form action="https://formspree.io/f/你的ID" method="POST">
-          並移除 data-mvp 屬性讓表單正常送出。
+          表單送出目的地設定在 assets/site.js 最上方的 FORM_ENDPOINT。
+          留空時，送出會顯示「登記尚未開放」而非假的成功訊息。
         -->
-        <form data-mvp="#preorder-ok">
+        <form data-preorder="#preorder-ok" data-error="#preorder-err">
           <div class="form-row">
             <div>
               <label for="name">姓名 *</label>
@@ -96,9 +94,14 @@
             <label for="msg">想說的話（選填）</label>
             <textarea id="msg" name="msg" rows="3" placeholder="例如：想了解企業採購方案、想知道配送地區…"></textarea>
           </div>
+          <!-- 蜜罐欄位：擋機器人，真人看不到 -->
+          <input type="text" name="_gotcha" tabindex="-1" autocomplete="off"
+                 aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px">
           <button class="btn btn-gold" type="submit" style="border:none;cursor:pointer">送出登記</button>
           <p class="form-note">送出即表示你同意我們在產季開始時以 Email 或 WhatsApp 與你聯繫。</p>
         </form>
+
+        <div class="form-error" id="preorder-err" role="alert"></div>
 
         <div class="form-success" id="preorder-ok">
           🌿 <b>感謝登記！</b><br>

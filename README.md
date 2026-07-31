@@ -60,21 +60,24 @@ python3 -m http.server 8000
 
 ## 預購表單
 
-GitHub Pages 是靜態託管，沒有後端，所以目前表單只做前端驗證並顯示成功訊息，**資料不會被送到任何地方**。
+GitHub Pages 是靜態託管沒有後端，所以表單要接一個外部服務才能收到資料。
 
-要真的收到報名資料，最簡單的做法是接一個表單服務（Formspree、Google Forms、Netlify Forms 等）。以 Formspree 為例，改 `contact.html` 裡的這一行：
+設定位置在 `assets/site.js` 最上方：
 
-```html
-<form data-mvp="#preorder-ok">
+```js
+const FORM_ENDPOINT = '';
 ```
 
-改成：
+**接上 Formspree（免費方案每月 50 筆）：**
 
-```html
-<form action="https://formspree.io/f/你的表單ID" method="POST">
-```
+1. 到 https://formspree.io 註冊，建立一個新表單
+2. 它會給你一組 endpoint，長得像 `https://formspree.io/f/xabcdefg`
+3. 把那串網址貼進 `FORM_ENDPOINT` 的引號裡
+4. 跑 `./deploy.sh`
 
-移除 `data-mvp` 屬性後，`assets/site.js` 就不會攔截送出，表單會正常提交。
+留空時表單不會假裝成功 —— 送出會顯示「登記尚未開放」，避免誤導訪客以為資料已經送出。
+
+表單已內建：送出中的 loading 狀態、失敗時顯示錯誤訊息並可重試、擋機器人的蜜罐欄位。
 
 ## 待補內容
 
