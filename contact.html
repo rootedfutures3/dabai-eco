@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>預購與合作｜聯絡我們 — DABAI.ECO</title>
+<meta name="description" content="登記 Dabai 產季預購意願，或洽談企業 ESG 採購、社區合作與投資事宜。">
+<link rel="stylesheet" href="assets/style.css">
+<script src="assets/site.js" defer></script>
+<style>
+  .contact-grid{display:grid;grid-template-columns:1.1fr .9fr;gap:48px;align-items:start}
+  @media(max-width:880px){.contact-grid{grid-template-columns:1fr}}
+  .info-card{
+    background:rgba(250,246,239,.07);border:1px solid rgba(224,193,132,.2);
+    border-radius:var(--radius);padding:28px;
+  }
+  .info-card + .info-card{margin-top:18px}
+  .info-card h3{color:var(--gold-bright);font-size:1.02rem;margin-bottom:8px}
+  .info-card p{font-size:.9rem;color:rgba(250,246,239,.78)}
+  .info-card a{color:var(--gold-bright);text-decoration:underline}
+</style>
+</head>
+<body>
+
+<nav>
+  <a class="logo" href="index.html">DABAI<em>.</em>ECO</a>
+  <button class="nav-toggle" aria-label="開關選單" aria-expanded="false">☰</button>
+  <div class="nav-links">
+    <a href="index.html">首頁</a>
+    <a href="dabai.html">認識 Dabai</a>
+    <a href="products.html">產品</a>
+    <a href="sustainability.html">永續藍圖</a>
+    <a href="team.html">團隊</a>
+  </div>
+  <a class="nav-cta" href="contact.html">搶先預購</a>
+</nav>
+
+<div class="page-hero">
+  <div class="wrap">
+    <span class="eyebrow">Pre-order &amp; Partnership</span>
+    <h1>搶先預購 · <span class="accent">產季直送</span></h1>
+    <p>Dabai 一年只有一季，產量稀有。留下資料，產季開始時我們會第一時間通知你，並享有早鳥優先配額與優惠價。</p>
+  </div>
+</div>
+
+<section class="dark-section">
+  <div class="wrap">
+    <div class="contact-grid">
+      <div class="reveal">
+        <h2 class="sec-title">登記預購意願</h2>
+        <p class="sec-sub">此為 MVP 市場驗證登記，<b>不會收取任何費用</b>，也不會產生實際訂單。</p>
+
+        <!--
+          目前為純前端驗證（GitHub Pages 為靜態託管，無後端）。
+          要真正收到資料，可將 <form> 改為指向表單服務，例如：
+            <form action="https://formspree.io/f/你的ID" method="POST">
+          並移除 data-mvp 屬性讓表單正常送出。
+        -->
+        <form data-mvp="#preorder-ok">
+          <div class="form-row">
+            <div>
+              <label for="name">姓名 *</label>
+              <input id="name" name="name" type="text" placeholder="你的名字" required>
+            </div>
+            <div>
+              <label for="phone">聯絡電話 / WhatsApp *</label>
+              <input id="phone" name="phone" type="tel" placeholder="+60 12-345 6789" required>
+            </div>
+          </div>
+          <div>
+            <label for="email">Email *</label>
+            <input id="email" name="email" type="email" placeholder="you@example.com" required>
+          </div>
+          <div class="form-row">
+            <div>
+              <label for="interest">最感興趣的產品</label>
+              <select id="interest" name="interest">
+                <option>生鮮 Dabai 直送</option>
+                <option>Dabai Kuaci 果核零嘴</option>
+                <option>Dabai Paste 抹醬</option>
+                <option>葉子環保包裝</option>
+                <option>企業 ESG 採購禮盒</option>
+              </select>
+            </div>
+            <div>
+              <label for="qty">預計數量</label>
+              <select id="qty" name="qty">
+                <option>1–2 份（自用）</option>
+                <option>3–5 份（送禮）</option>
+                <option>6–20 份（小量團購）</option>
+                <option>20 份以上（企業採購）</option>
+              </select>
+            </div>
+          </div>
+          <div>
+            <label for="msg">想說的話（選填）</label>
+            <textarea id="msg" name="msg" rows="3" placeholder="例如：想了解企業採購方案、想知道配送地區…"></textarea>
+          </div>
+          <button class="btn btn-gold" type="submit" style="border:none;cursor:pointer">送出登記</button>
+          <p class="form-note">送出即表示你同意我們在產季開始時以 Email 或 WhatsApp 與你聯繫。</p>
+        </form>
+
+        <div class="form-success" id="preorder-ok">
+          🌿 <b>感謝登記！</b><br>
+          我們已收到你的預購意願，Dabai 產季開始時會第一時間通知你。
+        </div>
+      </div>
+
+      <div class="reveal">
+        <div class="info-card">
+          <h3>🏢 企業 ESG 採購</h3>
+          <p>需要有故事、有數據、可寫進 ESG 報告的節慶禮盒或員工福利品？我們提供含碳足跡與社區回饋比例的採購方案。</p>
+        </div>
+        <div class="info-card">
+          <h3>🤝 社區與通路合作</h3>
+          <p>長屋契作、回收站點設置、綠色電商上架、在地合作社通路 —— 歡迎洽談。</p>
+        </div>
+        <div class="info-card">
+          <h3>💡 投資與研究</h3>
+          <p>影響力投資人、地方政府計畫、學研單位研究合作，我們可提供完整企劃書與 SROI 模型說明。</p>
+        </div>
+        <div class="info-card">
+          <h3>📍 我們在哪裡</h3>
+          <p>
+            Sarawak, Malaysia（婆羅洲）<br>
+            產地契作：砂拉越各長屋部落<br>
+            <span style="opacity:.7">※ 正式聯絡信箱與電話待品牌上線後公布</span>
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="reveal">
+      <span class="eyebrow">FAQ</span>
+      <h2 class="sec-title">常見問題</h2>
+    </div>
+    <div class="two-col reveal">
+      <div class="card">
+        <h3 style="font-size:1.05rem;margin-bottom:14px">關於產品</h3>
+        <ul class="fact-list" style="margin-top:0">
+          <li><div class="fact-ico">Q</div><div><b>Dabai 的產季是什麼時候？</b><span>一年僅一季，產期短且受氣候影響，確切時間會在開賣前公告。</span></div></li>
+          <li><div class="fact-ico">Q</div><div><b>生鮮可以寄多遠？</b><span>Dabai 保存期短，生鮮以冷鏈與鄰近市場為主；遠距市場建議選擇 Paste 或 Kuaci 加工品。</span></div></li>
+          <li><div class="fact-ico">Q</div><div><b>第一次吃要注意什麼？</b><span>務必先用熱水浸泡約 10 分鐘軟化，直接生吃會又硬又澀。<a href="dabai.html#howto" style="color:var(--gold);text-decoration:underline">看完整吃法 →</a></span></div></li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3 style="font-size:1.05rem;margin-bottom:14px">關於合作</h3>
+        <ul class="fact-list" style="margin-top:0">
+          <li><div class="fact-ico">Q</div><div><b>登記預購要付錢嗎？</b><span>不用。目前為市場驗證階段，只蒐集意願，不會產生任何費用。</span></div></li>
+          <li><div class="fact-ico">Q</div><div><b>企業採購最低量是多少？</b><span>視產品品項而定，歡迎在表單留言說明需求，我們會個別回覆方案。</span></div></li>
+          <li><div class="fact-ico">Q</div><div><b>可以提供 ESG 佐證資料嗎？</b><span>可以。我們提供供應鏈追溯、碳足跡與社區回饋比例的說明文件。</span></div></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="foot-grid">
+    <div><b>DABAI.ECO</b><br>砂拉越黑橄欖永續生態系<br>Sarawak, Malaysia</div>
+    <div class="foot-links">
+      <a href="index.html">首頁</a>
+      <a href="dabai.html">認識 Dabai</a>
+      <a href="products.html">產品</a>
+      <a href="sustainability.html">永續藍圖</a>
+      <a href="team.html">團隊</a>
+      <a href="contact.html">預購與合作</a>
+    </div>
+  </div>
+  <div class="foot-bottom">© 2026 Dabai Eco Team — AMELIA · CHEE HOU · AMILY</div>
+</footer>
+
+</body>
+</html>

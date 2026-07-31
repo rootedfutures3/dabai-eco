@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DABAI.ECO｜砂拉越黑橄欖 · 永續商業生態系</title>
+<meta name="description" content="來自砂拉越雨林的黑寶石 Dabai 黑橄欖。全果利用、循環包裝、社區共好 —— 財務可自給、影響力可擴張的永續商業生態系。">
+<link rel="stylesheet" href="assets/style.css">
+<script src="assets/site.js" defer></script>
+<style>
+  header.hero{
+    min-height:100vh;display:flex;align-items:center;
+    background:
+      radial-gradient(ellipse 80% 60% at 70% 20%, rgba(201,168,106,.15), transparent 60%),
+      radial-gradient(ellipse 60% 50% at 20% 80%, rgba(90,125,82,.18), transparent 60%),
+      linear-gradient(160deg, var(--plum-deep) 0%, var(--plum) 55%, #3a2342 100%);
+    color:var(--cream);
+    padding:120px 24px 80px;
+  }
+  .hero-grid{display:grid;grid-template-columns:1.15fr .85fr;gap:48px;align-items:center;max-width:1080px;margin:0 auto}
+  @media(max-width:820px){.hero-grid{grid-template-columns:1fr}}
+  .hero-tag{
+    display:inline-flex;align-items:center;gap:8px;
+    border:1px solid rgba(224,193,132,.4);border-radius:99px;
+    padding:6px 16px;font-size:.82rem;color:var(--gold-bright);margin-bottom:22px;
+  }
+  .hero-tag::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--green-light)}
+  header.hero h1{font-size:clamp(2.2rem,5.5vw,3.6rem);margin-bottom:20px}
+  header.hero h1 .accent{color:var(--gold-bright)}
+  .hero-desc{font-size:1.05rem;color:rgba(250,246,239,.8);max-width:480px;margin-bottom:34px}
+  .hero-stats{display:flex;gap:36px;margin-top:48px;flex-wrap:wrap}
+  .stat b{display:block;font-size:1.5rem;color:var(--gold-bright)}
+  .stat span{font-size:.82rem;color:rgba(250,246,239,.65)}
+  .hero-art{display:flex;justify-content:center}
+  .hero-art svg{width:100%;max-width:380px;filter:drop-shadow(0 24px 48px rgba(0,0,0,.35))}
+
+  .nav-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:22px}
+  .nav-card{
+    background:#fff;border-radius:var(--radius);padding:30px;
+    box-shadow:0 6px 24px rgba(45,27,51,.08);transition:.25s;
+    display:flex;flex-direction:column;border-top:4px solid var(--gold);
+  }
+  .nav-card:hover{transform:translateY(-6px);box-shadow:0 14px 34px rgba(45,27,51,.14)}
+  .nav-card .ico{font-size:1.8rem;margin-bottom:12px}
+  .nav-card h3{font-size:1.08rem;margin-bottom:8px}
+  .nav-card p{font-size:.88rem;color:var(--ink-soft);flex:1}
+  .nav-card .more{margin-top:16px;font-size:.85rem;font-weight:700;color:var(--gold)}
+</style>
+</head>
+<body>
+
+<nav>
+  <a class="logo" href="index.html">DABAI<em>.</em>ECO</a>
+  <button class="nav-toggle" aria-label="開關選單" aria-expanded="false">☰</button>
+  <div class="nav-links">
+    <a href="index.html" class="active">首頁</a>
+    <a href="dabai.html">認識 Dabai</a>
+    <a href="products.html">產品</a>
+    <a href="sustainability.html">永續藍圖</a>
+    <a href="team.html">團隊</a>
+  </div>
+  <a class="nav-cta" href="contact.html">搶先預購</a>
+</nav>
+
+<header class="hero">
+  <div class="hero-grid">
+    <div>
+      <span class="hero-tag">砂拉越雨林 · 產地直送</span>
+      <h1>來自婆羅洲的<br><span class="accent">黑色寶石 — Dabai</span></h1>
+      <p class="hero-desc">
+        砂拉越限定的季節珍果 Dabai 黑橄欖，從長屋部落的果樹到你的餐桌。
+        我們以全果利用、循環包裝與社區共好，
+        打造一個財務可自給自足、影響力可持續擴張的永續商業生態系。
+      </p>
+      <div class="btn-row">
+        <a class="btn btn-gold" href="dabai.html">認識 Dabai</a>
+        <a class="btn btn-ghost" href="contact.html">立即預購</a>
+      </div>
+      <div class="hero-stats">
+        <div class="stat"><b>8</b><span>階段永續藍圖</span></div>
+        <div class="stat"><b>3</b><span>核心 SDG 目標</span></div>
+        <div class="stat"><b>80%</b><span>目標廢棄物轉化率</span></div>
+      </div>
+    </div>
+    <div class="hero-art">
+      <svg viewBox="0 0 360 360" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Dabai 黑橄欖插畫">
+        <defs>
+          <radialGradient id="fruit" cx="35%" cy="30%" r="80%">
+            <stop offset="0%" stop-color="#6b4a75"/>
+            <stop offset="45%" stop-color="#3a2342"/>
+            <stop offset="100%" stop-color="#170d1c"/>
+          </radialGradient>
+          <radialGradient id="fruit2" cx="35%" cy="30%" r="80%">
+            <stop offset="0%" stop-color="#7d5688"/>
+            <stop offset="50%" stop-color="#452a4e"/>
+            <stop offset="100%" stop-color="#1d1023"/>
+          </radialGradient>
+          <linearGradient id="leaf" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#8fae85"/>
+            <stop offset="100%" stop-color="#4d6b45"/>
+          </linearGradient>
+        </defs>
+        <circle cx="180" cy="180" r="150" fill="rgba(224,193,132,.07)"/>
+        <circle cx="180" cy="180" r="118" fill="rgba(224,193,132,.06)"/>
+        <path d="M180 60 C 180 100, 176 130, 172 150" stroke="#7a5f3f" stroke-width="6" fill="none" stroke-linecap="round"/>
+        <path d="M178 92 C 140 70, 104 78, 84 108 C 116 122, 156 116, 178 92 Z" fill="url(#leaf)"/>
+        <path d="M180 84 C 214 58, 252 62, 276 88 C 248 108, 206 106, 180 84 Z" fill="url(#leaf)" opacity=".85"/>
+        <ellipse cx="130" cy="212" rx="52" ry="64" fill="url(#fruit2)"/>
+        <ellipse cx="113" cy="186" rx="14" ry="20" fill="rgba(255,255,255,.18)"/>
+        <ellipse cx="196" cy="228" rx="58" ry="72" fill="url(#fruit)"/>
+        <ellipse cx="177" cy="198" rx="15" ry="23" fill="rgba(255,255,255,.2)"/>
+        <ellipse cx="258" cy="204" rx="44" ry="56" fill="url(#fruit2)" opacity=".92"/>
+        <ellipse cx="244" cy="182" rx="11" ry="16" fill="rgba(255,255,255,.16)"/>
+      </svg>
+    </div>
+  </div>
+</header>
+
+<section>
+  <div class="wrap">
+    <div class="two-col reveal">
+      <div>
+        <span class="eyebrow">What is Dabai</span>
+        <h2 class="sec-title">一顆需要「泡熱水」<br>才懂的果實</h2>
+        <p class="lead">
+          Dabai（學名 <i>Canarium odontophyllum</i>），中文常稱為砂拉越黑橄欖或婆羅洲橄欖，
+          是馬來西亞砂拉越珍貴的季節性特產。果實呈橢圓形，成熟時果皮由白轉為深紫色至黑色。
+        </p>
+        <p class="lead" style="margin-top:16px">
+          生吃堅硬且帶苦澀，必須先用熱水浸泡約 10 分鐘軟化才能食用 ——
+          軟化後的果肉綿密濃郁，風味近似酪梨或乳酪。
+        </p>
+        <div class="btn-row" style="margin-top:28px">
+          <a class="btn btn-outline" href="dabai.html">看完整介紹：由來 · 吃法 · 用途</a>
+        </div>
+      </div>
+      <div>
+        <div class="dark-card">
+          <h3>為什麼是 Dabai？</h3>
+          <p>Dabai 保存期極短、離開產地便難以品嚐，多數果核與副產物被當作廢棄物。這既是痛點，也是機會 —— 我們用食品科技延長保存、用循環加工把「廢棄」變成「價值」。</p>
+        </div>
+        <div class="dark-card">
+          <h3>從長屋到餐桌</h3>
+          <p>與砂拉越各長屋（Longhouse）屋長合作契作採購，收益直接回到部落社區，建立外來競品無法複製的在地供應鏈護城河。</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section style="background:var(--cream-dim)">
+  <div class="wrap">
+    <div class="reveal">
+      <span class="eyebrow">Explore</span>
+      <h2 class="sec-title">從這裡開始了解我們</h2>
+      <p class="sec-sub">從一顆果實，到一整套永續商業生態系。</p>
+    </div>
+    <div class="nav-grid reveal">
+      <a class="nav-card" href="dabai.html">
+        <span class="ico">🫒</span>
+        <h3>認識 Dabai</h3>
+        <p>它的由來、正確吃法（別忘了泡熱水 10 分鐘），以及果肉、果核可以怎麼用。</p>
+        <span class="more">深入了解 →</span>
+      </a>
+      <a class="nav-card" href="products.html">
+        <span class="ico">🎁</span>
+        <h3>產品線</h3>
+        <p>生鮮直送、Dabai Kuaci、Dabai Paste 與葉材循環包裝 —— 全值化利用的產品家族。</p>
+        <span class="more">看產品 →</span>
+      </a>
+      <a class="nav-card" href="sustainability.html">
+        <span class="ico">🌏</span>
+        <h3>永續藍圖</h3>
+        <p>八階段推進計畫、SDG 11／12／17 雙核心策略，以及以物換物的社區機制。</p>
+        <span class="more">看藍圖 →</span>
+      </a>
+      <a class="nav-card" href="team.html">
+        <span class="ico">👥</span>
+        <h3>團隊</h3>
+        <p>系統營運、數位行銷與產品研發的跨域組合 —— 我們不只提案，已準備好落地。</p>
+        <span class="more">認識團隊 →</span>
+      </a>
+    </div>
+  </div>
+</section>
+
+<section class="dark-section">
+  <div class="wrap">
+    <div class="reveal">
+      <span class="eyebrow">Sustainability</span>
+      <h2 class="sec-title">雙核心永續策略</h2>
+      <p class="sec-sub">我們以 SDG 12 的產品作為商業獲利引擎，以 SDG 11 的社區場域作為永續供應鏈與文化根基，並透過 SDG 17 的跨界推動達成規模擴張。</p>
+    </div>
+    <div class="sdg-grid reveal">
+      <div class="sdg-card sdg-12">
+        <span class="sdg-num">SDG 12</span>
+        <h3>負責任的消費與生產</h3>
+        <span class="sdg-role">獲利引擎</span>
+        <p>全果利用循環加工、葉材低碳包裝、零有害添加。目標：廢棄物轉化率 80%。</p>
+      </div>
+      <div class="sdg-card sdg-11">
+        <span class="sdg-num">SDG 11</span>
+        <h3>永續城鄉與社區</h3>
+        <span class="sdg-role">永續根基</span>
+        <p>長屋契作供應鏈、文化保存與在地就業。目標：社區收益提升 20%。</p>
+      </div>
+      <div class="sdg-card sdg-17">
+        <span class="sdg-num">SDG 17</span>
+        <h3>全球夥伴關係</h3>
+        <span class="sdg-role">規模擴張</span>
+        <p>連結企業 ESG 採購、政府與學研機構，將淨利的一部分撥入社區永續基金。</p>
+      </div>
+    </div>
+    <div class="btn-row reveal" style="margin-top:40px">
+      <a class="btn btn-ghost" href="sustainability.html">看完整八階段藍圖</a>
+    </div>
+  </div>
+</section>
+
+<section class="cta-band">
+  <div class="wrap">
+    <span class="eyebrow">Pre-order</span>
+    <h2 class="sec-title">產季限定，先搶先贏</h2>
+    <p>Dabai 一年只有一季，產量稀有。留下資料，開賣時我們第一時間通知你，享早鳥優先配額。</p>
+    <div class="btn-row">
+      <a class="btn btn-gold" href="contact.html">登記預購意願</a>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="foot-grid">
+    <div><b>DABAI.ECO</b><br>砂拉越黑橄欖永續生態系<br>Sarawak, Malaysia</div>
+    <div class="foot-links">
+      <a href="index.html">首頁</a>
+      <a href="dabai.html">認識 Dabai</a>
+      <a href="products.html">產品</a>
+      <a href="sustainability.html">永續藍圖</a>
+      <a href="team.html">團隊</a>
+      <a href="contact.html">預購與合作</a>
+    </div>
+  </div>
+  <div class="foot-bottom">© 2026 Dabai Eco Team — AMELIA · CHEE HOU · AMILY</div>
+</footer>
+
+</body>
+</html>
