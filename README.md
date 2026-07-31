@@ -20,8 +20,26 @@
 
 ## 部署到 GitHub Pages
 
-1. 在 GitHub 建立一個新的 repository（例如 `dabai-eco`）。
-2. 把這個資料夾推上去：
+**第一次**：登入 GitHub（只需做一次，會開瀏覽器讓你授權）
+
+```bash
+gh auth login
+```
+
+**接著**：跑一鍵部署腳本，它會自動建立 repo、推送、開啟 Pages 並印出網址
+
+```bash
+./deploy.sh
+```
+
+之後每次改完內容，再跑一次 `./deploy.sh` 就會自動 commit + push 更新線上網站。
+想換 repo 名稱就加參數：`./deploy.sh 我的repo名稱`
+
+<details>
+<summary>手動部署（不想用腳本的話）</summary>
+
+1. 在 GitHub 建立新的 repository（例如 `dabai-eco`）。
+2. 推上去：
 
 ```bash
 git remote add origin https://github.com/<你的帳號>/dabai-eco.git
@@ -31,6 +49,8 @@ git push -u origin main
 
 3. 到 repo 的 **Settings → Pages**，`Source` 選 **Deploy from a branch**，branch 選 `main`、資料夾選 `/ (root)`，按 Save。
 4. 等一兩分鐘，網站會出現在 `https://<你的帳號>.github.io/dabai-eco/`。
+
+</details>
 
 本地預覽（不需要伺服器也能開，但用伺服器比較接近線上環境）：
 
