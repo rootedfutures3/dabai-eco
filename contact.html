@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>預購與合作｜聯絡我們 — DABAI.ECO</title>
-<meta name="description" content="登記 Dabai 產季預購意願，或洽談企業 ESG 採購、社區合作與投資事宜。">
+<title>加入平台｜果農上架 · 收購商找貨 — DABAI.ECO</title>
+<meta name="description" content="果農登記果園上架、收購商登記採購需求、申請農務顧問服務，或洽談投資與研究合作。">
 <link rel="stylesheet" href="assets/style.css">
 <script src="assets/site.js" defer></script>
 <style>
@@ -27,19 +27,21 @@
   <button class="nav-toggle" aria-label="開關選單" aria-expanded="false">☰</button>
   <div class="nav-links">
     <a href="index.html">首頁</a>
+    <a href="platform.html">媒合平台</a>
+    <a href="orchards.html">果園列表</a>
     <a href="dabai.html">認識 Dabai</a>
     <a href="products.html">產品</a>
     <a href="sustainability.html">永續藍圖</a>
     <a href="team.html">團隊</a>
   </div>
-  <a class="nav-cta" href="contact.html">搶先預購</a>
+  <a class="nav-cta" href="contact.html">加入平台</a>
 </nav>
 
 <div class="page-hero">
   <div class="wrap">
-    <span class="eyebrow">Pre-order &amp; Partnership</span>
-    <h1>搶先預購 · <span class="accent">產季直送</span></h1>
-    <p>Dabai 一年只有一季，產量稀有。留下資料，產季開始時我們會第一時間通知你，並享有早鳥優先配額與優惠價。</p>
+    <span class="eyebrow">Join the Platform</span>
+    <h1>加入平台 · <span class="accent">兩邊都歡迎</span></h1>
+    <p>你是有果子賣不掉的果農，還是找不到穩定貨源的收購商？也可能你只是想預購嚐鮮。留下資料，我們會依你的角色安排後續對接。</p>
   </div>
 </div>
 
@@ -47,18 +49,29 @@
   <div class="wrap">
     <div class="contact-grid">
       <div class="reveal">
-        <h2 class="sec-title">登記預購意願</h2>
-        <p class="sec-sub">此為 MVP 市場驗證登記，<b>不會收取任何費用</b>，也不會產生實際訂單。</p>
+        <h2 class="sec-title">登記加入平台</h2>
+        <p class="sec-sub">此為 MVP 市場驗證登記，<b>不會收取任何費用</b>，也不會產生實際合約或訂單。</p>
 
         <!--
           表單送出目的地設定在 assets/site.js 最上方的 FORM_ENDPOINT。
           留空時，送出會顯示「登記尚未開放」而非假的成功訊息。
         -->
         <form data-preorder="#preorder-ok" data-error="#preorder-err">
+          <div>
+            <label for="role">我的身分 *</label>
+            <select id="role" name="role" required>
+              <option value="">請選擇…</option>
+              <option>🌱 果農 —— 我有果園想上架</option>
+              <option>🏭 收購商 / 加工廠 —— 我要找貨源</option>
+              <option>🎓 想申請農務顧問服務</option>
+              <option>🛒 一般消費者 —— 想預購嚐鮮</option>
+              <option>🤝 其他合作洽談（投資 / 政府 / 學研）</option>
+            </select>
+          </div>
           <div class="form-row">
             <div>
-              <label for="name">姓名 *</label>
-              <input id="name" name="name" type="text" placeholder="你的名字" required>
+              <label for="name">姓名 / 公司 *</label>
+              <input id="name" name="name" type="text" placeholder="你的名字或公司名稱" required>
             </div>
             <div>
               <label for="phone">聯絡電話 / WhatsApp *</label>
@@ -71,52 +84,63 @@
           </div>
           <div class="form-row">
             <div>
-              <label for="interest">最感興趣的產品</label>
-              <select id="interest" name="interest">
-                <option>生鮮 Dabai 直送</option>
-                <option>Dabai Kuaci 果核零嘴</option>
-                <option>Dabai Paste 抹醬</option>
-                <option>葉子環保包裝</option>
-                <option>企業 ESG 採購禮盒</option>
+              <label for="crop">主要作物</label>
+              <select id="crop" name="crop">
+                <option>Dabai 黑橄欖</option>
+                <option>榴槤</option>
+                <option>兩者都有</option>
+                <option>加工品（Paste / Kuaci）</option>
+                <option>不適用 / 其他</option>
               </select>
             </div>
             <div>
-              <label for="qty">預計數量</label>
-              <select id="qty" name="qty">
-                <option>1–2 份（自用）</option>
-                <option>3–5 份（送禮）</option>
-                <option>6–20 份（小量團購）</option>
-                <option>20 份以上（企業採購）</option>
+              <label for="scale">規模</label>
+              <select id="scale" name="scale">
+                <option>果農：50 棵以下</option>
+                <option>果農：50–200 棵</option>
+                <option>果農：200 棵以上</option>
+                <option>收購商：單棵認養（試單）</option>
+                <option>收購商：整片果園認養</option>
+                <option>收購商：契作包銷（多年期）</option>
+                <option>一般消費者 / 尚未確定</option>
               </select>
             </div>
           </div>
           <div>
-            <label for="msg">想說的話（選填）</label>
-            <textarea id="msg" name="msg" rows="3" placeholder="例如：想了解企業採購方案、想知道配送地區…"></textarea>
+            <label for="area">所在地區（選填）</label>
+            <input id="area" name="area" type="text" placeholder="例如：Sibu、Kapit、Kuching…">
+          </div>
+          <div>
+            <label for="msg">需求說明（選填）</label>
+            <textarea id="msg" name="msg" rows="3" placeholder="果農：果園位置、樹齡、大約幾棵、目前遇到的困難…&#10;收購商：需要的數量、規格、出貨時間、是否需要產銷履歷…"></textarea>
           </div>
           <!-- 蜜罐欄位：擋機器人，真人看不到 -->
           <input type="text" name="_gotcha" tabindex="-1" autocomplete="off"
                  aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px">
           <button class="btn btn-gold" type="submit" style="border:none;cursor:pointer">送出登記</button>
-          <p class="form-note">送出即表示你同意我們在產季開始時以 Email 或 WhatsApp 與你聯繫。</p>
+          <p class="form-note">送出即表示你同意我們以 Email 或 WhatsApp 與你聯繫。</p>
         </form>
 
         <div class="form-error" id="preorder-err" role="alert"></div>
 
         <div class="form-success" id="preorder-ok">
           🌿 <b>感謝登記！</b><br>
-          我們已收到你的預購意願，Dabai 產季開始時會第一時間通知你。
+          我們已收到你的資料，會依你的身分安排後續對接並盡快與你聯繫。
         </div>
       </div>
 
       <div class="reveal">
         <div class="info-card">
-          <h3>🏢 企業 ESG 採購</h3>
-          <p>需要有故事、有數據、可寫進 ESG 報告的節慶禮盒或員工福利品？我們提供含碳足跡與社區回饋比例的採購方案。</p>
+          <h3>🌱 果農上架</h3>
+          <p>有果園卻賣不掉？登記後我們會安排農務顧問實地勘查、建立果園檔案並上架平台，讓收購商直接看到你的樹。</p>
         </div>
         <div class="info-card">
-          <h3>🤝 社區與通路合作</h3>
-          <p>長屋契作、回收站點設置、綠色電商上架、在地合作社通路 —— 歡迎洽談。</p>
+          <h3>🏭 收購商找貨</h3>
+          <p>需要穩定貨源與一致規格？先看<a href="orchards.html">果園列表</a>，或直接說出你的數量與規格需求，我們從契作果農中媒合。</p>
+        </div>
+        <div class="info-card">
+          <h3>🎓 農務顧問服務</h3>
+          <p>樹況診斷、施肥指導、果實品質分析與產量預測。不確定自己的果園值多少，從一次勘查開始。</p>
         </div>
         <div class="info-card">
           <h3>💡 投資與研究</h3>
@@ -143,19 +167,19 @@
     </div>
     <div class="two-col reveal">
       <div class="card">
-        <h3 style="font-size:1.05rem;margin-bottom:14px">關於產品</h3>
+        <h3 style="font-size:1.05rem;margin-bottom:14px">給果農</h3>
         <ul class="fact-list" style="margin-top:0">
-          <li><div class="fact-ico">Q</div><div><b>Dabai 的產季是什麼時候？</b><span>一年僅一季，產期短且受氣候影響，確切時間會在開賣前公告。</span></div></li>
-          <li><div class="fact-ico">Q</div><div><b>生鮮可以寄多遠？</b><span>Dabai 保存期短，生鮮以冷鏈與鄰近市場為主；遠距市場建議選擇 Paste 或 Kuaci 加工品。</span></div></li>
-          <li><div class="fact-ico">Q</div><div><b>第一次吃要注意什麼？</b><span>務必先用熱水浸泡約 10 分鐘軟化，直接生吃會又硬又澀。<a href="dabai.html#howto" style="color:var(--gold);text-decoration:underline">看完整吃法 →</a></span></div></li>
+          <li><div class="fact-ico">Q</div><div><b>上架果園要付費嗎？</b><span>不用。平台的費用向收購商端收取，果農上架與基礎勘查不收錢。</span></div></li>
+          <li><div class="fact-ico">Q</div><div><b>我的樹很老／樹況不好，也能上架嗎？</b><span>可以。健康評級 C 的果園一樣會上架，並由顧問介入輔導改善，很多收購商願意共同投入。</span></div></li>
+          <li><div class="fact-ico">Q</div><div><b>什麼時候能拿到錢？</b><span>認養成立後即撥付部分訂金，不必等到收成後才有現金。</span></div></li>
         </ul>
       </div>
       <div class="card">
-        <h3 style="font-size:1.05rem;margin-bottom:14px">關於合作</h3>
+        <h3 style="font-size:1.05rem;margin-bottom:14px">給收購商</h3>
         <ul class="fact-list" style="margin-top:0">
-          <li><div class="fact-ico">Q</div><div><b>登記預購要付錢嗎？</b><span>不用。目前為市場驗證階段，只蒐集意願，不會產生任何費用。</span></div></li>
-          <li><div class="fact-ico">Q</div><div><b>企業採購最低量是多少？</b><span>視產品品項而定，歡迎在表單留言說明需求，我們會個別回覆方案。</span></div></li>
-          <li><div class="fact-ico">Q</div><div><b>可以提供 ESG 佐證資料嗎？</b><span>可以。我們提供供應鏈追溯、碳足跡與社區回饋比例的說明文件。</span></div></li>
+          <li><div class="fact-ico">Q</div><div><b>認養跟直接下訂單差在哪？</b><span>認養是在開花前就綁定，果農提前拿到現金、你鎖住貨源，還能透過顧問影響最終品質。<a href="platform.html" style="color:var(--gold);text-decoration:underline">看完整說明 →</a></span></div></li>
+          <li><div class="fact-ico">Q</div><div><b>產量沒達標怎麼辦？</b><span>顧問從開花期就追蹤並定期回報預估產量，落差會提前反映，不會到出貨才發現。</span></div></li>
+          <li><div class="fact-ico">Q</div><div><b>有產銷履歷可以做出口稽核嗎？</b><span>有。每次農務作業都建檔，可產出含產地、樹齡與作業紀錄的完整履歷。</span></div></li>
         </ul>
       </div>
     </div>
@@ -164,14 +188,16 @@
 
 <footer>
   <div class="foot-grid">
-    <div><b>DABAI.ECO</b><br>砂拉越黑橄欖永續生態系<br>Sarawak, Malaysia</div>
+    <div><b>DABAI.ECO</b><br>果農 × 收購商媒合平台<br>Sarawak, Malaysia</div>
     <div class="foot-links">
       <a href="index.html">首頁</a>
+      <a href="platform.html">媒合平台</a>
+      <a href="orchards.html">果園列表</a>
       <a href="dabai.html">認識 Dabai</a>
       <a href="products.html">產品</a>
       <a href="sustainability.html">永續藍圖</a>
       <a href="team.html">團隊</a>
-      <a href="contact.html">預購與合作</a>
+      <a href="contact.html">加入平台</a>
     </div>
   </div>
   <div class="foot-bottom">© 2026 Dabai Eco Team — AMELIA · CHEE HOU · AMILY</div>

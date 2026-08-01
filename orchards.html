@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>果園列表｜瀏覽與認養 — DABAI.ECO</title>
+<meta name="description" content="瀏覽砂拉越 Dabai 與榴槤果園：果農資訊、樹齡、樹數、預估產量與顧問健康評級，可直接登記認養意向。">
+<link rel="stylesheet" href="assets/style.css">
+<script src="assets/site.js" defer></script>
+</head>
+<body>
+
+<nav>
+  <a class="logo" href="index.html">DABAI<em>.</em>ECO</a>
+  <button class="nav-toggle" aria-label="開關選單" aria-expanded="false">☰</button>
+  <div class="nav-links">
+    <a href="index.html">首頁</a>
+    <a href="platform.html">媒合平台</a>
+    <a href="orchards.html" class="active">果園列表</a>
+    <a href="dabai.html">認識 Dabai</a>
+    <a href="products.html">產品</a>
+    <a href="sustainability.html">永續藍圖</a>
+    <a href="team.html">團隊</a>
+  </div>
+  <a class="nav-cta" href="contact.html">加入平台</a>
+</nav>
+
+<div class="page-hero">
+  <div class="wrap">
+    <span class="eyebrow">Browse Orchards</span>
+    <h1>果園列表 · <span class="accent">開放認養</span></h1>
+    <p>
+      每一筆都經過農務顧問實地勘查，標示樹齡、樹數、歷年產量與健康評級。
+      找到合適的果園後，直接登記認養意向，我們會安排與果農對接。
+    </p>
+  </div>
+</div>
+
+<section>
+  <div class="wrap">
+
+    <div class="demo-banner">
+      ⚠️ <b>示範資料（Demo Data）</b> ——
+      以下果園與果農資訊為平台功能展示用的虛構範例，非真實果農資料。
+      平台正式上線後將串接經顧問查核的實際果園檔案。
+    </div>
+
+    <div class="filters">
+      <div class="fld">
+        <label for="f-crop">作物</label>
+        <select id="f-crop">
+          <option value="">全部作物</option>
+          <option value="dabai">Dabai 黑橄欖</option>
+          <option value="durian">榴槤</option>
+        </select>
+      </div>
+      <div class="fld">
+        <label for="f-area">地區</label>
+        <select id="f-area"><option value="">全部地區</option></select>
+      </div>
+      <div class="fld">
+        <label for="f-age">樹齡</label>
+        <select id="f-age">
+          <option value="">不限樹齡</option>
+          <option value="young">幼齡（10 年以下）</option>
+          <option value="prime">盛產期（10–30 年）</option>
+          <option value="old">老欉（30 年以上）</option>
+        </select>
+      </div>
+      <div class="fld">
+        <label for="f-status">認養狀態</label>
+        <select id="f-status">
+          <option value="">全部狀態</option>
+          <option value="open">可認養</option>
+          <option value="talking">洽談中</option>
+          <option value="taken">已認養</option>
+        </select>
+      </div>
+      <button class="filter-reset" id="f-reset">清除篩選</button>
+    </div>
+
+    <p class="result-count" id="count"></p>
+    <div class="orchard-grid" id="grid"></div>
+  </div>
+</section>
+
+<section class="cta-band">
+  <div class="wrap">
+    <h2 class="sec-title">找不到合適的果園？</h2>
+    <p>告訴我們你要的作物、數量與規格，我們從契作果農中為你媒合；果農也歡迎登記上架。</p>
+    <div class="btn-row">
+      <a class="btn btn-gold" href="contact.html">說出你的需求</a>
+      <a class="btn btn-ghost" href="platform.html">了解認養方案</a>
+    </div>
+  </div>
+</section>
+
+<!-- 認養意向彈窗 -->
+<div class="modal-back" id="claim-modal">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="claim-title">
+    <button class="modal-close" id="claim-close" aria-label="關閉">×</button>
+    <h3 id="claim-title">登記認養意向</h3>
+    <p class="sub">此為意向登記，<b>不會產生費用或合約</b>。我們收到後會安排與果農對接並說明後續流程。</p>
+
+    <div class="target" id="claim-target"></div>
+
+    <form data-preorder="#claim-ok" data-error="#claim-err">
+      <input type="hidden" name="form_type" value="果園認養意向">
+      <input type="hidden" name="orchard" id="claim-orchard">
+      <div class="form-row">
+        <div>
+          <label for="c-name">姓名 / 公司 *</label>
+          <input id="c-name" name="name" type="text" placeholder="收購商名稱" required>
+        </div>
+        <div>
+          <label for="c-phone">電話 / WhatsApp *</label>
+          <input id="c-phone" name="phone" type="tel" placeholder="+60 12-345 6789" required>
+        </div>
+      </div>
+      <div>
+        <label for="c-email">Email *</label>
+        <input id="c-email" name="email" type="email" placeholder="you@company.com" required>
+      </div>
+      <div>
+        <label for="c-plan">認養方案</label>
+        <select id="c-plan" name="plan">
+          <option>整片果園認養</option>
+          <option>單棵認養</option>
+          <option>契作包銷（多年期）</option>
+          <option>還不確定，想先了解</option>
+        </select>
+      </div>
+      <div>
+        <label for="c-msg">需求說明（選填）</label>
+        <textarea id="c-msg" name="msg" rows="3" placeholder="例如：需要的數量、規格、出貨時間、是否需要產銷履歷…"></textarea>
+      </div>
+      <input type="text" name="_gotcha" tabindex="-1" autocomplete="off"
+             aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px">
+      <button class="btn btn-gold" type="submit" style="border:none;cursor:pointer">送出認養意向</button>
+    </form>
+
+    <div class="form-error" id="claim-err" role="alert"></div>
+    <div class="form-success" id="claim-ok">
+      🌿 <b>已收到你的認養意向！</b><br>
+      我們會盡快與你聯繫，並安排與果農對接。
+    </div>
+  </div>
+</div>
+
+<footer>
+  <div class="foot-grid">
+    <div><b>DABAI.ECO</b><br>果農 × 收購商媒合平台<br>Sarawak, Malaysia</div>
+    <div class="foot-links">
+      <a href="index.html">首頁</a>
+      <a href="platform.html">媒合平台</a>
+      <a href="orchards.html">果園列表</a>
+      <a href="dabai.html">認識 Dabai</a>
+      <a href="products.html">產品</a>
+      <a href="sustainability.html">永續藍圖</a>
+      <a href="team.html">團隊</a>
+      <a href="contact.html">加入平台</a>
+    </div>
+  </div>
+  <div class="foot-bottom">© 2026 Dabai Eco Team — AMELIA · CHEE HOU · AMILY</div>
+</footer>
+
+</body>
+</html>
