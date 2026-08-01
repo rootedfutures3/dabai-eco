@@ -342,12 +342,11 @@ button[type="submit"]:disabled{opacity:.6;cursor:not-allowed;transform:none}
 .cta-band .btn-row{justify-content:center}
 
 /* ---------- Footer ---------- */
-footer{background:var(--black);color:rgba(255,251,255,.62);padding:44px 24px 32px;font-size:.91rem}
-.foot-grid{max-width:1080px;margin:0 auto;display:flex;justify-content:space-between;gap:28px;flex-wrap:wrap;margin-bottom:26px}
+footer{background:var(--black);color:rgba(255,251,255,.62);padding:44px 24px;font-size:.91rem}
+.foot-grid{max-width:1080px;margin:0 auto;display:flex;justify-content:space-between;gap:28px;flex-wrap:wrap}
 .foot-grid b{color:var(--almond);letter-spacing:.15em;font-size:1.06rem}
 .foot-links{display:flex;gap:20px;flex-wrap:wrap}
 .foot-links a:hover{color:var(--almond)}
-.foot-bottom{text-align:center;border-top:1px solid rgba(255,251,255,.14);padding-top:22px;max-width:1080px;margin:0 auto}
 
 /* ============================================
    平台（B2B 媒合系統）專用樣式
