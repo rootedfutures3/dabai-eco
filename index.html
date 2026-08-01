@@ -11,40 +11,40 @@
   header.hero{
     min-height:100vh;display:flex;align-items:center;
     background:
-      radial-gradient(ellipse 80% 60% at 70% 20%, rgba(201,168,106,.15), transparent 60%),
-      radial-gradient(ellipse 60% 50% at 20% 80%, rgba(90,125,82,.18), transparent 60%),
-      linear-gradient(160deg, var(--plum-deep) 0%, var(--plum) 55%, #3a2342 100%);
-    color:var(--cream);
+      radial-gradient(ellipse 80% 60% at 70% 20%, rgba(241,218,191,.15), transparent 60%),
+      radial-gradient(ellipse 60% 50% at 20% 80%, rgba(146,129,122,.18), transparent 60%),
+      linear-gradient(160deg, var(--black) 0%, var(--coffee) 55%, #362417 100%);
+    color:var(--snow);
     padding:120px 24px 80px;
   }
   .hero-grid{display:grid;grid-template-columns:1.15fr .85fr;gap:48px;align-items:center;max-width:1080px;margin:0 auto}
   @media(max-width:820px){.hero-grid{grid-template-columns:1fr}}
   .hero-tag{
     display:inline-flex;align-items:center;gap:8px;
-    border:1px solid rgba(224,193,132,.4);border-radius:99px;
-    padding:6px 16px;font-size:.82rem;color:var(--gold-bright);margin-bottom:22px;
+    border:1px solid rgba(241,218,191,.4);border-radius:99px;
+    padding:6px 16px;font-size:.82rem;color:var(--almond);margin-bottom:22px;
   }
-  .hero-tag::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--green-light)}
+  .hero-tag::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--taupe)}
   header.hero h1{font-size:clamp(2.2rem,5.5vw,3.6rem);margin-bottom:20px}
-  header.hero h1 .accent{color:var(--gold-bright)}
-  .hero-desc{font-size:1.05rem;color:rgba(250,246,239,.8);max-width:480px;margin-bottom:34px}
+  header.hero h1 .accent{color:var(--almond)}
+  .hero-desc{font-size:1.05rem;color:rgba(255,251,255,.8);max-width:480px;margin-bottom:34px}
   .hero-stats{display:flex;gap:36px;margin-top:48px;flex-wrap:wrap}
-  .stat b{display:block;font-size:1.5rem;color:var(--gold-bright)}
-  .stat span{font-size:.82rem;color:rgba(250,246,239,.65)}
+  .stat b{display:block;font-size:1.5rem;color:var(--almond)}
+  .stat span{font-size:.82rem;color:rgba(255,251,255,.65)}
   .hero-art{display:flex;justify-content:center}
   .hero-art svg{width:100%;max-width:380px;filter:drop-shadow(0 24px 48px rgba(0,0,0,.35))}
 
   .nav-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:22px}
   .nav-card{
-    background:#fff;border-radius:var(--radius);padding:30px;
-    box-shadow:0 6px 24px rgba(45,27,51,.08);transition:.25s;
-    display:flex;flex-direction:column;border-top:4px solid var(--gold);
+    background:var(--snow);border-radius:var(--radius);padding:30px;
+    box-shadow:0 6px 24px rgba(54,36,23,.08);transition:.25s;
+    display:flex;flex-direction:column;border-top:4px solid var(--accent);
   }
-  .nav-card:hover{transform:translateY(-6px);box-shadow:0 14px 34px rgba(45,27,51,.14)}
+  .nav-card:hover{transform:translateY(-6px);box-shadow:0 14px 34px rgba(54,36,23,.14)}
   .nav-card .ico{font-size:1.8rem;margin-bottom:12px}
   .nav-card h3{font-size:1.08rem;margin-bottom:8px}
   .nav-card p{font-size:.88rem;color:var(--ink-soft);flex:1}
-  .nav-card .more{margin-top:16px;font-size:.85rem;font-weight:700;color:var(--gold)}
+  .nav-card .more{margin-top:16px;font-size:.85rem;font-weight:700;color:var(--accent)}
 </style>
 </head>
 <body>
@@ -88,23 +88,23 @@
       <svg viewBox="0 0 360 360" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Dabai 黑橄欖插畫">
         <defs>
           <radialGradient id="fruit" cx="35%" cy="30%" r="80%">
-            <stop offset="0%" stop-color="#6b4a75"/>
-            <stop offset="45%" stop-color="#3a2342"/>
-            <stop offset="100%" stop-color="#170d1c"/>
+            <stop offset="0%" stop-color="#76655C"/>
+            <stop offset="45%" stop-color="#362417"/>
+            <stop offset="100%" stop-color="#000500"/>
           </radialGradient>
           <radialGradient id="fruit2" cx="35%" cy="30%" r="80%">
-            <stop offset="0%" stop-color="#7d5688"/>
-            <stop offset="50%" stop-color="#452a4e"/>
-            <stop offset="100%" stop-color="#1d1023"/>
+            <stop offset="0%" stop-color="#92817A"/>
+            <stop offset="50%" stop-color="#56453A"/>
+            <stop offset="100%" stop-color="#000500"/>
           </radialGradient>
           <linearGradient id="leaf" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stop-color="#8fae85"/>
-            <stop offset="100%" stop-color="#4d6b45"/>
+            <stop offset="0%" stop-color="#F1DABF"/>
+            <stop offset="100%" stop-color="#92817A"/>
           </linearGradient>
         </defs>
-        <circle cx="180" cy="180" r="150" fill="rgba(224,193,132,.07)"/>
-        <circle cx="180" cy="180" r="118" fill="rgba(224,193,132,.06)"/>
-        <path d="M180 60 C 180 100, 176 130, 172 150" stroke="#7a5f3f" stroke-width="6" fill="none" stroke-linecap="round"/>
+        <circle cx="180" cy="180" r="150" fill="rgba(241,218,191,.07)"/>
+        <circle cx="180" cy="180" r="118" fill="rgba(241,218,191,.06)"/>
+        <path d="M180 60 C 180 100, 176 130, 172 150" stroke="#56453A" stroke-width="6" fill="none" stroke-linecap="round"/>
         <path d="M178 92 C 140 70, 104 78, 84 108 C 116 122, 156 116, 178 92 Z" fill="url(#leaf)"/>
         <path d="M180 84 C 214 58, 252 62, 276 88 C 248 108, 206 106, 180 84 Z" fill="url(#leaf)" opacity=".85"/>
         <ellipse cx="130" cy="212" rx="52" ry="64" fill="url(#fruit2)"/>
@@ -166,7 +166,7 @@
   </div>
 </section>
 
-<section style="background:var(--cream-dim)">
+<section style="background:var(--almond-soft)">
   <div class="wrap">
     <div class="two-col reveal">
       <div>
