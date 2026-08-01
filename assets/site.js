@@ -97,30 +97,51 @@ function initPreorderForm(form) {
    ============================================================ */
 const ORCHARDS = [
   { id:'SBW-01', name:'Rumah Panjai 上游果園', area:'Sibu',    crop:'dabai',  variety:'在地原生種',      age:34, trees:120, yield:'2.4 噸', health:'A', status:'open',
-    note:'河岸沖積土，老欉果肉油脂含量高，歷年是當地公認品質最好的一批。' },
+    note:'河岸沖積土，老欉果肉油脂含量高，歷年是當地公認品質最好的一批。' , farmer:'Ak. Jelani 一家', farmYears:28, household:6, need:'希望有穩定買家，不必每年被中盤商殺價' },
   { id:'KPT-02', name:'Nanga Sepit 河谷果園',  area:'Kapit',   crop:'dabai',  variety:'在地原生種',      age:18, trees:260, yield:'4.1 噸', health:'A', status:'open',
-    note:'盛產期樹群，樹勢整齊、產量穩定，適合需要規格一致的加工廠。' },
+    note:'盛產期樹群，樹勢整齊、產量穩定，適合需要規格一致的加工廠。' , farmer:'Lim 氏果園（第二代）', farmYears:15, household:4, need:'想擴大種植，但需要資金與技術指導' },
   { id:'KNW-03', name:'Kanowit 坡地果園',      area:'Kanowit', crop:'durian', variety:'貓山王 Musang King', age:12, trees:85,  yield:'1.8 噸', health:'B', status:'open',
-    note:'排水良好的緩坡地，去年開始進入穩定產期，需補強施肥管理。' },
+    note:'排水良好的緩坡地，去年開始進入穩定產期，需補強施肥管理。' , farmer:'Nyawai 家族', farmYears:9, household:5, need:'首次嘗試商業化經營，需要施肥與病蟲害輔導' },
   { id:'SRK-04', name:'Sarikei 老欉園',        area:'Sarikei', crop:'dabai',  variety:'在地原生種',      age:41, trees:75,  yield:'1.3 噸', health:'B', status:'talking',
-    note:'四十年以上老樹，果實風味濃郁，但部分樹勢衰退，顧問建議修枝更新。' },
+    note:'四十年以上老樹，果實風味濃郁，但部分樹勢衰退，顧問建議修枝更新。' , farmer:'Tan 老先生', farmYears:41, household:3, need:'年事已高，希望有人接手管理老欉' },
   { id:'BTG-05', name:'Betong 平原果園',       area:'Betong',  crop:'durian', variety:'D24',             age:22, trees:140, yield:'3.2 噸', health:'A', status:'open',
-    note:'管理紀錄完整，連續三年產量穩定，已建立完整產銷履歷可供出口稽核。' },
+    note:'管理紀錄完整，連續三年產量穩定，已建立完整產銷履歷可供出口稽核。' , farmer:'Rumah Ugap 合作社', farmYears:22, household:12, need:'已有管理紀錄，尋求長期契作夥伴' },
   { id:'SRN-06', name:'Serian 混作果園',       area:'Serian',  crop:'dabai',  variety:'在地原生種',      age:9,  trees:310, yield:'1.1 噸', health:'A', status:'open',
-    note:'新植幼齡樹群，尚未進入盛產期，適合契作包銷、長期鎖定未來產量。' },
+    note:'新植幼齡樹群，尚未進入盛產期，適合契作包銷、長期鎖定未來產量。' , farmer:'Anak Bunsu', farmYears:6, household:4, need:'新植果園，想在盛產前先鎖定買家' },
   { id:'SNG-07', name:'Song 支流果園',         area:'Song',    crop:'dabai',  variety:'在地原生種',      age:27, trees:190, yield:'3.5 噸', health:'B', status:'open',
-    note:'交通需經水路，運輸成本略高，但果實品質佳、收購價具競爭力。' },
+    note:'交通需經水路，運輸成本略高，但果實品質佳、收購價具競爭力。' , farmer:'Empaling 一家', farmYears:27, household:7, need:'水路運輸成本高，需要共同分攤物流的夥伴' },
   { id:'JLU-08', name:'Julau 山腰果園',        area:'Julau',   crop:'durian', variety:'紅蝦 Udang Merah', age:16, trees:95,  yield:'2.0 噸', health:'C', status:'open',
-    note:'去年受病蟲害影響產量下滑，顧問已介入輔導，適合願意共同改善的長期夥伴。' },
+    note:'去年受病蟲害影響產量下滑，顧問已介入輔導，適合願意共同改善的長期夥伴。' , farmer:'Chan 氏兄弟', farmYears:16, household:5, need:'去年病蟲害損失慘重，需要顧問長期協助' },
   { id:'MRD-09', name:'Meradong 家族果園',     area:'Meradong',crop:'dabai',  variety:'在地原生種',      age:31, trees:150, yield:'2.8 噸', health:'A', status:'taken',
-    note:'本季已由加工廠整片認養，明年度開放續約前的優先洽談。' },
+    note:'本季已由加工廠整片認養，明年度開放續約前的優先洽談。' , farmer:'Rumah Belaja 長屋', farmYears:31, household:15, need:'本季已認養，明年續約前優先洽談' },
   { id:'BTU-10', name:'Bintulu 沿海果園',      area:'Bintulu', crop:'durian', variety:'黑刺 Black Thorn', age:14, trees:70,  yield:'1.5 噸', health:'B', status:'talking',
-    note:'鄰近港口，出口物流便利，目前與兩家出口商洽談中。' },
+    note:'鄰近港口，出口物流便利，目前與兩家出口商洽談中。' , farmer:'Ngu 家果園', farmYears:14, household:4, need:'鄰近港口，想拓展出口通路' },
   { id:'KPT-11', name:'Kapit 高地老欉',        area:'Kapit',   crop:'dabai',  variety:'在地原生種',      age:38, trees:60,  yield:'1.0 噸', health:'B', status:'open',
-    note:'產量不大但風味突出，適合小量高價的精品加工或禮盒客戶。' },
+    note:'產量不大但風味突出，適合小量高價的精品加工或禮盒客戶。' , farmer:'Bujang 老欉園', farmYears:38, household:2, need:'產量不大，想找重視風味的精品買家' },
   { id:'SBW-12', name:'Sibu 近郊示範園',       area:'Sibu',    crop:'durian', variety:'D101',            age:7,  trees:200, yield:'0.9 噸', health:'A', status:'open',
-    note:'平台輔導的標準化示範果園，全程導入顧問農法，資料最完整。' },
+    note:'平台輔導的標準化示範果園，全程導入顧問農法，資料最完整。' , farmer:'平台示範園（契作）', farmYears:7, household:8, need:'全程導入顧問農法，作為標準化示範' },
 ];
+
+/* 作物圖示：Unicode 沒有榴槤 emoji（🥭 是芒果），
+   且 emoji 自帶的鮮豔色彩與品牌色票衝突，故改用自繪 SVG。 */
+const CROP_ICON = {
+  dabai: `<svg viewBox="0 0 40 40" width="34" height="34" aria-hidden="true">
+    <ellipse cx="20" cy="24" rx="11" ry="14" fill="currentColor" opacity=".9"/>
+    <ellipse cx="16" cy="18" rx="3" ry="4.5" fill="#FFFBFF" opacity=".35"/>
+    <path d="M20 11c0-4 2-7 5-8-1 4-2 6-5 8z" fill="currentColor" opacity=".65"/>
+  </svg>`,
+  durian: `<svg viewBox="0 0 40 40" width="34" height="34" aria-hidden="true">
+    <circle cx="20" cy="22" r="12.5" fill="currentColor" opacity=".9"/>
+    <g fill="#FFFBFF" opacity=".45">
+      <path d="M20 6.5l2.2 4.2h-4.4z"/><path d="M33.5 20.5l-4.2 2.2v-4.4z"/>
+      <path d="M6.5 22.5l4.2-2.2v4.4z"/><path d="M20 37.5l-2.2-4.2h4.4z"/>
+      <path d="M29.6 12.4l-1.3 4.5-3.1-3.1z"/><path d="M10.4 32.6l1.3-4.5 3.1 3.1z"/>
+      <path d="M29.6 32.6l-4.5-1.3 3.1-3.1z"/><path d="M10.4 12.4l4.5 1.3-3.1 3.1z"/>
+    </g>
+    <path d="M20 9.5V4" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" opacity=".7"/>
+  </svg>`,
+};
+const CROP_NAME = { dabai:'Dabai 黑橄欖', durian:'榴槤' };
 
 const STATUS_TEXT  = { open:'可認養', talking:'洽談中', taken:'已認養' };
 const STATUS_CLASS = { open:'st-open', talking:'st-talking', taken:'st-taken' };
@@ -171,7 +192,7 @@ function initOrchards() {
             <h3>${o.name}</h3>
             <div class="loc">${o.area}, Sarawak · ${o.id}</div>
           </div>
-          <span class="crop">${o.crop === 'dabai' ? '🫒' : '🥭'}</span>
+          <span class="crop" title="${CROP_NAME[o.crop]}">${CROP_ICON[o.crop]}</span>
           <span class="status ${STATUS_CLASS[o.status]}">${STATUS_TEXT[o.status]}</span>
         </div>
         <div class="orchard-body">
@@ -182,6 +203,18 @@ function initOrchards() {
             <div><dt>年均產量</dt><dd>${o.yield}</dd></div>
           </dl>
           <span class="health h-${o.health.toLowerCase()}">顧問評級 ${HEALTH_TEXT[o.health]}</span>
+
+          <div class="farmer">
+            <div class="farmer-head">
+              <span class="farmer-avatar" aria-hidden="true">${o.farmer.slice(0,1)}</span>
+              <div>
+                <b>${o.farmer}</b>
+                <span class="farmer-meta">務農 ${o.farmYears} 年 · 家戶 ${o.household} 人</span>
+              </div>
+            </div>
+            <p class="farmer-need">「${o.need}」</p>
+          </div>
+
           <p class="orchard-note">${o.note}</p>
           <button class="btn-claim" data-claim="${o.id}" ${o.status === 'taken' ? 'disabled' : ''}>
             ${o.status === 'taken' ? '本季已認養' : '登記認養意向'}
@@ -222,8 +255,9 @@ function initClaimModal(grid) {
 
     target.innerHTML = `
       <b>${o.name}（${o.id}）</b>
-      ${o.area}, Sarawak · ${o.crop === 'dabai' ? 'Dabai 黑橄欖' : '榴槤'} ${o.variety}<br>
-      樹齡 ${o.age} 年 · ${o.trees} 棵 · 年均產量 ${o.yield} · 顧問評級 ${o.health}
+      ${o.area}, Sarawak · ${CROP_NAME[o.crop]} ${o.variety}<br>
+      樹齡 ${o.age} 年 · ${o.trees} 棵 · 年均產量 ${o.yield} · 顧問評級 ${o.health}<br>
+      果農：${o.farmer}（務農 ${o.farmYears} 年）
     `;
     hidden.value = `${o.name}（${o.id}）`;
 

@@ -22,15 +22,15 @@
   .hero-tag{
     display:inline-flex;align-items:center;gap:8px;
     border:1px solid rgba(241,218,191,.4);border-radius:99px;
-    padding:6px 16px;font-size:.82rem;color:var(--almond);margin-bottom:22px;
+    padding:6px 16px;font-size:.9rem;color:var(--almond);margin-bottom:22px;
   }
   .hero-tag::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--taupe)}
   header.hero h1{font-size:clamp(2.2rem,5.5vw,3.6rem);margin-bottom:20px}
   header.hero h1 .accent{color:var(--almond)}
-  .hero-desc{font-size:1.05rem;color:rgba(255,251,255,.8);max-width:480px;margin-bottom:34px}
+  .hero-desc{font-size:1.12rem;color:rgba(255,251,255,.8);max-width:480px;margin-bottom:34px}
   .hero-stats{display:flex;gap:36px;margin-top:48px;flex-wrap:wrap}
   .stat b{display:block;font-size:1.5rem;color:var(--almond)}
-  .stat span{font-size:.82rem;color:rgba(255,251,255,.65)}
+  .stat span{font-size:.9rem;color:rgba(255,251,255,.65)}
   .hero-art{display:flex;justify-content:center}
   .hero-art svg{width:100%;max-width:380px;filter:drop-shadow(0 24px 48px rgba(0,0,0,.35))}
 
@@ -42,9 +42,30 @@
   }
   .nav-card:hover{transform:translateY(-6px);box-shadow:0 14px 34px rgba(54,36,23,.14)}
   .nav-card .ico{font-size:1.8rem;margin-bottom:12px}
-  .nav-card h3{font-size:1.08rem;margin-bottom:8px}
-  .nav-card p{font-size:.88rem;color:var(--ink-soft);flex:1}
-  .nav-card .more{margin-top:16px;font-size:.85rem;font-weight:700;color:var(--accent)}
+  .nav-card h3{font-size:1.15rem;margin-bottom:8px}
+  .nav-card p{font-size:.96rem;color:var(--ink-soft);flex:1}
+  .nav-card .more{margin-top:16px;font-size:.93rem;font-weight:700;color:var(--accent)}
+
+  /* --- RWD --- */
+  .nav-grid{grid-template-columns:repeat(auto-fit,minmax(min(230px,100%),1fr))}
+  @media(max-width:820px){
+    .hero-grid{grid-template-columns:1fr;gap:34px}
+    .hero-art{order:-1}                        /* 手機把插圖移到標題上方 */
+    .hero-art svg{max-width:210px}
+    .hero-stats{gap:24px;margin-top:34px}
+  }
+  @media(max-width:640px){
+    header.hero{padding:104px 18px 56px;min-height:auto}
+    .hero-desc{font-size:1.02rem}
+    .hero-stats{gap:18px 22px;margin-top:28px}
+    .stat{flex:1 1 calc(33% - 22px);min-width:88px}
+    .nav-card{padding:24px 22px}
+  }
+  @media(max-width:380px){
+    header.hero{padding:96px 14px 48px}
+    .hero-art svg{max-width:170px}
+    .stat{flex:1 1 100%}
+  }
 </style>
 </head>
 <body>
@@ -59,7 +80,6 @@
     <a href="dabai.html">認識 Dabai</a>
     <a href="products.html">產品</a>
     <a href="sustainability.html">永續藍圖</a>
-    <a href="team.html">團隊</a>
   </div>
   <a class="nav-cta" href="contact.html">加入平台</a>
 </nav>
@@ -236,12 +256,6 @@
         <p>八階段推進計畫、SDG 11／12／17 雙核心策略，以及以物換物的社區機制。</p>
         <span class="more">看藍圖 →</span>
       </a>
-      <a class="nav-card" href="team.html">
-        <span class="ico">👥</span>
-        <h3>團隊</h3>
-        <p>系統營運、數位行銷與產品研發的跨域組合 —— 我們不只提案，已準備好落地。</p>
-        <span class="more">認識團隊 →</span>
-      </a>
     </div>
   </div>
 </section>
@@ -300,7 +314,6 @@
       <a href="dabai.html">認識 Dabai</a>
       <a href="products.html">產品</a>
       <a href="sustainability.html">永續藍圖</a>
-      <a href="team.html">團隊</a>
       <a href="contact.html">加入平台</a>
     </div>
   </div>
