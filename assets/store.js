@@ -17,6 +17,18 @@ const STORE_KEY = 'rootedfutures_demo_v1';
 
 /* ---------- 種子資料（虛擬） ---------- */
 const SEED = {
+  /* 使用者帳號（示範）—— 密碼一律為 admin，僅供 demo */
+  users: [
+    { u:'admin',  pass:'admin', role:'admin',  name:'平台管理員', org:'ROOTED FUTURES', phone:'+60 82-000 000', email:'admin@example.com', area:'Song' },
+    { u:'farmer', pass:'admin', role:'farmer', name:'Ak. Jelani', org:'Rumah Panjai 上游果園', phone:'+60 13-220 1188', email:'jelani@example.com', area:'Sibu' },
+    { u:'buyer',  pass:'admin', role:'buyer',  name:'李采薇', org:'南洋食品工業', phone:'+60 82-334 900', email:'esg@example.com', area:'Kuching' },
+  ],
+
+  messages: [
+    { id:1, treeId:'DB-002', from:'buyer', to:'farmer', at:'2026-01-15 10:22', text:'你好，想確認這棵樹今年的開花狀況，方便拍幾張照片嗎？' },
+    { id:2, treeId:'DB-002', from:'farmer', to:'buyer', at:'2026-01-15 14:05', text:'沒問題，明天早上溝通者會去現場，我請他多拍幾張上傳。' },
+  ],
+
   orders: [
     { no:'RF-2026-0001', date:'2026-01-14', treeId:'DB-002', crop:'dabai',    customer:'陳品妤', email:'ping@example.com', phone:'+60 12-330 8821', amount:400,  paid:200, channel:'FPX 網路銀行', status:'已付訂金' },
     { no:'RF-2026-0002', date:'2026-01-19', treeId:'DR-002', crop:'durian',   customer:'Ong Wei Sheng', email:'ws.ong@example.com', phone:'+60 16-772 1140', amount:1180, paid:1180, channel:'信用卡', status:'已付全額' },
@@ -52,11 +64,19 @@ const SEED = {
 /* ---------- 存取層 ---------- */
 const Store = {
   read() {
+    const fresh = JSON.parse(JSON.stringify(SEED));
     try {
       const raw = localStorage.getItem(STORE_KEY);
-      if (raw) return JSON.parse(raw);
-    } catch (e) { /* localStorage 不可用時退回種子資料 */ }
-    return JSON.parse(JSON.stringify(SEED));
+      if (!raw) return fresh;
+      const saved = JSON.parse(raw);
+      // 舊版存檔可能缺少後來才新增的欄位（例如 users、messages），
+      // 這裡補齊缺項，避免升級後讀到 undefined 而整個壞掉。
+      for (const k of Object.keys(fresh)) {
+        if (saved[k] === undefined) saved[k] = fresh[k];
+      }
+      return saved;
+    } catch (e) { /* localStorage 不可用或內容毀損時退回種子資料 */ }
+    return fresh;
   },
 
   write(db) {
@@ -86,6 +106,53 @@ const Store = {
   reset() {
     try { localStorage.removeItem(STORE_KEY); } catch (e) {}
     return Store.read();
+  },
+
+  /* ---- 使用者 ---- */
+  findUser(u, pass) {
+    return Store.read().users.find(x =>
+      x.u.toLowerCase() === String(u).trim().toLowerCase() && x.pass === pass) || null;
+  },
+  userExists(u) {
+    return Store.read().users.some(x => x.u.toLowerCase() === String(u).trim().toLowerCase());
+  },
+  addUser(user) {
+    const db = Store.read();
+    db.users.push(user);
+    Store.write(db);
+    return user;
+  },
+
+  /* ---- 樹木資產（首次由 site.js 的 TREES 種子化，之後可編輯） ---- */
+  trees(seedFn) {
+    const db = Store.read();
+    if (!db.trees && typeof seedFn === 'function') {
+      db.trees = seedFn();
+      Store.write(db);
+    }
+    return db.trees || [];
+  },
+  saveTrees(trees) {
+    const db = Store.read();
+    db.trees = trees;
+    return Store.write(db).trees;
+  },
+  upsertTree(tree) {
+    const db = Store.read();
+    db.trees = db.trees || [];
+    const i = db.trees.findIndex(t => t.id === tree.id);
+    if (i >= 0) db.trees[i] = { ...db.trees[i], ...tree };
+    else db.trees.push(tree);
+    return Store.write(db).trees;
+  },
+
+  /* ---- 訊息 ---- */
+  addMessage(m) {
+    const db = Store.read();
+    db.messages = db.messages || [];
+    m.id = (db.messages.at(-1)?.id || 0) + 1;
+    db.messages.push(m);
+    return Store.write(db).messages;
   },
 
   /** 下一個訂單編號，格式 RF-YYYY-NNNN */

@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>平台登入｜ROOTED FUTURES</title>
+<meta name="robots" content="noindex">
+<link rel="icon" type="image/png" sizes="32x32" href="assets/img/favicon-32.png">
+<link rel="apple-touch-icon" href="assets/img/logo-180.png">
+<link rel="stylesheet" href="assets/style.css">
+<script src="assets/store.js" defer></script>
+<script src="assets/site.js" defer></script>
+<script src="assets/app.js" defer></script>
+</head>
+<body class="app">
+
+<!-- ===== 登入 / 註冊 ===== -->
+<div class="signin" id="gate">
+  <div class="signin-card" style="max-width:460px">
+    <img src="assets/img/logo.png" alt="" width="72" height="72">
+    <h1>ROOTED FUTURES 平台</h1>
+    <p class="sub">果農 × 收購商 · 一樹一碼媒合系統</p>
+
+    <div class="sim-note" style="text-align:left">
+      🧪 <b>示範系統</b> —— 沒有伺服器，帳號與資料只存在<b>這台瀏覽器</b>，
+      換一台裝置就看不到。請<b>不要使用任何真實密碼</b>。
+    </div>
+
+    <div class="demo-cred">
+      預設帳號 <b>admin</b> ／ 密碼 <b>admin</b>
+    </div>
+
+    <!-- 登入 -->
+    <div class="pane on" data-gate="login">
+      <form id="login-form">
+        <div>
+          <label for="g-user">帳號</label>
+          <input id="g-user" name="u" type="text" autocomplete="username"
+                 placeholder="admin" value="admin" required>
+        </div>
+        <div>
+          <label for="g-pass">密碼</label>
+          <input id="g-pass" name="pass" type="password" autocomplete="current-password"
+                 placeholder="admin" value="admin" required>
+        </div>
+        <button class="btn btn-gold" type="submit" style="border:none;cursor:pointer;width:100%">登入平台</button>
+      </form>
+      <div class="form-error" id="login-err" role="alert"></div>
+
+      <div class="quick">
+        <span>快速切換身分（密碼皆為 admin）</span>
+        <div class="quick-row">
+          <button data-quick="admin">平台管理員</button>
+          <button data-quick="farmer">果農</button>
+          <button data-quick="buyer">收購商</button>
+        </div>
+      </div>
+
+      <button class="btn-back" data-goto="register">還沒有帳號？註冊一個 →</button>
+    </div>
+
+    <!-- 註冊 -->
+    <div class="pane" data-gate="register">
+      <form id="reg-form">
+        <div>
+          <label for="r-role">我的身分</label>
+          <select id="r-role" name="role">
+            <option value="farmer">🌱 果農 —— 我有果樹要上架</option>
+            <option value="buyer">🏭 收購商 —— 我要認養果樹</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <div>
+            <label for="r-user">帳號</label>
+            <input id="r-user" name="u" type="text" placeholder="英數字" required>
+          </div>
+          <div>
+            <label for="r-pass">密碼</label>
+            <input id="r-pass" name="pass" type="password" placeholder="示範用，勿用真實密碼" required>
+          </div>
+        </div>
+        <div class="form-row">
+          <div>
+            <label for="r-name">姓名</label>
+            <input id="r-name" name="name" type="text" required>
+          </div>
+          <div>
+            <label for="r-org">果園 / 公司</label>
+            <input id="r-org" name="org" type="text" required>
+          </div>
+        </div>
+        <div class="form-row">
+          <div>
+            <label for="r-phone">電話</label>
+            <input id="r-phone" name="phone" type="tel" placeholder="+60 12-345 6789">
+          </div>
+          <div>
+            <label for="r-area">所在地區</label>
+            <input id="r-area" name="area" type="text" placeholder="例如：Song">
+          </div>
+        </div>
+        <button class="btn btn-gold" type="submit" style="border:none;cursor:pointer;width:100%">建立帳號並登入</button>
+      </form>
+      <div class="form-error" id="reg-err" role="alert"></div>
+      <button class="btn-back" data-goto="login">← 已經有帳號，回登入</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 平台主體 ===== -->
+<div id="shell" hidden>
+  <nav>
+    <a class="logo" href="index.html"><img src="assets/img/logo.png" alt="" width="40" height="40"><span>ROOTED<em>&nbsp;</em>FUTURES</span></a>
+    <button class="nav-toggle" aria-label="開關選單" aria-expanded="false">☰</button>
+    <div class="nav-links" id="app-nav"></div>
+    <button class="nav-cta" id="logout" style="border:none;cursor:pointer">登出</button>
+  </nav>
+
+  <div class="portal-bar">
+    <div class="wrap">
+      <div>
+        <span class="dim" id="me-role">—</span>
+        <b id="me-name">—</b>
+      </div>
+      <span class="net-pill" id="me-org">—</span>
+    </div>
+  </div>
+
+  <section style="padding-top:30px">
+    <div class="wrap" id="view"></div>
+  </section>
+
+  <footer>
+    <div class="foot-grid">
+      <div class="foot-brand"><img src="assets/img/logo.png" alt="ROOTED FUTURES 標誌" width="56" height="56"><div><b>ROOTED FUTURES</b><br>Social Enterprise · Song, Sarawak<br>平台系統 · Phase 1 示範</div></div>
+      <div class="foot-links">
+        <a href="index.html">回官網</a>
+        <a href="erp.html">ERP 儀表板</a>
+        <a href="coordinator.html">溝通者門戶</a>
+      </div>
+    </div>
+  </footer>
+</div>
+
+<!-- 樹木編輯 / 認養彈窗 -->
+<div class="modal-back" id="app-modal">
+  <div class="modal checkout" role="dialog" aria-modal="true">
+    <button class="modal-close" id="app-modal-close" aria-label="關閉">×</button>
+    <div id="app-modal-body"></div>
+  </div>
+</div>
+
+</body>
+</html>
