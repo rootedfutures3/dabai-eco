@@ -35,61 +35,17 @@ const T_STATUS = {
    啟動
    ============================================================ */
 document.addEventListener('DOMContentLoaded', () => {
-  if (!document.getElementById('gate')) return;
+  const shell = document.getElementById('app-nav');
+  if (!shell) return;
 
-  // 切換登入／註冊
-  document.querySelectorAll('[data-goto]').forEach(b =>
-    b.addEventListener('click', () => {
-      document.querySelectorAll('[data-gate]').forEach(p =>
-        p.classList.toggle('on', p.dataset.gate === b.dataset.goto));
-    }));
-
-  // 快速切換身分
-  document.querySelectorAll('[data-quick]').forEach(b =>
-    b.addEventListener('click', () => {
-      document.getElementById('g-user').value = b.dataset.quick;
-      document.getElementById('g-pass').value = 'admin';
-      document.getElementById('login-form').requestSubmit();
-    }));
-
-  document.getElementById('login-form').addEventListener('submit', e => {
-    e.preventDefault();
-    const err = document.getElementById('login-err');
-    const u = document.getElementById('g-user').value;
-    const p = document.getElementById('g-pass').value;
-    const user = Store.findUser(u, p);
-    if (!user) {
-      err.textContent = '帳號或密碼不正確。預設帳號 admin、密碼 admin。';
-      err.style.display = 'block';
-      return;
-    }
-    err.style.display = 'none';
-    signIn(user);
-  });
-
-  document.getElementById('reg-form').addEventListener('submit', e => {
-    e.preventDefault();
-    const f = e.target, err = document.getElementById('reg-err');
-    const u = f.u.value.trim();
-    if (!/^[A-Za-z0-9_]{3,20}$/.test(u)) {
-      err.textContent = '帳號請用 3–20 個英數字或底線。'; err.style.display = 'block'; return;
-    }
-    if (Store.userExists(u)) {
-      err.textContent = '這個帳號已經有人用了，換一個試試。'; err.style.display = 'block'; return;
-    }
-    err.style.display = 'none';
-    const user = {
-      u, pass: f.pass.value, role: f.role.value,
-      name: f.name.value.trim(), org: f.org.value.trim(),
-      phone: f.phone.value.trim(), email: '', area: f.area.value.trim(),
-    };
-    Store.addUser(user);
-    signIn(user);
-  });
+  // 沒有有效登入就導回登入頁
+  const saved = sessionStorage.getItem(SESSION);
+  const user = saved ? Store.read().users.find(x => x.u === saved) : null;
+  if (!user) { location.replace('app.html'); return; }
 
   document.getElementById('logout').addEventListener('click', () => {
     sessionStorage.removeItem(SESSION);
-    location.reload();
+    location.assign('app.html');
   });
 
   // 手機選單
@@ -107,19 +63,12 @@ document.addEventListener('DOMContentLoaded', () => {
     if (e.key === 'Escape' && modal.classList.contains('open')) closeModal();
   });
 
-  // 已登入就直接進入
-  const saved = sessionStorage.getItem(SESSION);
-  if (saved) {
-    const user = Store.read().users.find(x => x.u === saved);
-    if (user) signIn(user);
-  }
+  signIn(user);
 });
 
 function signIn(user) {
   me = user;
   sessionStorage.setItem(SESSION, user.u);
-  document.getElementById('gate').hidden = true;
-  document.getElementById('shell').hidden = false;
   document.getElementById('me-role').textContent = ROLE_LABEL[user.role];
   document.getElementById('me-name').textContent = user.name;
   document.getElementById('me-org').textContent = user.org;

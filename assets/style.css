@@ -984,3 +984,141 @@ body.app{background:var(--almond-soft)}
 
 /* 平台內的卡片式表單維持淺底樣式 */
 .app .modal .form-row input:disabled{opacity:.6}
+
+/* ============================================
+   登入頁（app.html）
+   ============================================ */
+body.auth-page{background:var(--black);overflow-x:hidden}
+.auth{
+  min-height:100vh;display:grid;grid-template-columns:1.05fr .95fr;
+  transition:opacity .45s ease, transform .45s ease;
+}
+.auth.leaving{opacity:0;transform:scale(.985)}
+
+/* --- 左：品牌側 --- */
+.auth-brand{
+  position:relative;overflow:hidden;
+  display:flex;align-items:center;
+  padding:60px 56px;
+  background:linear-gradient(155deg,var(--black) 0%,var(--coffee) 62%,var(--coffee-mid) 100%);
+  color:var(--snow);
+}
+.auth-back{
+  position:absolute;top:26px;left:32px;z-index:3;
+  font-size:.95rem;color:rgba(255,251,255,.68);transition:.2s;
+}
+.auth-back:hover{color:var(--almond)}
+.auth-brand-in{position:relative;z-index:2;max-width:440px}
+.auth-brand-in img{margin-bottom:26px;filter:drop-shadow(0 18px 40px rgba(0,5,0,.55))}
+.auth-brand-in h1{font-size:clamp(1.7rem,2.6vw,2.5rem);margin-bottom:14px}
+.auth-brand-in p{color:rgba(255,251,255,.72);font-size:1.04rem}
+.auth-points{list-style:none;display:flex;gap:32px;margin-top:38px;flex-wrap:wrap}
+.auth-points b{display:block;font-size:1.6rem;color:var(--almond);line-height:1.2}
+.auth-points span{font-size:.9rem;color:rgba(255,251,255,.62)}
+
+/* 背景光暈 */
+.orbs i{
+  position:absolute;border-radius:50%;filter:blur(60px);opacity:.5;
+  animation:orb 18s ease-in-out infinite;
+}
+.orbs i:nth-child(1){width:340px;height:340px;background:rgba(241,218,191,.22);top:-60px;right:-40px}
+.orbs i:nth-child(2){width:280px;height:280px;background:rgba(146,129,122,.3);bottom:-70px;left:-50px;animation-delay:-6s}
+.orbs i:nth-child(3){width:220px;height:220px;background:rgba(241,218,191,.14);top:45%;left:55%;animation-delay:-12s}
+@keyframes orb{
+  0%,100%{transform:translate(0,0) scale(1)}
+  50%{transform:translate(22px,-26px) scale(1.12)}
+}
+
+/* 飄浮果實 */
+.drift{position:absolute;inset:0;z-index:1;pointer-events:none}
+.drift-i{
+  position:absolute;color:var(--almond);opacity:.16;
+  animation:float 14s ease-in-out infinite;
+}
+.drift-i svg{width:44px;height:44px}
+@keyframes float{
+  0%,100%{transform:translateY(0) rotate(0)}
+  50%{transform:translateY(-26px) rotate(8deg)}
+}
+
+/* --- 右：表單側 --- */
+.auth-form{
+  display:flex;align-items:center;justify-content:center;
+  padding:60px 40px;background:var(--almond-soft);
+}
+.auth-card{
+  width:100%;max-width:460px;
+  background:var(--snow);border-radius:22px;padding:38px 34px;
+  box-shadow:0 24px 60px rgba(54,36,23,.18);border:1px solid var(--line);
+  max-height:88vh;overflow-y:auto;
+  animation:cardIn .6s cubic-bezier(.2,.7,.3,1) both;
+}
+@keyframes cardIn{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:none}}
+.auth-card.shake{animation:shake .4s}
+@keyframes shake{
+  0%,100%{transform:translateX(0)}
+  20%,60%{transform:translateX(-7px)}
+  40%,80%{transform:translateX(7px)}
+}
+.auth-head{margin-bottom:18px}
+.auth-head h2{font-size:1.6rem;margin-bottom:4px}
+.auth-sub{color:var(--ink-soft);font-size:.96rem}
+
+.auth-submit{
+  width:100%;border:none;cursor:pointer;position:relative;overflow:hidden;
+  margin-top:4px;
+}
+.auth-submit::after{
+  content:"";position:absolute;inset:0;
+  background:linear-gradient(100deg,transparent 30%,rgba(255,251,255,.35) 50%,transparent 70%);
+  transform:translateX(-100%);
+}
+.auth-submit:hover::after{animation:sheen .8s ease}
+@keyframes sheen{to{transform:translateX(100%)}}
+
+.auth-page .quick{border-top-color:var(--line)}
+.auth-page .quick > span{color:var(--ink-soft)}
+.auth-page .quick-row button{
+  background:var(--almond-soft);border:1px solid var(--taupe);color:var(--coffee);
+  display:flex;flex-direction:column;align-items:center;gap:3px;padding:12px 6px;
+}
+.auth-page .quick-row button b{font-size:1.2rem;line-height:1}
+.auth-page .quick-row button:hover{background:var(--almond);border-color:var(--coffee)}
+.auth-page .btn-back{color:var(--ink-soft)}
+.auth-page .btn-back:hover{color:var(--coffee)}
+.auth-page .demo-cred{
+  background:var(--almond-soft);border-color:var(--taupe);color:var(--ink);
+  margin-bottom:18px;
+}
+.auth-page .demo-cred b{color:var(--coffee)}
+.auth-page .sim-note{background:var(--almond-soft);border-color:var(--taupe);border-left-color:var(--coffee)}
+.auth-page .sim-note b{color:var(--coffee)}
+
+/* --- 登入成功轉場 --- */
+.handoff{
+  position:fixed;inset:0;z-index:300;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;
+  background:linear-gradient(155deg,var(--black),var(--coffee));
+  color:var(--snow);opacity:0;pointer-events:none;transition:opacity .4s ease;
+}
+.handoff.on{opacity:1;pointer-events:auto}
+.handoff img{animation:pulse 1.4s ease-in-out infinite}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.07)}}
+.handoff p{font-size:1.08rem;color:var(--almond)}
+.handoff-bar{width:190px;height:4px;border-radius:99px;background:rgba(255,251,255,.18);overflow:hidden}
+.handoff-bar i{display:block;height:100%;width:0;background:var(--almond);border-radius:99px}
+.handoff.on .handoff-bar i{animation:fill 1.05s ease-out forwards}
+@keyframes fill{to{width:100%}}
+
+@media(max-width:900px){
+  .auth{grid-template-columns:1fr}
+  .auth-brand{padding:74px 26px 46px;min-height:auto}
+  .auth-brand-in img{width:72px;height:72px;margin-bottom:18px}
+  .auth-points{gap:22px;margin-top:26px}
+  .auth-form{padding:34px 20px 56px}
+  .auth-card{max-height:none;padding:30px 24px}
+}
+@media(prefers-reduced-motion:reduce){
+  .orbs i,.drift-i,.handoff img,.auth-card{animation:none}
+  .auth-submit:hover::after{animation:none}
+}

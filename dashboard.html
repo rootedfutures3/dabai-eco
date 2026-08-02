@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>平台後台｜ROOTED FUTURES</title>
+<meta name="robots" content="noindex">
+<link rel="icon" type="image/png" sizes="32x32" href="assets/img/favicon-32.png">
+<link rel="apple-touch-icon" href="assets/img/logo-180.png">
+<link rel="stylesheet" href="assets/style.css">
+<script src="assets/store.js" defer></script>
+<script src="assets/site.js" defer></script>
+<script src="assets/app.js" defer></script>
+</head>
+<body class="app">
+
+<nav>
+  <a class="logo" href="index.html"><img src="assets/img/logo.png" alt="" width="40" height="40"><span>ROOTED<em>&nbsp;</em>FUTURES</span></a>
+  <button class="nav-toggle" aria-label="開關選單" aria-expanded="false">☰</button>
+  <div class="nav-links" id="app-nav"></div>
+  <button class="nav-cta" id="logout" style="border:none;cursor:pointer">登出</button>
+</nav>
+
+<div class="portal-bar">
+  <div class="wrap">
+    <div>
+      <span class="dim" id="me-role">—</span>
+      <b id="me-name">—</b>
+    </div>
+    <span class="net-pill" id="me-org">—</span>
+  </div>
+</div>
+
+<section style="padding-top:30px">
+  <div class="wrap" id="view"></div>
+</section>
+
+<footer>
+  <div class="foot-grid">
+    <div class="foot-brand"><img src="assets/img/logo.png" alt="ROOTED FUTURES 標誌" width="56" height="56"><div><b>ROOTED FUTURES</b><br>Social Enterprise · Song, Sarawak<br>平台系統 · Phase 1 示範</div></div>
+    <div class="foot-links">
+      <a href="index.html">回官網</a>
+      <a href="erp.html">ERP 儀表板</a>
+      <a href="coordinator.html">溝通者門戶</a>
+    </div>
+  </div>
+</footer>
+
+<!-- 果樹編輯 / 認養彈窗 -->
+<div class="modal-back" id="app-modal">
+  <div class="modal checkout" role="dialog" aria-modal="true">
+    <button class="modal-close" id="app-modal-close" aria-label="關閉">×</button>
+    <div id="app-modal-body"></div>
+  </div>
+</div>
+
+</body>
+</html>
