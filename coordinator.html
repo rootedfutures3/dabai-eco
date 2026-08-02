@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>溝通者現場門戶（示範）— ROOTED FUTURES</title>
+<meta name="robots" content="noindex">
+<link rel="icon" type="image/png" sizes="32x32" href="assets/img/favicon-32.png">
+<link rel="stylesheet" href="assets/style.css">
+<script src="assets/store.js" defer></script>
+<script src="assets/site.js" defer></script>
+<script src="assets/coordinator.js" defer></script>
+</head>
+<body class="app">
+
+<nav>
+  <a class="logo" href="index.html"><img src="assets/img/logo.png" alt="" width="40" height="40"><span>ROOTED<em>&nbsp;</em>FUTURES</span></a>
+  <button class="nav-toggle" aria-label="開關選單" aria-expanded="false">☰</button>
+  <div class="nav-links">
+    <a href="index.html">回前台</a>
+    <a href="erp.html">ERP 儀表板</a>
+    <a href="coordinator.html" class="active">溝通者門戶</a>
+  </div>
+  <span class="net-pill" id="net">連線中</span>
+</nav>
+
+<!-- ===== 登入畫面 ===== -->
+<div class="signin" id="signin">
+  <div class="signin-card">
+    <img src="assets/img/logo.png" alt="" width="72" height="72">
+    <h1>溝通者現場門戶</h1>
+    <p class="sub">Coordinator Portal · Song, Sarawak</p>
+
+    <div class="sim-note" style="text-align:left">
+      🧪 <b>示範登入</b> —— 這是給 demo 看流程用的畫面，<b>沒有真正的帳號驗證</b>。
+      請<b>不要輸入任何真實密碼</b>。輸入下面顯示的示範代碼即可進入。
+    </div>
+
+    <div class="demo-cred">
+      示範代碼：<b>SONG2026</b>
+    </div>
+
+    <form id="login-form">
+      <div>
+        <label for="who">你是誰</label>
+        <select id="who" name="who">
+          <option>Anding</option>
+          <option>Melissa</option>
+          <option>Jimmy</option>
+        </select>
+      </div>
+      <div>
+        <label for="code">示範代碼</label>
+        <input id="code" name="code" type="text" inputmode="latin"
+               autocomplete="off" placeholder="SONG2026" required>
+      </div>
+      <button class="btn btn-gold" type="submit" style="border:none;cursor:pointer;width:100%">進入現場門戶</button>
+    </form>
+    <div class="form-error" id="login-err" role="alert"></div>
+  </div>
+</div>
+
+<!-- ===== 門戶主體 ===== -->
+<div id="portal" hidden>
+  <div class="portal-bar">
+    <div class="wrap">
+      <div>
+        <span class="dim">現場溝通者</span>
+        <b id="who-label">—</b>
+      </div>
+      <button class="btn-back" id="logout" style="width:auto;margin:0">登出</button>
+    </div>
+  </div>
+
+  <section style="padding-top:32px">
+    <div class="wrap" style="max-width:720px">
+
+      <div class="demo-banner">
+        ⚠️ <b>示範系統</b> —— 回報資料存在這台裝置的 localStorage，不會上傳到伺服器。
+        照片只在本機預覽，不會被儲存或傳送。
+      </div>
+
+      <!-- 待辦派工單 -->
+      <h3 class="panel-h">今日派工單 <small>Work Orders</small></h3>
+      <div class="jobs" id="jobs"></div>
+
+      <!-- 樹況回報 -->
+      <h3 class="panel-h" style="margin-top:38px">樹況回報 <small>Field Report</small></h3>
+      <div class="card" style="background:var(--snow)">
+        <form id="report-form">
+          <div class="form-row">
+            <div>
+              <label for="r-tree">Tree ID *</label>
+              <select id="r-tree" name="treeId" required></select>
+            </div>
+            <div>
+              <label for="r-stage">生長階段 *</label>
+              <select id="r-stage" name="stage" required>
+                <option>開花期</option><option>幼果期</option>
+                <option>成熟期</option><option>採收後</option><option>休眠期</option>
+              </select>
+            </div>
+          </div>
+          <div>
+            <label for="r-health">樹況 *</label>
+            <select id="r-health" name="health" required>
+              <option>良好</option><option>需注意</option><option>需顧問介入</option>
+            </select>
+          </div>
+          <div>
+            <label for="r-note">現場備註 *</label>
+            <textarea id="r-note" name="note" rows="3" required
+              placeholder="例如：花況密集，已完成第一次追肥。發現少量果實蠅。"></textarea>
+          </div>
+          <div>
+            <label for="r-photo">拍照記錄（可多張，僅本機預覽）</label>
+            <input id="r-photo" name="photo" type="file" accept="image/*" capture="environment" multiple>
+            <div class="thumbs" id="thumbs"></div>
+          </div>
+          <button class="btn btn-gold" type="submit" style="border:none;cursor:pointer;width:100%">儲存回報</button>
+          <p class="form-note" id="queue-note"></p>
+        </form>
+      </div>
+
+      <!-- 標籤列印 -->
+      <h3 class="panel-h" style="margin-top:38px">採收標籤 <small>Harvest Label</small></h3>
+      <div class="card" style="background:var(--snow)">
+        <p class="lead" style="font-size:.98rem;margin-bottom:16px">
+          選一棵樹產生標籤，貼在採收籃上。實機部署時這裡會透過藍芽送到標籤機；
+          <b>目前先用系統列印對話框輸出</b>，同樣可接到藍芽標籤印表機。
+        </p>
+        <div class="form-row">
+          <div>
+            <label for="l-tree">Tree ID</label>
+            <select id="l-tree"></select>
+          </div>
+          <div>
+            <label for="l-basket">採收籃編號</label>
+            <input id="l-basket" type="text" placeholder="例如：B-07" value="B-01">
+          </div>
+        </div>
+        <div class="label-preview" id="label"></div>
+        <button class="btn btn-outline" id="print-btn" style="border:1.5px solid var(--coffee);cursor:pointer;width:100%;background:none">
+          🖨️ 列印標籤
+        </button>
+      </div>
+
+      <!-- 本機回報紀錄 -->
+      <h3 class="panel-h" style="margin-top:38px">我的回報紀錄 <small>本機暫存</small></h3>
+      <div id="my-reports"></div>
+
+    </div>
+  </section>
+</div>
+
+<footer>
+  <div class="foot-grid">
+    <div class="foot-brand"><img src="assets/img/logo.png" alt="ROOTED FUTURES 標誌" width="56" height="56"><div><b>ROOTED FUTURES</b><br>Social Enterprise · Song, Sarawak<br>內部系統 · Phase 1 示範</div></div>
+    <div class="foot-links">
+      <a href="index.html">回前台</a>
+      <a href="erp.html">ERP 儀表板</a>
+      <a href="coordinator.html">溝通者門戶</a>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>

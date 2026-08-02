@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ERP 儀表板（示範）— ROOTED FUTURES</title>
+<meta name="robots" content="noindex">
+<link rel="icon" type="image/png" sizes="32x32" href="assets/img/favicon-32.png">
+<link rel="stylesheet" href="assets/style.css">
+<script src="assets/store.js" defer></script>
+<script src="assets/site.js" defer></script>
+<script src="assets/erp.js" defer></script>
+</head>
+<body class="app">
+
+<nav>
+  <a class="logo" href="index.html"><img src="assets/img/logo.png" alt="" width="40" height="40"><span>ROOTED<em>&nbsp;</em>FUTURES</span></a>
+  <button class="nav-toggle" aria-label="開關選單" aria-expanded="false">☰</button>
+  <div class="nav-links">
+    <a href="index.html">回前台</a>
+    <a href="erp.html" class="active">ERP 儀表板</a>
+    <a href="coordinator.html">溝通者門戶</a>
+  </div>
+  <button class="nav-cta" id="db-reset" style="border:none;cursor:pointer">重設示範資料</button>
+</nav>
+
+<div class="page-hero" style="padding-bottom:56px">
+  <div class="wrap">
+    <span class="eyebrow">Internal · Phase 1</span>
+    <h1>ERP <span class="accent">核心中樞</span></h1>
+    <p>
+      樹體資產、認養訂單與預付款、客戶名單、現場樹況回報與工資紀錄 —— 一頁看完。
+    </p>
+  </div>
+</div>
+
+<section style="padding-top:44px">
+  <div class="wrap">
+
+    <div class="demo-banner">
+      ⚠️ <b>示範系統（Demo）</b> ——
+      這不是真的 ERP。GitHub Pages 沒有後端與資料庫，所有資料存在<b>你這台瀏覽器的 localStorage</b>，
+      不會上傳到任何伺服器，清除瀏覽器資料就會消失，也沒有帳號權限控管。
+      正式營運需要真正的後端與登入機制。
+      <br><br>
+      試試看：到<a href="trees.html" style="color:var(--coffee);font-weight:700;text-decoration:underline">包樹認養頁</a>完成一筆模擬認養，回來這頁就會多一筆訂單。
+    </div>
+
+    <!-- KPI -->
+    <div class="kpi-row" id="kpis"></div>
+
+    <!-- 分頁 -->
+    <div class="tabs" id="tabs">
+      <button class="tab on" data-tab="orders">認養訂單</button>
+      <button class="tab" data-tab="trees">樹體資產</button>
+      <button class="tab" data-tab="customers">客戶名單</button>
+      <button class="tab" data-tab="reports">樹況回報</button>
+      <button class="tab" data-tab="wages">收益與工資</button>
+    </div>
+
+    <div class="tab-pane on" data-panel="orders">
+      <h3 class="panel-h">認養訂單與預付款 <small>Orders &amp; Unearned Revenue</small></h3>
+      <div class="table-scroll"><table id="t-orders"></table></div>
+    </div>
+
+    <div class="tab-pane" data-panel="trees">
+      <h3 class="panel-h">樹體資產 <small>Tree Assets · 一樹一碼</small></h3>
+      <div class="filters" style="margin-bottom:18px">
+        <div class="fld">
+          <label for="erp-crop">作物</label>
+          <select id="erp-crop">
+            <option value="">全部</option>
+            <option value="dabai">Dabai 黑橄欖</option>
+            <option value="durian">榴槤</option>
+            <option value="rambutan">紅毛丹</option>
+          </select>
+        </div>
+        <div class="fld">
+          <label for="erp-status">狀態</label>
+          <select id="erp-status">
+            <option value="">全部</option>
+            <option value="available">開放認養</option>
+            <option value="reserved">保留中</option>
+            <option value="adopted">已認養</option>
+          </select>
+        </div>
+      </div>
+      <div class="table-scroll"><table id="t-trees"></table></div>
+    </div>
+
+    <div class="tab-pane" data-panel="customers">
+      <h3 class="panel-h">客戶資料庫 <small>B2C 認養人 CRM &amp; B2B 潛在名單</small></h3>
+      <h4 class="sub-h">B2C 認養人</h4>
+      <div class="table-scroll"><table id="t-b2c"></table></div>
+      <h4 class="sub-h">B2B 企業潛在名單</h4>
+      <div class="table-scroll"><table id="t-b2b"></table></div>
+    </div>
+
+    <div class="tab-pane" data-panel="reports">
+      <h3 class="panel-h">現場樹況回報 <small>Field Reports · 由溝通者門戶寫入</small></h3>
+      <div class="table-scroll"><table id="t-reports"></table></div>
+    </div>
+
+    <div class="tab-pane" data-panel="wages">
+      <h3 class="panel-h">農民／摘果者／溝通者 收益紀錄 <small>Payouts</small></h3>
+      <div class="table-scroll"><table id="t-wages"></table></div>
+    </div>
+
+  </div>
+</section>
+
+<footer>
+  <div class="foot-grid">
+    <div class="foot-brand"><img src="assets/img/logo.png" alt="ROOTED FUTURES 標誌" width="56" height="56"><div><b>ROOTED FUTURES</b><br>Social Enterprise · Song, Sarawak<br>內部系統 · Phase 1 示範</div></div>
+    <div class="foot-links">
+      <a href="index.html">回前台</a>
+      <a href="erp.html">ERP 儀表板</a>
+      <a href="coordinator.html">溝通者門戶</a>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>

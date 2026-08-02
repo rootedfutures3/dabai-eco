@@ -1,5 +1,5 @@
 /* ============================================
-   DABAI.ECO — 共用樣式
+   ROOTED FUTURES — 共用樣式
    ============================================ */
 
 /* ============================================
@@ -44,6 +44,14 @@
   --accent-hi:var(--coffee);
   --accent-ink:var(--snow);
 
+  /* 表單欄位：淺底預設，深色區塊會整組覆寫 */
+  --field-bg:var(--almond-soft);
+  --field-ink:var(--ink);
+  --field-line:var(--line);
+  --field-ph:var(--taupe-deep);
+  --field-ring:var(--coffee);
+  --note-ink:var(--ink-soft);
+
   --line:rgba(54,36,23,.14);
   --shadow:rgba(54,36,23,.10);
   --shadow-lg:rgba(54,36,23,.18);
@@ -54,10 +62,17 @@
 /* 深色底的區塊：重點色自動切換為 Almond Cream */
 nav, .page-hero, header.hero, .dark-section, .cta-band, footer, .modal,
 .dark-card, .fact-ico, .flow-dot, .howto-num, .btn-claim, .orchard-top,
-.side-mid .badge, .avatar, th{
+.side-mid .badge, .avatar, th, .signin, .signin-card, .portal-bar{
   --accent:var(--almond);
   --accent-hi:var(--almond);
   --accent-ink:var(--coffee);
+
+  --field-bg:rgba(255,251,255,.08);
+  --field-ink:var(--snow);
+  --field-line:rgba(255,251,255,.28);
+  --field-ph:rgba(255,251,255,.45);
+  --field-ring:var(--almond);
+  --note-ink:rgba(255,251,255,.6);
 }
 
 *{margin:0;padding:0;box-sizing:border-box}
@@ -206,7 +221,9 @@ nav{
 /* ---------- Spec table ---------- */
 .table-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
 table{border-collapse:collapse;width:100%;min-width:520px;background:var(--snow);border-radius:var(--radius);overflow:hidden}
+/* td 明確指定文字色 —— 表格底色是 Snow，放進深色區塊時會繼承白字而看不見 */
 th,td{padding:14px 18px;text-align:left;font-size:.98rem;border-bottom:1px solid var(--line)}
+td{color:var(--ink)}
 th{background:var(--coffee);color:var(--almond);font-weight:700;font-size:.93rem;letter-spacing:.05em}
 tr:last-child td{border-bottom:none}
 td:first-child{font-weight:700;white-space:nowrap}
@@ -311,15 +328,15 @@ td:first-child{font-weight:700;white-space:nowrap}
 form{display:grid;gap:14px;text-align:left}
 .form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 @media(max-width:560px){.form-row{grid-template-columns:1fr}}
-label{font-size:.9rem;font-weight:600;color:var(--almond);display:block;margin-bottom:6px}
+label{font-size:.9rem;font-weight:600;color:var(--accent);display:block;margin-bottom:6px}
 input,select,textarea{
-  width:100%;padding:13px 16px;border-radius:12px;border:1px solid rgba(255,251,255,.28);
-  background:rgba(255,251,255,.08);color:var(--snow);font-size:1.03rem;font-family:inherit;
+  width:100%;padding:13px 16px;border-radius:12px;border:1px solid var(--field-line);
+  background:var(--field-bg);color:var(--field-ink);font-size:1.03rem;font-family:inherit;
 }
-input::placeholder,textarea::placeholder{color:rgba(255,251,255,.45)}
-input:focus,select:focus,textarea:focus{outline:2px solid var(--almond);border-color:transparent}
+input::placeholder,textarea::placeholder{color:var(--field-ph)}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--field-ring);border-color:transparent}
 select option{color:var(--ink);background:var(--snow)}
-.form-note{font-size:.87rem;color:rgba(255,251,255,.6);text-align:center}
+.form-note{font-size:.87rem;color:var(--note-ink);text-align:center}
 .form-success{
   display:none;padding:28px;border-radius:var(--radius);
   background:rgba(241,218,191,.16);border:1px solid var(--almond);font-size:1.06rem;
@@ -327,8 +344,8 @@ select option{color:var(--ink);background:var(--snow)}
 .form-error{
   display:none;margin-top:16px;padding:18px 22px;border-radius:var(--radius);
   background:rgba(146,129,122,.28);border:1px solid var(--taupe);
-  border-left:5px solid var(--almond);
-  color:var(--snow);font-size:1rem;
+  border-left:5px solid var(--accent);
+  color:var(--field-ink);font-size:1rem;   /* 隨深／淺底切換，避免白字配淺底 */
 }
 button[type="submit"]:disabled{opacity:.6;cursor:not-allowed;transform:none}
 
@@ -649,4 +666,291 @@ footer{background:var(--black);color:rgba(255,251,255,.62);padding:44px 24px;fon
 /* ---- 大螢幕：放寬容器，避免兩側空曠 ---- */
 @media(min-width:1500px){
   .wrap{max-width:1200px}
+}
+
+/* ============================================
+   包樹認養（B2C）
+   ============================================ */
+.tree-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(270px,100%),1fr));gap:22px}
+.tree{
+  background:var(--snow);border-radius:var(--radius);overflow:hidden;
+  box-shadow:0 6px 24px var(--shadow);border:1px solid var(--line);
+  display:flex;flex-direction:column;transition:.25s;
+}
+.tree:hover{transform:translateY(-5px);box-shadow:0 14px 34px var(--shadow-lg)}
+.tree-photo{
+  height:132px;position:relative;display:flex;align-items:center;justify-content:center;
+  color:var(--almond);
+}
+.tree-photo.dabai   {background:linear-gradient(135deg,#000500,#362417)}
+.tree-photo.durian  {background:linear-gradient(135deg,#56453A,#76655C)}
+.tree-photo.rambutan{background:linear-gradient(135deg,#362417,#56453A)}
+.tree-ico{display:flex;transform:scale(1.9);opacity:.85}
+.tree-id{
+  position:absolute;top:12px;left:12px;
+  /* 底色要夠不透明，否則疊在較亮的漸層上時 Tree ID 對比不足 */
+  background:rgba(0,5,0,.78);border:1px solid rgba(241,218,191,.5);
+  color:var(--almond);font-weight:700;font-size:.88rem;letter-spacing:.1em;
+  padding:4px 11px;border-radius:8px;
+}
+.tree-photo .status{bottom:-11px;left:14px}
+.tree-body{padding:24px 20px 20px;flex:1;display:flex;flex-direction:column}
+.tree-body h3{font-size:1.06rem;margin-bottom:12px}
+.tree-variety{display:block;font-size:.9rem;font-weight:600;color:var(--taupe-deep);margin-top:2px}
+.tree-where{font-size:.9rem;color:var(--ink-soft);flex:1;margin-bottom:14px;line-height:1.6}
+.tree-foot{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.tree-price{flex:1;white-space:nowrap}
+.tree-price b{font-size:1.28rem;color:var(--coffee)}
+.tree-price span{font-size:.88rem;color:var(--ink-soft)}
+.tree-foot .btn-claim{width:auto;flex:1 1 130px;padding:11px 16px}
+
+/* 認養金分配 */
+.split-row{display:flex;justify-content:space-between;font-size:.95rem;margin-bottom:5px}
+.split-row b{color:var(--coffee)}
+.split-bar{height:9px;border-radius:99px;background:var(--almond-soft);margin-bottom:16px;overflow:hidden}
+.split-bar i{display:block;height:100%;background:var(--coffee);border-radius:99px}
+
+/* ============================================
+   結帳流程（模擬）
+   ============================================ */
+.checkout{max-width:580px}
+.steps{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap}
+.step{
+  flex:1;min-width:96px;text-align:center;font-size:.85rem;font-weight:700;
+  padding:8px 6px;border-radius:99px;
+  background:rgba(255,251,255,.08);color:rgba(255,251,255,.5);
+  border:1px solid rgba(241,218,191,.2);
+}
+.step.on{background:rgba(241,218,191,.18);color:var(--almond);border-color:var(--almond)}
+.pane{display:none}
+.pane.on{display:block}
+.pane h3{font-size:1.15rem;margin-bottom:16px}
+.modal-price{display:block;margin-top:6px;font-size:1.12rem;font-weight:700;color:var(--almond)}
+
+.terms{
+  background:rgba(255,251,255,.07);border:1px solid rgba(241,218,191,.25);
+  border-radius:12px;padding:16px 18px;font-size:.9rem;
+}
+.terms b{color:var(--almond);display:block;margin-bottom:8px}
+.terms ul{list-style:none;margin-bottom:14px}
+.terms ul li{position:relative;padding:5px 0 5px 16px;color:rgba(255,251,255,.8);line-height:1.6}
+.terms ul li::before{content:"·";position:absolute;left:4px;color:var(--almond);font-weight:700}
+.check{display:flex;align-items:flex-start;gap:10px;cursor:pointer;color:var(--snow);font-size:.92rem;font-weight:600}
+.check input{width:20px;height:20px;flex-shrink:0;margin-top:1px;accent-color:var(--almond)}
+
+.sim-note{
+  background:rgba(241,218,191,.14);border:1px solid var(--almond);
+  border-left:5px solid var(--almond);
+  border-radius:12px;padding:14px 16px;font-size:.9rem;margin-bottom:18px;line-height:1.65;
+}
+.sim-note b{color:var(--almond)}
+
+.pay-opts{display:grid;gap:10px;margin-bottom:18px}
+.pay-opt{display:block;cursor:pointer}
+.pay-opt input{position:absolute;opacity:0;pointer-events:none}
+.pay-opt span{
+  display:block;padding:14px 16px;border-radius:12px;
+  border:1.5px solid rgba(241,218,191,.25);background:rgba(255,251,255,.05);
+  transition:.2s;position:relative;
+}
+.pay-opt input:checked + span{border-color:var(--almond);background:rgba(241,218,191,.14)}
+.pay-opt input:focus-visible + span{outline:2px solid var(--almond);outline-offset:2px}
+.pay-opt b{font-size:1rem}
+.pay-opt em{float:right;font-style:normal;font-weight:800;color:var(--almond);font-size:1.06rem}
+.pay-opt small{display:block;font-size:.86rem;color:rgba(255,251,255,.6);margin-top:3px}
+
+.pay-methods{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px}
+@media(max-width:460px){.pay-methods{grid-template-columns:1fr}}
+.pay-m{cursor:pointer}
+.pay-m input{position:absolute;opacity:0;pointer-events:none}
+.pay-m span{
+  display:block;text-align:center;padding:12px 10px;border-radius:12px;font-size:.92rem;
+  border:1.5px solid rgba(241,218,191,.25);background:rgba(255,251,255,.05);transition:.2s;
+}
+.pay-m input:checked + span{border-color:var(--almond);background:rgba(241,218,191,.14);font-weight:700}
+.pay-m input:focus-visible + span{outline:2px solid var(--almond);outline-offset:2px}
+
+.btn-back{
+  width:100%;margin-top:10px;background:none;border:none;cursor:pointer;
+  color:rgba(255,251,255,.6);font-family:inherit;font-size:.92rem;padding:10px;
+}
+.btn-back:hover{color:var(--almond)}
+
+/* 認養證書 */
+.cert{
+  background:rgba(241,218,191,.12);border:1px solid var(--almond);
+  border-radius:14px;padding:22px;
+}
+.cert-top{display:flex;align-items:center;gap:14px;margin-bottom:18px;
+  padding-bottom:16px;border-bottom:1px dashed rgba(241,218,191,.4)}
+.cert-ico{display:flex;color:var(--almond);transform:scale(1.4)}
+.cert-label{display:block;font-size:.82rem;letter-spacing:.18em;text-transform:uppercase;color:rgba(255,251,255,.6)}
+.cert-top b{font-size:1.5rem;color:var(--almond);letter-spacing:.08em}
+.cert-rows{display:grid;gap:9px}
+.cert-rows > div{display:flex;justify-content:space-between;gap:14px;font-size:.93rem}
+.cert-rows dt{color:rgba(255,251,255,.65);white-space:nowrap}
+.cert-rows dd{text-align:right;font-weight:600}
+.cert-sim{
+  margin-top:16px;padding-top:14px;border-top:1px dashed rgba(241,218,191,.4);
+  font-size:.88rem;color:rgba(255,251,255,.7);text-align:center;
+}
+
+/* ============================================
+   品牌標誌
+   --------------------------------------------
+   Logo 是彩色圖檔（綠／藍／橘），與色票鐵律不同色系。
+   作法：讓 logo 維持原色作為品牌識別，周圍一律用色票中性色，
+   使它成為畫面中唯一的彩色元素而非衝突來源。
+   ============================================ */
+.logo{display:flex;align-items:center;gap:11px}
+.logo img{
+  width:40px;height:40px;flex-shrink:0;
+  filter:drop-shadow(0 2px 6px rgba(0,5,0,.45));
+}
+.logo span{display:inline-block}
+@media(max-width:520px){
+  .logo span{font-size:.95rem;letter-spacing:.08em}
+  .logo img{width:34px;height:34px}
+}
+@media(max-width:380px){
+  .logo span{display:none}      /* 極窄螢幕只留標誌，避免擠壓選單按鈕 */
+  .logo img{width:36px;height:36px}
+}
+
+.foot-brand{display:flex;align-items:flex-start;gap:14px}
+.foot-brand img{width:56px;height:56px;flex-shrink:0}
+
+/* ============================================
+   內部系統（ERP / 溝通者門戶）
+   ============================================ */
+body.app{background:var(--almond-soft)}
+.net-pill{
+  font-size:.88rem;font-weight:700;color:var(--almond);
+  border:1px solid rgba(241,218,191,.4);border-radius:99px;padding:6px 14px;white-space:nowrap;
+}
+.net-pill.off{color:var(--snow);background:rgba(146,129,122,.4);border-color:var(--taupe)}
+
+.pill{
+  display:inline-block;background:var(--coffee);color:var(--almond);
+  font-size:.84rem;font-weight:700;letter-spacing:.06em;
+  padding:2px 9px;border-radius:6px;margin-right:4px;white-space:nowrap;
+}
+.dim{color:var(--taupe-deep)}
+.badge-ok,.badge-wait{
+  display:inline-block;font-size:.84rem;font-weight:700;
+  padding:2px 10px;border-radius:99px;white-space:nowrap;
+}
+.badge-ok  {background:var(--coffee);color:var(--almond)}
+.badge-wait{background:var(--almond-soft);color:var(--coffee);border:1px solid var(--taupe)}
+
+/* KPI 列 */
+.kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(170px,100%),1fr));gap:16px;margin-bottom:30px}
+.kpi-card{
+  background:var(--snow);border-radius:14px;padding:20px;
+  border:1px solid var(--line);box-shadow:0 4px 18px var(--shadow);
+}
+.kpi-card .k{display:block;font-size:.88rem;color:var(--taupe-deep);margin-bottom:4px}
+.kpi-card b{display:block;font-size:1.5rem;color:var(--coffee);line-height:1.25}
+.kpi-card small{display:block;font-size:.84rem;color:var(--taupe-deep);margin-top:4px}
+
+/* 分頁 */
+.tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:22px}
+.tab{
+  border:1px solid var(--taupe);background:var(--snow);color:var(--taupe-deep);
+  padding:10px 18px;border-radius:99px;cursor:pointer;font-family:inherit;
+  font-size:.95rem;font-weight:700;transition:.2s;
+}
+.tab:hover{border-color:var(--coffee);color:var(--coffee)}
+.tab.on{background:var(--coffee);color:var(--almond);border-color:var(--coffee)}
+.tab-pane{display:none}
+.tab-pane.on{display:block}
+.panel-h{font-size:1.15rem;margin-bottom:16px}
+.panel-h small{font-weight:600;color:var(--taupe-deep);font-size:.9rem;margin-left:8px}
+.sub-h{font-size:1rem;margin:26px 0 12px;color:var(--taupe-deep)}
+
+/* 登入畫面 */
+.signin{
+  min-height:100vh;display:flex;align-items:center;justify-content:center;
+  padding:110px 20px 60px;
+  background:linear-gradient(160deg,var(--black),var(--coffee) 65%,var(--coffee-mid));
+}
+.signin-card{
+  background:rgba(255,251,255,.06);border:1px solid rgba(241,218,191,.28);
+  border-radius:var(--radius);padding:34px 30px;max-width:420px;width:100%;
+  color:var(--snow);text-align:center;
+}
+.signin-card img{margin:0 auto 16px;display:block}
+.signin-card h1{font-size:1.42rem;margin-bottom:4px}
+.signin-card .sub{font-size:.9rem;color:rgba(255,251,255,.6);margin-bottom:20px}
+.signin-card form{text-align:left;margin-top:18px}
+.demo-cred{
+  background:rgba(241,218,191,.16);border:1px dashed var(--almond);
+  border-radius:12px;padding:12px;font-size:.95rem;margin-bottom:4px;
+}
+.demo-cred b{color:var(--almond);letter-spacing:.14em;font-size:1.12rem}
+
+/* 門戶 */
+.portal-bar{background:var(--coffee);color:var(--snow);padding:82px 24px 14px}
+.portal-bar .wrap{display:flex;justify-content:space-between;align-items:center;gap:16px}
+.portal-bar .dim{color:rgba(255,251,255,.6);font-size:.88rem;display:block}
+.portal-bar b{color:var(--almond);font-size:1.08rem}
+.portal-bar .btn-back{color:rgba(255,251,255,.75)}
+
+/* 派工單 */
+.jobs{display:grid;gap:14px}
+.job{
+  background:var(--snow);border-radius:14px;padding:18px 20px;
+  border:1px solid var(--line);border-left:4px solid var(--coffee);
+}
+.job-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;gap:10px}
+.job-due{font-size:.88rem;font-weight:700;color:var(--taupe-deep)}
+.job b{display:block;margin-bottom:2px}
+.job .dim{font-size:.92rem}
+.job-trees{margin-top:10px;display:flex;flex-wrap:wrap;gap:5px}
+
+  background:var(--almond-soft);border:1px solid var(--line);color:var(--ink);
+}
+.app .card input::placeholder,.app .card textarea::placeholder{color:var(--taupe-deep)}
+.app .card input:focus,.app .card select:focus,.app .card textarea:focus{outline:2px solid var(--coffee)}
+.app .card .form-note{color:var(--taupe-deep);text-align:left;margin-top:4px}
+
+.thumbs{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.thumbs img{width:74px;height:74px;object-fit:cover;border-radius:10px;border:1px solid var(--taupe)}
+
+/* 回報紀錄 */
+.rep{
+  background:var(--snow);border-radius:14px;padding:16px 18px;
+  border:1px solid var(--line);margin-bottom:12px;
+}
+.rep.pending{border-left:4px solid var(--taupe);background:var(--almond-soft)}
+.rep-top{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px;font-size:.88rem}
+.rep b{display:block;margin-bottom:4px}
+.rep p{font-size:.95rem;color:var(--ink-soft)}
+
+/* 採收標籤 */
+.label-preview{margin:18px 0}
+.label-card{
+  background:var(--snow);border:2px solid var(--coffee);border-radius:10px;
+  padding:16px 18px;max-width:340px;
+}
+.label-head{
+  display:flex;justify-content:space-between;align-items:baseline;
+  border-bottom:2px solid var(--coffee);padding-bottom:8px;margin-bottom:10px;
+}
+.label-head b{font-size:1.6rem;letter-spacing:.1em;color:var(--coffee)}
+.label-head span{font-size:.82rem;font-weight:700;letter-spacing:.1em;color:var(--taupe-deep)}
+.label-body{display:grid;gap:4px}
+.label-body div{display:flex;justify-content:space-between;gap:12px;font-size:.9rem}
+.label-body span{color:var(--taupe-deep)}
+.label-foot{
+  margin-top:10px;padding-top:8px;border-top:1px dashed var(--taupe);
+  font-size:.82rem;color:var(--taupe-deep);text-align:center;
+}
+
+/* 列印時只留標籤 */
+@media print{
+  body *{visibility:hidden}
+  #label-card,#label-card *{visibility:visible}
+  #label-card{position:absolute;left:0;top:0;border-width:1px}
+  nav,footer,.portal-bar{display:none}
 }

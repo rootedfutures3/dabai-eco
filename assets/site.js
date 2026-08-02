@@ -36,6 +36,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('form[data-preorder]').forEach(initPreorderForm);
 
   if (document.getElementById('grid')) initOrchards();
+  if (document.getElementById('tree-grid')) initTrees();
 });
 
 function initPreorderForm(form) {
@@ -140,8 +141,16 @@ const CROP_ICON = {
     </g>
     <path d="M20 9.5V4" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" opacity=".7"/>
   </svg>`,
+  rambutan: `<svg viewBox="0 0 40 40" width="34" height="34" aria-hidden="true">
+    <g stroke="currentColor" stroke-width="1.7" stroke-linecap="round" opacity=".75">
+      <path d="M20 21l-1 -12M20 21l7 -10M20 21l11 -6M20 21l12 3M20 21l9 9
+               M20 21l1 12M20 21l-7 10M20 21l-11 6M20 21l-12 -3M20 21l-9 -9"/>
+    </g>
+    <ellipse cx="20" cy="21" rx="10.5" ry="9.5" fill="currentColor" opacity=".92"/>
+    <ellipse cx="16.5" cy="17.5" rx="2.8" ry="2.2" fill="#FFFBFF" opacity=".35"/>
+  </svg>`,
 };
-const CROP_NAME = { dabai:'Dabai 黑橄欖', durian:'榴槤' };
+const CROP_NAME = { dabai:'Dabai 黑橄欖', durian:'榴槤', rambutan:'紅毛丹' };
 
 const STATUS_TEXT  = { open:'可認養', talking:'洽談中', taken:'已認養' };
 const STATUS_CLASS = { open:'st-open', talking:'st-talking', taken:'st-taken' };
@@ -267,6 +276,259 @@ function initClaimModal(grid) {
   });
 
   closeEl.addEventListener('click', close);
+  modal.addEventListener('click', e => { if (e.target === modal) close(); });
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && modal.classList.contains('open')) close();
+  });
+}
+
+
+/* ============================================================
+   單株果樹資產（Tree ID）—— B2C 包樹認養
+   ------------------------------------------------------------
+   ⚠️ 示範資料（Demo Data）。Phase 1 MVP 先放 36 棵示範樹。
+      正式營運時此陣列應改為由 ERP 後端提供，
+      Tree ID 為資產綁定的唯一鍵（DB=Dabai / DR=榴槤 / RB=紅毛丹）。
+   欄位：[樹號, 作物, 品種, 樹齡, 果園, 地區, 果農, 預估年產量kg, 年認養金RM, 狀態]
+   ============================================================ */
+const TREE_ROWS = [
+  ['DB-001','dabai','在地原生種',34,'Rumah Panjai 上游果園','Sibu','Ak. Jelani 一家',85,420,'available'],
+  ['DB-002','dabai','在地原生種',34,'Rumah Panjai 上游果園','Sibu','Ak. Jelani 一家',78,400,'adopted'],
+  ['DB-003','dabai','在地原生種',31,'Rumah Panjai 上游果園','Sibu','Ak. Jelani 一家',72,390,'available'],
+  ['DB-004','dabai','在地原生種',18,'Nanga Sepit 河谷果園','Kapit','Lim 氏果園（第二代）',64,350,'available'],
+  ['DB-005','dabai','在地原生種',18,'Nanga Sepit 河谷果園','Kapit','Lim 氏果園（第二代）',61,350,'available'],
+  ['DB-006','dabai','在地原生種',17,'Nanga Sepit 河谷果園','Kapit','Lim 氏果園（第二代）',58,340,'reserved'],
+  ['DB-007','dabai','在地原生種',41,'Sarikei 老欉園','Sarikei','Tan 老先生',92,460,'available'],
+  ['DB-008','dabai','在地原生種',41,'Sarikei 老欉園','Sarikei','Tan 老先生',88,450,'adopted'],
+  ['DB-009','dabai','在地原生種',27,'Song 支流果園','Song','Empaling 一家',70,380,'available'],
+  ['DB-010','dabai','在地原生種',27,'Song 支流果園','Song','Empaling 一家',66,370,'available'],
+  ['DB-011','dabai','在地原生種',38,'Kapit 高地老欉','Kapit','Bujang 老欉園',80,440,'available'],
+  ['DB-012','dabai','在地原生種',9,'Serian 混作果園','Serian','Anak Bunsu',32,260,'available'],
+  ['DB-013','dabai','在地原生種',9,'Serian 混作果園','Serian','Anak Bunsu',30,260,'available'],
+  ['DB-014','dabai','在地原生種',31,'Meradong 家族果園','Meradong','Rumah Belaja 長屋',75,410,'adopted'],
+
+  ['DR-001','durian','貓山王 Musang King',12,'Kanowit 坡地果園','Kanowit','Nyawai 家族',48,1200,'available'],
+  ['DR-002','durian','貓山王 Musang King',12,'Kanowit 坡地果園','Kanowit','Nyawai 家族',45,1180,'adopted'],
+  ['DR-003','durian','貓山王 Musang King',11,'Kanowit 坡地果園','Kanowit','Nyawai 家族',42,1150,'available'],
+  ['DR-004','durian','D24',22,'Betong 平原果園','Betong','Rumah Ugap 合作社',66,820,'available'],
+  ['DR-005','durian','D24',22,'Betong 平原果園','Betong','Rumah Ugap 合作社',63,810,'available'],
+  ['DR-006','durian','D24',21,'Betong 平原果園','Betong','Rumah Ugap 合作社',60,800,'reserved'],
+  ['DR-007','durian','紅蝦 Udang Merah',16,'Julau 山腰果園','Julau','Chan 氏兄弟',38,760,'available'],
+  ['DR-008','durian','紅蝦 Udang Merah',16,'Julau 山腰果園','Julau','Chan 氏兄弟',35,750,'available'],
+  ['DR-009','durian','黑刺 Black Thorn',14,'Bintulu 沿海果園','Bintulu','Ngu 家果園',40,980,'available'],
+  ['DR-010','durian','黑刺 Black Thorn',14,'Bintulu 沿海果園','Bintulu','Ngu 家果園',37,960,'adopted'],
+  ['DR-011','durian','D101',7,'Sibu 近郊示範園','Sibu','平台示範園（契作）',22,600,'available'],
+  ['DR-012','durian','D101',7,'Sibu 近郊示範園','Sibu','平台示範園（契作）',20,600,'available'],
+
+  ['RB-001','rambutan','R156 黃金紅毛丹',15,'Serian 混作果園','Serian','Anak Bunsu',110,240,'available'],
+  ['RB-002','rambutan','R156 黃金紅毛丹',15,'Serian 混作果園','Serian','Anak Bunsu',105,240,'available'],
+  ['RB-003','rambutan','R156 黃金紅毛丹',14,'Serian 混作果園','Serian','Anak Bunsu',98,230,'adopted'],
+  ['RB-004','rambutan','R191 甜紅毛丹',19,'Sarikei 老欉園','Sarikei','Tan 老先生',125,260,'available'],
+  ['RB-005','rambutan','R191 甜紅毛丹',19,'Sarikei 老欉園','Sarikei','Tan 老先生',120,260,'available'],
+  ['RB-006','rambutan','R191 甜紅毛丹',18,'Sarikei 老欉園','Sarikei','Tan 老先生',115,250,'reserved'],
+  ['RB-007','rambutan','在地原生種',26,'Song 支流果園','Song','Empaling 一家',140,270,'available'],
+  ['RB-008','rambutan','在地原生種',26,'Song 支流果園','Song','Empaling 一家',132,270,'available'],
+  ['RB-009','rambutan','在地原生種',8,'Sibu 近郊示範園','Sibu','平台示範園（契作）',55,190,'available'],
+  ['RB-010','rambutan','在地原生種',8,'Sibu 近郊示範園','Sibu','平台示範園（契作）',52,190,'available'],
+];
+
+const TREES = TREE_ROWS.map(([id,crop,variety,age,orchard,area,farmer,kg,price,status]) =>
+  ({id,crop,variety,age,orchard,area,farmer,kg,price,status}));
+
+const TREE_STATUS = {
+  available:{t:'開放認養', c:'st-open'},
+  reserved :{t:'保留中',   c:'st-talking'},
+  adopted  :{t:'已認養',   c:'st-taken'},
+};
+
+function initTrees() {
+  const grid  = document.getElementById('tree-grid');
+  const count = document.getElementById('tree-count');
+  const fCrop = document.getElementById('t-crop');
+  const fArea = document.getElementById('t-area');
+  const fPrice= document.getElementById('t-price');
+  const fStat = document.getElementById('t-status');
+  const reset = document.getElementById('t-reset');
+
+  [...new Set(TREES.map(t => t.area))].sort().forEach(a =>
+    fArea.insertAdjacentHTML('beforeend', `<option value="${a}">${a}</option>`));
+
+  const inBand = (p, b) =>
+    !b || (b === 'low' ? p < 400 : b === 'mid' ? p >= 400 && p < 800 : p >= 800);
+
+  const render = () => {
+    const list = TREES.filter(t =>
+      (!fCrop.value || t.crop === fCrop.value) &&
+      (!fArea.value || t.area === fArea.value) &&
+      inBand(t.price, fPrice.value) &&
+      (!fStat.value || t.status === fStat.value));
+
+    const open = list.filter(t => t.status === 'available').length;
+    count.innerHTML = `符合條件：<b>${list.length}</b> 棵　·　其中 <b>${open}</b> 棵開放認養　（示範樹共 ${TREES.length} 棵）`;
+
+    if (!list.length) {
+      grid.innerHTML = `<div class="no-result">找不到符合條件的果樹。試著放寬條件，或
+        <a href="contact.html" style="color:var(--accent);text-decoration:underline">告訴我們你想認養什麼</a>。</div>`;
+      return;
+    }
+
+    grid.innerHTML = list.map(t => `
+      <article class="tree">
+        <div class="tree-photo ${t.crop}">
+          <span class="tree-ico">${CROP_ICON[t.crop]}</span>
+          <span class="tree-id">${t.id}</span>
+          <span class="status ${TREE_STATUS[t.status].c}">${TREE_STATUS[t.status].t}</span>
+        </div>
+        <div class="tree-body">
+          <h3>${CROP_NAME[t.crop]}<span class="tree-variety">${t.variety}</span></h3>
+          <dl class="spec">
+            <div><dt>樹齡</dt><dd>${t.age} 年</dd></div>
+            <div><dt>預估年產量</dt><dd>${t.kg} kg</dd></div>
+          </dl>
+          <p class="tree-where">📍 ${t.orchard}<br>${t.area}, Sarawak · 果農：${t.farmer}</p>
+          <div class="tree-foot">
+            <div class="tree-price"><b>RM ${t.price}</b><span>／年</span></div>
+            <button class="btn-claim" data-tree="${t.id}" ${t.status !== 'available' ? 'disabled' : ''}>
+              ${t.status === 'available' ? '認養這棵' : TREE_STATUS[t.status].t}
+            </button>
+          </div>
+        </div>
+      </article>`).join('');
+  };
+
+  [fCrop, fArea, fPrice, fStat].forEach(el => el.addEventListener('change', render));
+  reset.addEventListener('click', () => {
+    [fCrop, fArea, fPrice, fStat].forEach(el => el.value = '');
+    render();
+  });
+
+  render();
+  initTreeModal(grid);
+}
+
+function initTreeModal(grid) {
+  const modal  = document.getElementById('tree-modal');
+  if (!modal) return;
+  const target = document.getElementById('tree-target');
+  const hidden = document.getElementById('tree-hidden');
+  const form   = document.getElementById('tree-form');
+  const agree  = document.getElementById('agree');
+  const errBox = document.getElementById('tree-err');
+  const payBtn = document.getElementById('pay-btn');
+  let current  = null;   // 目前選中的樹
+
+  const panes = [...modal.querySelectorAll('[data-pane]')];
+  const steps = [...modal.querySelectorAll('.step')];
+  const goStep = n => {
+    panes.forEach(p => p.classList.toggle('on', p.dataset.pane === String(n)));
+    steps.forEach(p => p.classList.toggle('on', Number(p.dataset.step) <= n));
+  };
+
+  const close = () => { modal.classList.remove('open'); document.body.style.overflow = ''; };
+
+  /* ---- 開啟：從樹卡帶入資料 ---- */
+  grid.addEventListener('click', e => {
+    const btn = e.target.closest('[data-tree]');
+    if (!btn || btn.disabled) return;
+    const t = TREES.find(x => x.id === btn.dataset.tree);
+    if (!t) return;
+    current = t;
+
+    target.innerHTML = `
+      <b>${t.id} · ${CROP_NAME[t.crop]}（${t.variety}）</b>
+      樹齡 ${t.age} 年 · 預估年產量 ${t.kg} kg<br>
+      ${t.orchard}，${t.area} · 果農：${t.farmer}<br>
+      <span class="modal-price">年認養金 RM ${t.price}</span>`;
+    hidden.value = `${t.id}｜${CROP_NAME[t.crop]} ${t.variety}｜RM ${t.price}/年`;
+    document.getElementById('amt-deposit').textContent = `RM ${Math.round(t.price / 2)}`;
+    document.getElementById('amt-full').textContent    = `RM ${t.price}`;
+
+    form.reset(); agree.checked = false;
+    errBox.style.display = 'none';
+    form.style.display = 'grid';
+    goStep(1);
+    modal.classList.add('open');
+    document.body.style.overflow = 'hidden';
+    form.querySelector('input[name="name"]').focus();
+  });
+
+  /* ---- 步驟 1 → 2：驗證合約勾選 ---- */
+  form.addEventListener('submit', e => {
+    e.preventDefault();
+    if (form.querySelector('[name="_gotcha"]').value) return;
+    if (!agree.checked) {
+      errBox.textContent = '請先閱讀並勾選同意認養合約要點，才能繼續。';
+      errBox.style.display = 'block';
+      agree.focus();
+      return;
+    }
+    errBox.style.display = 'none';
+    goStep(2);
+    modal.scrollTop = 0;
+  });
+
+  document.getElementById('pay-back').addEventListener('click', () => goStep(1));
+
+  /* ---- 步驟 2 → 3：模擬付款 ---- */
+  payBtn.addEventListener('click', async () => {
+    if (!current) return;
+    const amtMode = modal.querySelector('input[name="payamt"]:checked').value;
+    const channel = modal.querySelector('input[name="paych"]:checked').value;
+    const paid    = amtMode === 'full' ? current.price : Math.round(current.price / 2);
+
+    payBtn.disabled = true;
+    payBtn.textContent = '模擬付款處理中…';
+    await new Promise(r => setTimeout(r, 1100));   // 模擬金流往返
+
+    const fd    = new FormData(form);
+    const today = new Date().toISOString().slice(0, 10);
+    const order = {
+      no: Store.nextOrderNo(today.slice(0, 4)),
+      date: today,
+      treeId: current.id,
+      crop: current.crop,
+      customer: fd.get('name'),
+      email: fd.get('email'),
+      phone: fd.get('phone'),
+      amount: current.price,
+      paid,
+      channel,
+      status: amtMode === 'full' ? '已付全額' : '已付訂金',
+    };
+    Store.addOrder(order);
+
+    // 讓列表即時反映（僅本次瀏覽，重整後回到示範狀態）
+    current.status = 'adopted';
+
+    document.getElementById('cert').innerHTML = `
+      <div class="cert-top">
+        <span class="cert-ico">${CROP_ICON[current.crop]}</span>
+        <div>
+          <span class="cert-label">認養證書 · Adoption Certificate</span>
+          <b>${current.id}</b>
+        </div>
+      </div>
+      <dl class="cert-rows">
+        <div><dt>認養人</dt><dd>${order.customer}</dd></div>
+        <div><dt>果樹</dt><dd>${CROP_NAME[current.crop]}　${current.variety}</dd></div>
+        <div><dt>果園</dt><dd>${current.orchard}，${current.area}</dd></div>
+        <div><dt>果農</dt><dd>${current.farmer}</dd></div>
+        <div><dt>認養期間</dt><dd>${today} 起 12 個月</dd></div>
+        <div><dt>訂單編號</dt><dd>${order.no}</dd></div>
+        <div><dt>付款方式</dt><dd>${channel}</dd></div>
+        <div><dt>本次支付</dt><dd><b>RM ${paid}</b>${amtMode === 'full' ? '（全額）' : ` / RM ${current.price}（訂金）`}</dd></div>
+      </dl>
+      <p class="cert-sim">🧪 模擬交易 — 未發生任何實際扣款</p>`;
+
+    payBtn.disabled = false;
+    payBtn.textContent = '模擬付款';
+    goStep(3);
+    modal.scrollTop = 0;
+  });
+
+  document.getElementById('cert-done').addEventListener('click', () => { close(); initTrees(); });
+
+  document.getElementById('tree-close').addEventListener('click', close);
   modal.addEventListener('click', e => { if (e.target === modal) close(); });
   document.addEventListener('keydown', e => {
     if (e.key === 'Escape' && modal.classList.contains('open')) close();

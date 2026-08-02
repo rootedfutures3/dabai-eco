@@ -3,67 +3,96 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>DABAI.ECO｜砂拉越果農 × 收購商媒合平台</title>
-<meta name="description" content="解決砂拉越 Dabai 與榴槤產量過剩：果農上架果園與樹況資訊，收購商認養果樹或整片果園，農務顧問全程把關品質。">
+<title>ROOTED FUTURES｜扎根原鄉的永續果樹平台 · Song, Sarawak</title>
+<meta name="description" content="扎根砂拉越 Song 的社會企業。以 Dabai、榴槤、紅毛丹三寶為核心，用包樹認養把收益在開花前送到果農手上，並以農務顧問確保品質與永續耕作。">
+<link rel="icon" type="image/png" sizes="32x32" href="assets/img/favicon-32.png">
+<link rel="apple-touch-icon" href="assets/img/logo-180.png">
 <link rel="stylesheet" href="assets/style.css">
+<script src="assets/store.js" defer></script>
 <script src="assets/site.js" defer></script>
 <style>
   header.hero{
     min-height:100vh;display:flex;align-items:center;
     background:
-      radial-gradient(ellipse 80% 60% at 70% 20%, rgba(241,218,191,.15), transparent 60%),
-      radial-gradient(ellipse 60% 50% at 20% 80%, rgba(146,129,122,.18), transparent 60%),
-      linear-gradient(160deg, var(--black) 0%, var(--coffee) 55%, #362417 100%);
-    color:var(--snow);
-    padding:120px 24px 80px;
+      radial-gradient(ellipse 80% 60% at 72% 22%, rgba(241,218,191,.16), transparent 62%),
+      radial-gradient(ellipse 60% 50% at 18% 82%, rgba(146,129,122,.2), transparent 62%),
+      linear-gradient(160deg, var(--black) 0%, var(--coffee) 58%, var(--coffee-mid) 100%);
+    color:var(--snow);padding:124px 24px 84px;
   }
-  .hero-grid{display:grid;grid-template-columns:1.15fr .85fr;gap:48px;align-items:center;max-width:1080px;margin:0 auto}
-  @media(max-width:820px){.hero-grid{grid-template-columns:1fr}}
+  .hero-grid{display:grid;grid-template-columns:1.12fr .88fr;gap:52px;align-items:center;max-width:1080px;margin:0 auto}
   .hero-tag{
-    display:inline-flex;align-items:center;gap:8px;
+    display:inline-flex;align-items:center;gap:9px;
     border:1px solid rgba(241,218,191,.4);border-radius:99px;
     padding:6px 16px;font-size:.9rem;color:var(--almond);margin-bottom:22px;
   }
-  .hero-tag::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--taupe)}
-  header.hero h1{font-size:clamp(2.2rem,5.5vw,3.6rem);margin-bottom:20px}
+  .hero-tag::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--almond)}
+  header.hero h1{font-size:clamp(2.1rem,5.2vw,3.4rem);margin-bottom:20px}
   header.hero h1 .accent{color:var(--almond)}
-  .hero-desc{font-size:1.12rem;color:rgba(255,251,255,.8);max-width:480px;margin-bottom:34px}
-  .hero-stats{display:flex;gap:36px;margin-top:48px;flex-wrap:wrap}
+  .hero-desc{font-size:1.12rem;color:rgba(255,251,255,.82);max-width:490px;margin-bottom:34px}
+  .hero-stats{display:flex;gap:36px;margin-top:46px;flex-wrap:wrap}
   .stat b{display:block;font-size:1.5rem;color:var(--almond)}
-  .stat span{font-size:.9rem;color:rgba(255,251,255,.65)}
-  .hero-art{display:flex;justify-content:center}
-  .hero-art svg{width:100%;max-width:380px;filter:drop-shadow(0 24px 48px rgba(0,0,0,.35))}
+  .stat span{font-size:.9rem;color:rgba(255,251,255,.66)}
+  .hero-mark{display:flex;justify-content:center}
+  .hero-mark img{width:100%;max-width:330px;filter:drop-shadow(0 26px 52px rgba(0,5,0,.5))}
 
-  .nav-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:22px}
-  .nav-card{
-    background:var(--snow);border-radius:var(--radius);padding:30px;
-    box-shadow:0 6px 24px rgba(54,36,23,.08);transition:.25s;
-    display:flex;flex-direction:column;border-top:4px solid var(--accent);
+  .trio{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(250px,100%),1fr));gap:24px}
+  .trio-card{
+    background:var(--snow);border-radius:var(--radius);overflow:hidden;
+    box-shadow:0 6px 24px var(--shadow);border:1px solid var(--line);
+    display:flex;flex-direction:column;transition:.25s;
   }
-  .nav-card:hover{transform:translateY(-6px);box-shadow:0 14px 34px rgba(54,36,23,.14)}
-  .nav-card .ico{font-size:1.8rem;margin-bottom:12px}
-  .nav-card h3{font-size:1.15rem;margin-bottom:8px}
-  .nav-card p{font-size:.96rem;color:var(--ink-soft);flex:1}
-  .nav-card .more{margin-top:16px;font-size:.93rem;font-weight:700;color:var(--accent)}
+  .trio-card:hover{transform:translateY(-6px);box-shadow:0 14px 34px var(--shadow-lg)}
+  .trio-top{height:120px;display:flex;align-items:center;justify-content:center;color:var(--almond)}
+  .trio-top.a{background:linear-gradient(135deg,#000500,#362417)}
+  .trio-top.b{background:linear-gradient(135deg,#56453A,#76655C)}
+  .trio-top.c{background:linear-gradient(135deg,#362417,#56453A)}
+  .trio-top svg{transform:scale(1.9)}
+  .trio-body{padding:24px;flex:1;display:flex;flex-direction:column}
+  .trio-body h3{font-size:1.15rem}
+  .trio-body .en{font-size:.86rem;letter-spacing:.1em;text-transform:uppercase;color:var(--taupe-deep);font-weight:700;margin:2px 0 10px}
+  .trio-body p{font-size:.96rem;color:var(--ink-soft);flex:1}
+  .trio-body .more{margin-top:14px;font-size:.93rem;font-weight:700;color:var(--coffee)}
 
-  /* --- RWD --- */
-  .nav-grid{grid-template-columns:repeat(auto-fit,minmax(min(230px,100%),1fr))}
+  .esg-band{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(240px,100%),1fr));gap:22px}
+  .esg-box{
+    background:rgba(255,251,255,.06);border:1px solid rgba(241,218,191,.22);
+    border-radius:var(--radius);padding:28px;
+  }
+  .esg-box .letter{
+    display:inline-flex;align-items:center;justify-content:center;
+    width:42px;height:42px;border-radius:12px;
+    background:var(--almond);color:var(--coffee);
+    font-size:1.28rem;font-weight:800;margin-bottom:14px;
+  }
+  .esg-box h3{font-size:1.06rem;margin-bottom:8px}
+  .esg-box p{font-size:.95rem;color:rgba(255,251,255,.74)}
+
+  .path{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(230px,100%),1fr));gap:22px}
+  .path-card{
+    background:var(--snow);border-radius:var(--radius);padding:30px;
+    box-shadow:0 6px 24px var(--shadow);border:1px solid var(--line);
+    display:flex;flex-direction:column;border-top:4px solid var(--coffee);transition:.25s;
+  }
+  .path-card:hover{transform:translateY(-6px);box-shadow:0 14px 34px var(--shadow-lg)}
+  .path-card .ico{font-size:1.8rem;margin-bottom:12px}
+  .path-card h3{font-size:1.12rem;margin-bottom:8px}
+  .path-card p{font-size:.96rem;color:var(--ink-soft);flex:1}
+  .path-card .more{margin-top:16px;font-size:.93rem;font-weight:700;color:var(--coffee)}
+
   @media(max-width:820px){
     .hero-grid{grid-template-columns:1fr;gap:34px}
-    .hero-art{order:-1}                        /* 手機把插圖移到標題上方 */
-    .hero-art svg{max-width:210px}
-    .hero-stats{gap:24px;margin-top:34px}
+    .hero-mark{order:-1}
+    .hero-mark img{max-width:190px}
   }
   @media(max-width:640px){
     header.hero{padding:104px 18px 56px;min-height:auto}
-    .hero-desc{font-size:1.02rem}
-    .hero-stats{gap:18px 22px;margin-top:28px}
-    .stat{flex:1 1 calc(33% - 22px);min-width:88px}
-    .nav-card{padding:24px 22px}
+    .hero-desc{font-size:1.04rem}
+    .hero-stats{gap:20px 24px;margin-top:30px}
+    .stat{flex:1 1 calc(33% - 24px);min-width:90px}
   }
   @media(max-width:380px){
     header.hero{padding:96px 14px 48px}
-    .hero-art svg{max-width:170px}
+    .hero-mark img{max-width:150px}
     .stat{flex:1 1 100%}
   }
 </style>
@@ -71,15 +100,16 @@
 <body>
 
 <nav>
-  <a class="logo" href="index.html">DABAI<em>.</em>ECO</a>
+  <a class="logo" href="index.html"><img src="assets/img/logo.png" alt="" width="40" height="40"><span>ROOTED<em>&nbsp;</em>FUTURES</span></a>
   <button class="nav-toggle" aria-label="開關選單" aria-expanded="false">☰</button>
   <div class="nav-links">
     <a href="index.html" class="active">首頁</a>
-    <a href="platform.html">媒合平台</a>
+    <a href="platform.html">平台介紹</a>
+    <a href="trees.html">包樹認養</a>
     <a href="orchards.html">果園列表</a>
-    <a href="dabai.html">認識 Dabai</a>
-    <a href="products.html">產品</a>
-    <a href="sustainability.html">永續藍圖</a>
+    <a href="esg.html">企業 ESG</a>
+    <a href="dabai.html">認識三寶</a>
+    <a href="sustainability.html">永續承諾</a>
   </div>
   <a class="nav-cta" href="contact.html">加入平台</a>
 </nav>
@@ -87,234 +117,224 @@
 <header class="hero">
   <div class="hero-grid">
     <div>
-      <span class="hero-tag">砂拉越 · 果農 × 收購商媒合平台</span>
-      <h1>果子爛在樹上，<br><span class="accent">工廠卻搶不到貨</span></h1>
+      <span class="hero-tag">Social Enterprise · Song, Sarawak</span>
+      <h1>把根扎在原鄉，<br><span class="accent">讓收成有人接住</span></h1>
       <p class="hero-desc">
-        砂拉越的 Dabai 與榴槤產季集中、保存期短，果農賣不掉，加工廠卻找不到穩定貨源。
-        我們把兩邊接起來 —— 果農上架果園與樹況資訊，收購商依資料認養果樹或整片果園，
-        農務顧問下田確保這批貨真的長得出來。
+        砂拉越的 Dabai、榴槤與紅毛丹產季集中、保存期短。果子熟了卻沒人收，只能爛在樹上；
+        另一頭的加工廠卻年年搶不到穩定貨源。我們用「一樹一碼」把兩端接起來 ——
+        認養金在開花前就送到果農手上。
       </p>
       <div class="btn-row">
-        <a class="btn btn-gold" href="orchards.html">瀏覽可認養果園</a>
-        <a class="btn btn-ghost" href="platform.html">平台怎麼運作</a>
+        <a class="btn btn-gold" href="trees.html">認養一棵樹</a>
+        <a class="btn btn-ghost" href="esg.html">企業 ESG 方案</a>
       </div>
       <div class="hero-stats">
-        <div class="stat"><b>2</b><span>邊媒合：果農 × 收購商</span></div>
-        <div class="stat"><b>3</b><span>種認養規模</span></div>
-        <div class="stat"><b>6</b><span>項農務顧問服務</span></div>
+        <div class="stat"><b>3</b><span>原鄉三寶</span></div>
+        <div class="stat"><b>36</b><span>棵示範認養樹</span></div>
+        <div class="stat"><b>55%</b><span>認養金直達果農</span></div>
       </div>
     </div>
-    <div class="hero-art">
-      <svg viewBox="0 0 360 360" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Dabai 黑橄欖插畫">
-        <defs>
-          <radialGradient id="fruit" cx="35%" cy="30%" r="80%">
-            <stop offset="0%" stop-color="#76655C"/>
-            <stop offset="45%" stop-color="#362417"/>
-            <stop offset="100%" stop-color="#000500"/>
-          </radialGradient>
-          <radialGradient id="fruit2" cx="35%" cy="30%" r="80%">
-            <stop offset="0%" stop-color="#92817A"/>
-            <stop offset="50%" stop-color="#56453A"/>
-            <stop offset="100%" stop-color="#000500"/>
-          </radialGradient>
-          <linearGradient id="leaf" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stop-color="#F1DABF"/>
-            <stop offset="100%" stop-color="#92817A"/>
-          </linearGradient>
-        </defs>
-        <circle cx="180" cy="180" r="150" fill="rgba(241,218,191,.07)"/>
-        <circle cx="180" cy="180" r="118" fill="rgba(241,218,191,.06)"/>
-        <path d="M180 60 C 180 100, 176 130, 172 150" stroke="#56453A" stroke-width="6" fill="none" stroke-linecap="round"/>
-        <path d="M178 92 C 140 70, 104 78, 84 108 C 116 122, 156 116, 178 92 Z" fill="url(#leaf)"/>
-        <path d="M180 84 C 214 58, 252 62, 276 88 C 248 108, 206 106, 180 84 Z" fill="url(#leaf)" opacity=".85"/>
-        <ellipse cx="130" cy="212" rx="52" ry="64" fill="url(#fruit2)"/>
-        <ellipse cx="113" cy="186" rx="14" ry="20" fill="rgba(255,255,255,.18)"/>
-        <ellipse cx="196" cy="228" rx="58" ry="72" fill="url(#fruit)"/>
-        <ellipse cx="177" cy="198" rx="15" ry="23" fill="rgba(255,255,255,.2)"/>
-        <ellipse cx="258" cy="204" rx="44" ry="56" fill="url(#fruit2)" opacity=".92"/>
-        <ellipse cx="244" cy="182" rx="11" ry="16" fill="rgba(255,255,255,.16)"/>
-      </svg>
+    <div class="hero-mark">
+      <img src="assets/img/logo.png" alt="ROOTED FUTURES 標誌" width="330" height="330">
     </div>
   </div>
 </header>
 
+<!-- 品牌起源 -->
 <section>
-  <div class="wrap">
-    <div class="reveal">
-      <span class="eyebrow">The Platform</span>
-      <h2 class="sec-title">產量過剩，不等於有人買</h2>
-      <p class="sec-sub">
-        問題從來不是產量不夠，是連不起來。我們做的是一套雙邊媒合系統 ——
-        一邊接住賣不掉的果農，一邊接住找不到貨的收購商。
-      </p>
-    </div>
-
-    <div class="side-grid reveal">
-      <div class="side-card">
-        <span class="who">Supply · 供給端</span>
-        <h3>果農的困境</h3>
-        <ul class="pain-list">
-          <li>產季一到全部同時成熟，被中盤商壓價</li>
-          <li>沒有通路，賣不掉就爛在樹上</li>
-          <li>不懂施肥與病蟲害管理，收成逐年變差</li>
-          <li>要等收成後才拿得到錢，週轉困難</li>
-        </ul>
-      </div>
-
-      <div class="side-mid">
-        <div class="arrows">⇄</div>
-        <span class="badge">DABAI.ECO 平台</span>
-        <div class="arrows">⇄</div>
-      </div>
-
-      <div class="side-card buyer">
-        <span class="who">Demand · 需求端</span>
-        <h3>收購商的困境</h3>
-        <ul class="pain-list">
-          <li>找不到穩定貨源，產線排程無法預測</li>
-          <li>不知道果園在哪、樹況如何，只能靠中間人</li>
-          <li>品質規格不一致，同批貨落差大</li>
-          <li>沒有產銷履歷，過不了出口與 ESG 稽核</li>
-        </ul>
-      </div>
-    </div>
-
-    <div class="btn-row reveal" style="margin-top:36px">
-      <a class="btn btn-gold" href="orchards.html">瀏覽果園列表</a>
-      <a class="btn btn-outline" href="platform.html">看完整平台架構</a>
-    </div>
-  </div>
-</section>
-
-<section style="background:var(--almond-soft)">
   <div class="wrap">
     <div class="two-col reveal">
       <div>
-        <span class="eyebrow">What is Dabai</span>
-        <h2 class="sec-title">一顆需要「泡熱水」<br>才懂的果實</h2>
+        <span class="eyebrow">Our Roots</span>
+        <h2 class="sec-title">為什麼叫<br>ROOTED FUTURES</h2>
         <p class="lead">
-          Dabai（學名 <i>Canarium odontophyllum</i>），中文常稱為砂拉越黑橄欖或婆羅洲橄欖，
-          是馬來西亞砂拉越珍貴的季節性特產。果實呈橢圓形，成熟時果皮由白轉為深紫色至黑色。
+          Rooted 是扎根 —— 根扎在 Song 這片土地，扎在長屋部落的果樹與人。
+          Futures 是未來，也是複數：果農的未來、社區的未來、這些老欉的未來，
+          不該只有「賤價賣掉」一種結局。
         </p>
         <p class="lead" style="margin-top:16px">
-          生吃堅硬且帶苦澀，必須先用熱水浸泡約 10 分鐘軟化才能食用 ——
-          軟化後的果肉綿密濃郁，風味近似酪梨或乳酪。
+          我們是社會企業，不是慈善機構。直接給錢只能短暫解決問題，
+          唯有讓果農靠自己的樹賺到合理的錢，這件事才走得下去。
         </p>
-        <div class="btn-row" style="margin-top:28px">
-          <a class="btn btn-outline" href="dabai.html">看完整介紹：由來 · 吃法 · 用途</a>
+        <div class="btn-row" style="margin-top:26px">
+          <a class="btn btn-outline" href="platform.html">看平台怎麼運作</a>
         </div>
       </div>
       <div>
         <div class="dark-card">
-          <h3>為什麼是 Dabai？</h3>
-          <p>Dabai 保存期極短、離開產地便難以品嚐，多數果核與副產物被當作廢棄物。這既是痛點，也是機會 —— 我們用食品科技延長保存、用循環加工把「廢棄」變成「價值」。</p>
+          <h3>🌏 我們在 Song</h3>
+          <p>Song 是砂拉越拉讓江中游的小鎮，四周是伊班族長屋與果園。這裡的果樹很多是祖先種的，樹況全看天，收購價全看中盤商臉色。</p>
         </div>
         <div class="dark-card">
-          <h3>從長屋到餐桌</h3>
-          <p>與砂拉越各長屋（Longhouse）屋長合作契作採購，收益直接回到部落社區，建立外來競品無法複製的在地供應鏈護城河。</p>
+          <h3>🎯 我們解決的問題</h3>
+          <p>產季一到全部同時成熟 → 價格崩盤 → 賣不掉就爛掉。同時加工廠找不到穩定貨源而停線。不是產量不夠，是連不起來。</p>
+        </div>
+        <div class="dark-card">
+          <h3>🔑 我們的方法</h3>
+          <p>一樹一碼（Tree ID）綁定資產、認養制讓錢在開花前到位、農務顧問確保品質撐得住、全程建檔形成可稽核的產銷履歷。</p>
         </div>
       </div>
     </div>
   </div>
 </section>
 
-<section>
+<!-- 三寶 -->
+<section style="background:var(--almond-soft)">
   <div class="wrap">
     <div class="reveal">
-      <span class="eyebrow">Explore</span>
-      <h2 class="sec-title">從這裡開始了解我們</h2>
-      <p class="sec-sub">從一套媒合系統，到一整條全值化利用的產業鏈。</p>
+      <span class="eyebrow">The Three Treasures</span>
+      <h2 class="sec-title">原鄉三寶</h2>
+      <p class="sec-sub">Dabai、榴槤、紅毛丹 —— 三種產季錯開的雨林果實，構成全年不斷檔的產銷節奏。</p>
     </div>
-    <div class="nav-grid reveal">
-      <a class="nav-card" href="platform.html">
-        <span class="ico">⇄</span>
-        <h3>媒合平台</h3>
-        <p>雙邊如何運作、三種認養規模、六項農務顧問服務，以及平台的收益模式。</p>
-        <span class="more">看平台架構 →</span>
+    <div class="trio reveal">
+      <a class="trio-card" href="dabai.html">
+        <div class="trio-top a"><svg viewBox="0 0 40 40" width="34" height="34" aria-hidden="true">
+          <ellipse cx="20" cy="24" rx="11" ry="14" fill="currentColor" opacity=".9"/>
+          <ellipse cx="16" cy="18" rx="3" ry="4.5" fill="#FFFBFF" opacity=".35"/>
+          <path d="M20 11c0-4 2-7 5-8-1 4-2 6-5 8z" fill="currentColor" opacity=".65"/></svg></div>
+        <div class="trio-body">
+          <h3>Dabai 黑橄欖</h3>
+          <div class="en">Canarium odontophyllum</div>
+          <p>砂拉越限定的雨林珍果。泡熱水 10 分鐘軟化後，果肉綿密濃郁近似酪梨。果核可做 Kuaci 零嘴，全果零廢棄。</p>
+          <span class="more">深入了解 →</span>
+        </div>
       </a>
-      <a class="nav-card" href="orchards.html">
-        <span class="ico">🌳</span>
-        <h3>果園列表</h3>
-        <p>依作物、地區、樹齡與健康評級篩選果園，找到合適的直接登記認養。</p>
-        <span class="more">瀏覽果園 →</span>
+      <a class="trio-card" href="dabai.html">
+        <div class="trio-top b"><svg viewBox="0 0 40 40" width="34" height="34" aria-hidden="true">
+          <circle cx="20" cy="22" r="12.5" fill="currentColor" opacity=".9"/>
+          <g fill="#FFFBFF" opacity=".45">
+            <path d="M20 6.5l2.2 4.2h-4.4z"/><path d="M33.5 20.5l-4.2 2.2v-4.4z"/>
+            <path d="M6.5 22.5l4.2-2.2v4.4z"/><path d="M20 37.5l-2.2-4.2h4.4z"/>
+            <path d="M29.6 12.4l-1.3 4.5-3.1-3.1z"/><path d="M10.4 32.6l1.3-4.5 3.1 3.1z"/>
+            <path d="M29.6 32.6l-4.5-1.3 3.1-3.1z"/><path d="M10.4 12.4l4.5 1.3-3.1 3.1z"/></g>
+          <path d="M20 9.5V4" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" opacity=".7"/></svg></div>
+        <div class="trio-body">
+          <h3>榴槤</h3>
+          <div class="en">Durian</div>
+          <p>貓山王、D24、黑刺、紅蝦等品種。價值最高但產季集中，過剩與過熟的損耗最嚴重 —— 也是認養制最能發揮的地方。</p>
+          <span class="more">深入了解 →</span>
+        </div>
       </a>
-      <a class="nav-card" href="dabai.html">
-        <span class="ico">🫒</span>
-        <h3>認識 Dabai</h3>
-        <p>它的由來、正確吃法（別忘了泡熱水 10 分鐘），以及果肉、果核可以怎麼用。</p>
-        <span class="more">深入了解 →</span>
-      </a>
-      <a class="nav-card" href="products.html">
-        <span class="ico">🎁</span>
-        <h3>產品線</h3>
-        <p>生鮮直送、Dabai Kuaci、Dabai Paste 與葉材循環包裝 —— 全值化利用的產品家族。</p>
-        <span class="more">看產品 →</span>
-      </a>
-      <a class="nav-card" href="sustainability.html">
-        <span class="ico">🌏</span>
-        <h3>永續藍圖</h3>
-        <p>八階段推進計畫、SDG 11／12／17 雙核心策略，以及以物換物的社區機制。</p>
-        <span class="more">看藍圖 →</span>
+      <a class="trio-card" href="dabai.html">
+        <div class="trio-top c"><svg viewBox="0 0 40 40" width="34" height="34" aria-hidden="true">
+          <g stroke="currentColor" stroke-width="1.7" stroke-linecap="round" opacity=".75">
+            <path d="M20 21l-1 -12M20 21l7 -10M20 21l11 -6M20 21l12 3M20 21l9 9
+                     M20 21l1 12M20 21l-7 10M20 21l-11 6M20 21l-12 -3M20 21l-9 -9"/></g>
+          <ellipse cx="20" cy="21" rx="10.5" ry="9.5" fill="currentColor" opacity=".92"/>
+          <ellipse cx="16.5" cy="17.5" rx="2.8" ry="2.2" fill="#FFFBFF" opacity=".35"/></svg></div>
+        <div class="trio-body">
+          <h3>紅毛丹</h3>
+          <div class="en">Rambutan</div>
+          <p>產量大、單價低，最容易被整車倒掉。適合小額認養入門，也是加工品（果乾、果醬）的主力原料。</p>
+          <span class="more">深入了解 →</span>
+        </div>
       </a>
     </div>
   </div>
 </section>
 
+<!-- ESG 承諾 -->
 <section class="dark-section">
   <div class="wrap">
     <div class="reveal">
-      <span class="eyebrow">Sustainability</span>
-      <h2 class="sec-title">雙核心永續策略</h2>
-      <p class="sec-sub">我們以 SDG 12 的產品作為商業獲利引擎，以 SDG 11 的社區場域作為永續供應鏈與文化根基，並透過 SDG 17 的跨界推動達成規模擴張。</p>
+      <span class="eyebrow">Our ESG Commitment</span>
+      <h2 class="sec-title">永續承諾：<br>能被追問的那種</h2>
+      <p class="sec-sub">
+        我們不寫「保護環境」這種空話。每一項主張都對應具體做法與可追蹤的數字 ——
+        這是社會企業該有的自我要求，也是我們對抗漂綠質疑的方式。
+      </p>
     </div>
-    <div class="sdg-grid reveal">
-      <div class="sdg-card sdg-12">
-        <span class="sdg-num">SDG 12</span>
-        <h3>負責任的消費與生產</h3>
-        <span class="sdg-role">獲利引擎</span>
-        <p>全果利用循環加工、葉材低碳包裝、零有害添加。目標：廢棄物轉化率 80%。</p>
+    <div class="esg-band reveal">
+      <div class="esg-box">
+        <span class="letter">E</span>
+        <h3>環境 Environmental</h3>
+        <p>保育既有雨林果樹而非開墾新地、減少過剩果實腐敗的甲烷排放、以葉材與編織提籃取代塑膠包裝、全果利用達成零廢棄。</p>
       </div>
-      <div class="sdg-card sdg-11">
-        <span class="sdg-num">SDG 11</span>
-        <h3>永續城鄉與社區</h3>
-        <span class="sdg-role">永續根基</span>
-        <p>長屋契作供應鏈、文化保存與在地就業。目標：社區收益提升 20%。</p>
+      <div class="esg-box">
+        <span class="letter">S</span>
+        <h3>社會 Social</h3>
+        <p>認養金 55% 於開花前直達果農、創造溝通者與採收班的在地就業、保存長屋文化與農法知識、收益回饋社區永續基金。</p>
       </div>
-      <div class="sdg-card sdg-17">
-        <span class="sdg-num">SDG 17</span>
-        <h3>全球夥伴關係</h3>
-        <span class="sdg-role">規模擴張</span>
-        <p>連結企業 ESG 採購、政府與學研機構，將淨利的一部分撥入社區永續基金。</p>
+      <div class="esg-box">
+        <span class="letter">G</span>
+        <h3>治理 Governance</h3>
+        <p>一樹一碼的資產綁定、每次農務作業建檔、資金流向公開透明、不做無法佐證的碳中和聲明。</p>
       </div>
     </div>
-    <div class="btn-row reveal" style="margin-top:40px">
-      <a class="btn btn-ghost" href="sustainability.html">看完整八階段藍圖</a>
+    <div class="loop-note reveal">
+      <b>我們對齊的 SDG：</b>
+      SDG 12（負責任的消費與生產）是獲利引擎、SDG 11（永續城鄉與社區）是永續根基、
+      SDG 17（全球夥伴關係）是規模擴張的紐帶。
+      <a href="sustainability.html" style="color:var(--almond);text-decoration:underline">看完整永續藍圖與 KPI →</a>
+    </div>
+  </div>
+</section>
+
+<!-- 兩條路 -->
+<section>
+  <div class="wrap">
+    <div class="reveal">
+      <span class="eyebrow">Start Here</span>
+      <h2 class="sec-title">你想怎麼參與？</h2>
+      <p class="sec-sub">不論你是個人、企業，還是有果園的果農，都有對應的入口。</p>
+    </div>
+    <div class="path reveal">
+      <a class="path-card" href="trees.html">
+        <span class="ico">🌳</span>
+        <h3>我想認養一棵樹</h3>
+        <p>個人包樹認養。挑一棵有 Tree ID 的樹，看得到果農與果園，收成直送到你手上。</p>
+        <span class="more">看開放認養的樹 →</span>
+      </a>
+      <a class="path-card" href="esg.html">
+        <span class="ico">🏢</span>
+        <h3>我代表企業</h3>
+        <p>ESG 綠色包樹、原料契作包銷或大宗採購，附可寫入永續報告書的量化數據。</p>
+        <span class="more">索取企業提案 →</span>
+      </a>
+      <a class="path-card" href="orchards.html">
+        <span class="ico">🏭</span>
+        <h3>我要找穩定貨源</h3>
+        <p>以果園為單位瀏覽，依作物、地區、樹齡與顧問健康評級篩選整片認養。</p>
+        <span class="more">瀏覽果園列表 →</span>
+      </a>
+      <a class="path-card" href="contact.html">
+        <span class="ico">🌱</span>
+        <h3>我有果園想上架</h3>
+        <p>登記後由農務顧問實地勘查、建立果園檔案並上架，上架與基礎勘查不收費。</p>
+        <span class="more">登記我的果園 →</span>
+      </a>
     </div>
   </div>
 </section>
 
 <section class="cta-band">
   <div class="wrap">
-    <span class="eyebrow">Pre-order</span>
-    <h2 class="sec-title">產季限定，先搶先贏</h2>
-    <p>Dabai 一年只有一季，產量稀有。留下資料，開賣時我們第一時間通知你，享早鳥優先配額。</p>
+    <span class="eyebrow">Phase 1 MVP</span>
+    <h2 class="sec-title">這是一個正在長出來的系統</h2>
+    <p>
+      我們正在做市場驗證。果園與果樹資料為示範用途，結帳為模擬流程 ——
+      但問題是真的，果農是真的，我們也準備好把它做成真的。
+    </p>
     <div class="btn-row">
-      <a class="btn btn-gold" href="contact.html">登記預購意願</a>
+      <a class="btn btn-gold" href="trees.html">看看認養怎麼運作</a>
+      <a class="btn btn-ghost" href="contact.html">聯絡我們</a>
     </div>
   </div>
 </section>
 
 <footer>
   <div class="foot-grid">
-    <div><b>DABAI.ECO</b><br>果農 × 收購商媒合平台<br>Sarawak, Malaysia</div>
+    <div class="foot-brand"><img src="assets/img/logo.png" alt="ROOTED FUTURES 標誌" width="56" height="56"><div><b>ROOTED FUTURES</b><br>Social Enterprise · Song, Sarawak<br>扎根原鄉 · 永續果樹平台</div></div>
     <div class="foot-links">
       <a href="index.html">首頁</a>
-      <a href="platform.html">媒合平台</a>
+      <a href="platform.html">平台介紹</a>
+      <a href="trees.html">包樹認養</a>
       <a href="orchards.html">果園列表</a>
-      <a href="dabai.html">認識 Dabai</a>
-      <a href="products.html">產品</a>
-      <a href="sustainability.html">永續藍圖</a>
-      <a href="contact.html">加入平台</a>
+      <a href="esg.html">企業 ESG</a>
+      <a href="dabai.html">認識三寶</a>
+      <a href="sustainability.html">永續承諾</a>
+      <a href="products.html">產品線</a>
+      <a href="contact.html">聯絡我們</a>
     </div>
   </div>
 </footer>

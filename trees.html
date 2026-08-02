@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>包樹認養｜一樹一碼 Tree ID — ROOTED FUTURES</title>
+<meta name="description" content="認養一棵屬於你的果樹。每棵樹有獨立 Tree ID、果農資訊與預估產量，收成直送到你手上。Dabai、榴槤、紅毛丹三寶開放認養。">
+<link rel="icon" type="image/png" sizes="32x32" href="assets/img/favicon-32.png">
+<link rel="apple-touch-icon" href="assets/img/logo-180.png">
+<link rel="stylesheet" href="assets/style.css">
+<script src="assets/store.js" defer></script>
+<script src="assets/site.js" defer></script>
+</head>
+<body>
+
+<nav>
+  <a class="logo" href="index.html"><img src="assets/img/logo.png" alt="" width="40" height="40"><span>ROOTED<em>&nbsp;</em>FUTURES</span></a>
+  <button class="nav-toggle" aria-label="開關選單" aria-expanded="false">☰</button>
+  <div class="nav-links">
+    <a href="index.html">首頁</a>
+    <a href="platform.html">平台介紹</a>
+    <a href="trees.html" class="active">包樹認養</a>
+    <a href="orchards.html">果園列表</a>
+    <a href="esg.html">企業 ESG</a>
+    <a href="dabai.html">認識三寶</a>
+    <a href="sustainability.html">永續承諾</a>
+  </div>
+  <a class="nav-cta" href="contact.html">加入平台</a>
+</nav>
+
+<div class="page-hero">
+  <div class="wrap">
+    <span class="eyebrow">Adopt a Tree</span>
+    <h1>認養一棵<span class="accent">屬於你的果樹</span></h1>
+    <p>
+      每棵樹都有獨立的 Tree ID、明確的果農與果園、經顧問查核的樹況與預估產量。
+      你付的認養金在開花前就到果農手上 —— 他不必再賤價賣給中盤商，你則拿到整棵樹的收成。
+    </p>
+  </div>
+</div>
+
+<!-- 認養怎麼運作 -->
+<section>
+  <div class="wrap">
+    <div class="reveal">
+      <span class="eyebrow">How It Works</span>
+      <h2 class="sec-title">從選樹到收成，四步</h2>
+      <p class="sec-sub">認養期為一整個產季（一年）。期間你可以追蹤這棵樹的每一次農務紀錄。</p>
+    </div>
+    <div class="howto reveal">
+      <div class="howto-steps">
+        <div class="howto-step">
+          <div class="howto-num">01</div>
+          <b>挑一棵樹</b>
+          <span>依作物、地區、價格挑選。每棵樹都標示 Tree ID 與預估產量。</span>
+        </div>
+        <div class="howto-arrow">→</div>
+        <div class="howto-step">
+          <div class="howto-num">02</div>
+          <b>付認養金</b>
+          <span>可選付訂金 50% 或全額。款項在產季前撥付給果農。</span>
+        </div>
+        <div class="howto-arrow">→</div>
+        <div class="howto-step">
+          <div class="howto-num">03</div>
+          <b>追蹤樹況</b>
+          <span>溝通者現場回報開花、結果、施肥紀錄，附照片。</span>
+        </div>
+        <div class="howto-arrow">→</div>
+        <div class="howto-step">
+          <div class="howto-num">04</div>
+          <b>收成寄送</b>
+          <span>採收後掛上你的 Tree ID 標籤直送，或折算加工品。</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 樹列表 -->
+<section style="background:var(--almond-soft)">
+  <div class="wrap">
+    <div class="reveal">
+      <span class="eyebrow">Available Trees</span>
+      <h2 class="sec-title">開放認養的果樹</h2>
+    </div>
+
+    <div class="demo-banner">
+      ⚠️ <b>Phase 1 MVP 示範資料</b> ——
+      以下 36 棵果樹與果農資訊為功能展示用的虛構範例。
+      結帳流程為<b>模擬付款</b>，不會真的收取任何款項，也不會要求你輸入信用卡號。
+    </div>
+
+    <div class="filters">
+      <div class="fld">
+        <label for="t-crop">作物</label>
+        <select id="t-crop">
+          <option value="">全部三寶</option>
+          <option value="dabai">Dabai 黑橄欖</option>
+          <option value="durian">榴槤</option>
+          <option value="rambutan">紅毛丹</option>
+        </select>
+      </div>
+      <div class="fld">
+        <label for="t-area">地區</label>
+        <select id="t-area"><option value="">全部地區</option></select>
+      </div>
+      <div class="fld">
+        <label for="t-price">年認養金</label>
+        <select id="t-price">
+          <option value="">不限價格</option>
+          <option value="low">RM 400 以下</option>
+          <option value="mid">RM 400–799</option>
+          <option value="high">RM 800 以上</option>
+        </select>
+      </div>
+      <div class="fld">
+        <label for="t-status">狀態</label>
+        <select id="t-status">
+          <option value="">全部狀態</option>
+          <option value="available">開放認養</option>
+          <option value="reserved">保留中</option>
+          <option value="adopted">已認養</option>
+        </select>
+      </div>
+      <button class="filter-reset" id="t-reset">清除篩選</button>
+    </div>
+
+    <p class="result-count" id="tree-count"></p>
+    <div class="tree-grid" id="tree-grid"></div>
+  </div>
+</section>
+
+<!-- 認養金去哪 -->
+<section>
+  <div class="wrap">
+    <div class="two-col reveal">
+      <div>
+        <span class="eyebrow">Where the Money Goes</span>
+        <h2 class="sec-title">你的認養金<br>怎麼分配</h2>
+        <p class="lead">
+          我們不做黑箱。每一筆認養金的流向都寫在這裡，
+          未來也會在你的認養人專頁上顯示這棵樹的實際支出紀錄。
+        </p>
+      </div>
+      <div class="card reveal">
+        <div class="split-row"><span>果農收益（開花前預付）</span><b>55%</b></div>
+        <div class="split-bar"><i style="width:55%"></i></div>
+        <div class="split-row"><span>農務顧問與資材</span><b>18%</b></div>
+        <div class="split-bar"><i style="width:18%"></i></div>
+        <div class="split-row"><span>採收、包裝與物流</span><b>15%</b></div>
+        <div class="split-bar"><i style="width:15%"></i></div>
+        <div class="split-row"><span>平台營運</span><b>7%</b></div>
+        <div class="split-bar"><i style="width:7%"></i></div>
+        <div class="split-row"><span>社區永續基金</span><b>5%</b></div>
+        <div class="split-bar"><i style="width:5%"></i></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="dark-section">
+  <div class="wrap">
+    <div class="reveal">
+      <span class="eyebrow">FAQ</span>
+      <h2 class="sec-title">認養前想清楚的事</h2>
+    </div>
+    <div class="rail reveal">
+      <div class="rail-col">
+        <div class="rail-step"><div class="rail-dot">Q</div><div><b>收成不如預期怎麼辦？</b>
+          <span>預估產量是依樹齡與歷年紀錄推算，不是保證。若因天災導致歉收，我們會依實際收成比例折算，差額轉為下一季認養金折抵。</span></div></div>
+        <div class="rail-step"><div class="rail-dot">Q</div><div><b>我人不在馬來西亞，收得到嗎？</b>
+          <span>生鮮受限於保存期與檢疫，跨境以加工品（Paste、果乾、冷凍果肉）折算寄送。下單時可指定。</span></div></div>
+        <div class="rail-step"><div class="rail-dot">Q</div><div><b>可以去看我的樹嗎？</b>
+          <span>可以。產季期間開放預約參訪，由溝通者帶路。這也是我們地方創生規劃的一部分。</span></div></div>
+      </div>
+      <div class="rail-col">
+        <div class="rail-step"><div class="rail-dot">Q</div><div><b>認養金什麼時候給果農？</b>
+          <span>訂金在認養成立後撥付，尾款在採收前撥付 —— 重點就是讓錢在開花前就到果農手上。</span></div></div>
+        <div class="rail-step"><div class="rail-dot">Q</div><div><b>認養期滿可以續約嗎？</b>
+          <span>可以，且原認養人有優先續約權。同一棵樹連續認養滿三年，享有樹況升級補助。</span></div></div>
+        <div class="rail-step"><div class="rail-dot">Q</div><div><b>企業要認養一批樹？</b>
+          <span>企業方案有專屬窗口與 ESG 報告文件，請走 <a href="esg.html" style="color:var(--almond);text-decoration:underline">企業 ESG 專頁</a>。</span></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== 認養結帳彈窗（四步驟） ===== -->
+<div class="modal-back" id="tree-modal">
+  <div class="modal checkout" role="dialog" aria-modal="true" aria-labelledby="tree-title">
+    <button class="modal-close" id="tree-close" aria-label="關閉">×</button>
+
+    <div class="steps" id="steps">
+      <span class="step on" data-step="1">1 認養人資料</span>
+      <span class="step" data-step="2">2 付款方式</span>
+      <span class="step" data-step="3">3 完成</span>
+    </div>
+
+    <div class="target" id="tree-target"></div>
+
+    <!-- 步驟 1：資料 + 合約 -->
+    <div class="pane on" data-pane="1">
+      <h3 id="tree-title">認養人資料</h3>
+      <form id="tree-form" autocomplete="on">
+        <input type="hidden" name="form_type" value="包樹認養">
+        <input type="hidden" name="tree" id="tree-hidden">
+        <div class="form-row">
+          <div>
+            <label for="k-name">姓名 *</label>
+            <input id="k-name" name="name" type="text" placeholder="認養人姓名" required>
+          </div>
+          <div>
+            <label for="k-phone">電話 / WhatsApp *</label>
+            <input id="k-phone" name="phone" type="tel" placeholder="+60 12-345 6789" required>
+          </div>
+        </div>
+        <div>
+          <label for="k-email">Email *</label>
+          <input id="k-email" name="email" type="email" placeholder="you@example.com" required>
+        </div>
+        <div>
+          <label for="k-deliver">收成配送方式</label>
+          <select id="k-deliver" name="deliver">
+            <option>生鮮直送（限馬來西亞境內）</option>
+            <option>折算加工品寄送（可跨境）</option>
+            <option>捐給社區福利機構</option>
+            <option>產季再決定</option>
+          </select>
+        </div>
+
+        <div class="terms">
+          <b>認養合約要點</b>
+          <ul>
+            <li>認養期間為一個完整產季（自認養日起 12 個月）。</li>
+            <li>預估產量為依樹齡與歷年紀錄之推算值，<b>非保證產量</b>。</li>
+            <li>因天災、病蟲害導致歉收時，依實際收成比例折算，差額轉為次季折抵。</li>
+            <li>認養金撥付果農後不可退款；認養權益可轉讓他人。</li>
+            <li>認養人不取得該果樹之土地或所有權，僅取得當季收成權益。</li>
+          </ul>
+          <label class="check">
+            <input type="checkbox" id="agree">
+            <span>我已閱讀並同意上述認養合約要點</span>
+          </label>
+        </div>
+
+        <input type="text" name="_gotcha" tabindex="-1" autocomplete="off"
+               aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px">
+        <button class="btn btn-gold" type="submit" style="border:none;cursor:pointer">下一步：選擇付款方式</button>
+      </form>
+      <div class="form-error" id="tree-err" role="alert"></div>
+    </div>
+
+    <!-- 步驟 2：模擬付款 -->
+    <div class="pane" data-pane="2">
+      <h3>付款方式</h3>
+
+      <div class="sim-note">
+        🧪 <b>這是模擬結帳</b> —— 為了讓你看到完整流程而設計。
+        <b>不會產生任何實際扣款</b>，也不會要求信用卡號、CVV 或任何真實付款資訊。
+        正式上線時這一步會接真正的金流商（如 ToyyibPay、Stripe）。
+      </div>
+
+      <div class="pay-opts">
+        <label class="pay-opt">
+          <input type="radio" name="payamt" value="deposit" checked>
+          <span><b>先付訂金 50%</b><em id="amt-deposit">—</em>
+          <small>尾款於採收前繳清</small></span>
+        </label>
+        <label class="pay-opt">
+          <input type="radio" name="payamt" value="full">
+          <span><b>一次付清</b><em id="amt-full">—</em>
+          <small>享次季續約 5% 折扣</small></span>
+        </label>
+      </div>
+
+      <div class="pay-methods">
+        <label class="pay-m"><input type="radio" name="paych" value="FPX 網路銀行" checked><span>🏦 FPX 網路銀行</span></label>
+        <label class="pay-m"><input type="radio" name="paych" value="DuitNow QR"><span>📱 DuitNow QR</span></label>
+        <label class="pay-m"><input type="radio" name="paych" value="信用卡"><span>💳 信用卡</span></label>
+        <label class="pay-m"><input type="radio" name="paych" value="企業匯款"><span>🏢 企業匯款</span></label>
+      </div>
+
+      <button class="btn btn-gold" id="pay-btn" style="border:none;cursor:pointer;width:100%">
+        模擬付款
+      </button>
+      <button class="btn-back" id="pay-back">← 回上一步</button>
+    </div>
+
+    <!-- 步驟 3：完成 -->
+    <div class="pane" data-pane="3">
+      <div class="cert" id="cert"></div>
+      <p class="form-note" style="margin-top:16px">
+        這筆模擬訂單已寫入本機的示範資料庫，你可以到
+        <a href="erp.html" style="color:var(--almond);text-decoration:underline">ERP 儀表板</a>
+        看到它。資料只存在你這台裝置上。
+      </p>
+      <button class="btn btn-gold" id="cert-done" style="border:none;cursor:pointer;width:100%;margin-top:14px">
+        完成
+      </button>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <div class="foot-grid">
+    <div class="foot-brand"><img src="assets/img/logo.png" alt="ROOTED FUTURES 標誌" width="56" height="56"><div><b>ROOTED FUTURES</b><br>Social Enterprise · Song, Sarawak<br>扎根原鄉 · 永續果樹平台</div></div>
+    <div class="foot-links">
+      <a href="index.html">首頁</a>
+      <a href="platform.html">平台介紹</a>
+      <a href="trees.html">包樹認養</a>
+      <a href="orchards.html">果園列表</a>
+      <a href="esg.html">企業 ESG</a>
+      <a href="dabai.html">認識三寶</a>
+      <a href="sustainability.html">永續承諾</a>
+      <a href="products.html">產品線</a>
+      <a href="contact.html">聯絡我們</a>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>
