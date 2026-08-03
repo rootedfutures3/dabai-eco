@@ -112,7 +112,7 @@ nav{
 }
 .logo{font-size:1.22rem;font-weight:800;letter-spacing:.18em;white-space:nowrap}
 .logo em{font-style:normal;color:var(--almond)}
-.nav-links{display:flex;gap:24px;font-size:.98rem}
+.nav-links{display:flex;gap:18px;font-size:.96rem}
 .nav-links a{opacity:.8;transition:.2s;white-space:nowrap}
 .nav-links a:hover{opacity:1;color:var(--almond)}
 .nav-links a.active{opacity:1;color:var(--almond);font-weight:700}
@@ -812,8 +812,8 @@ footer{background:var(--black);color:rgba(255,251,255,.62);padding:44px 24px;fon
   .logo span{font-size:.95rem;letter-spacing:.08em}
   .logo img{width:34px;height:34px}
 }
-@media(max-width:380px){
-  .logo span{display:none}      /* 極窄螢幕只留標誌，避免擠壓選單按鈕 */
+@media(max-width:560px){
+  .logo span{display:none}      /* 窄螢幕只留標誌，把寬度讓給選單與語言鈕 */
   .logo img{width:36px;height:36px}
 }
 
@@ -1124,31 +1124,75 @@ body.auth-page{background:var(--black);overflow-x:hidden}
 }
 
 /* ============================================
-   語言切換
+   語言切換（下拉式）
+   --------------------------------------------
+   三個語言全名並排會撐破導覽列，改成收合式：
+   平常只佔一顆按鈕，展開後三個選項都是完整名稱。
    ============================================ */
-.lang-switch{
-  display:flex;gap:2px;flex-shrink:0;
-  background:rgba(255,251,255,.1);border:1px solid rgba(241,218,191,.28);
-  border-radius:99px;padding:3px;
+.lang-switch{position:relative;flex-shrink:0}
+
+.lang-toggle{
+  display:flex;align-items:center;gap:8px;
+  background:rgba(255,251,255,.1);border:1px solid rgba(241,218,191,.3);
+  color:var(--snow);font-family:inherit;font-size:.88rem;font-weight:700;
+  padding:8px 14px;border-radius:99px;cursor:pointer;transition:.2s;white-space:nowrap;
 }
+.lang-toggle:hover{background:rgba(241,218,191,.2);border-color:var(--almond)}
+.lang-caret{font-size:.72rem;opacity:.75;transition:transform .2s}
+.lang-switch.open .lang-caret{transform:rotate(180deg)}
+
+.lang-menu{
+  position:absolute;top:calc(100% + 10px);right:0;z-index:120;
+  display:none;flex-direction:column;gap:6px;      /* 選項之間的間距 */
+  background:var(--coffee);border:1px solid rgba(241,218,191,.35);
+  border-radius:14px;padding:8px;min-width:210px;
+  box-shadow:0 18px 40px rgba(0,5,0,.45);
+}
+.lang-switch.open .lang-menu{display:flex}
+
 .lang-btn{
   background:none;border:none;cursor:pointer;font-family:inherit;
-  color:rgba(255,251,255,.7);font-size:.86rem;font-weight:700;
-  padding:5px 11px;border-radius:99px;transition:.2s;white-space:nowrap;
+  color:rgba(255,251,255,.8);font-size:.9rem;font-weight:700;letter-spacing:.04em;
+  padding:11px 16px;border-radius:10px;transition:.2s;
+  text-align:left;white-space:nowrap;
 }
-.lang-btn:hover{color:var(--almond)}
+.lang-btn:hover{background:rgba(241,218,191,.16);color:var(--almond)}
 .lang-btn.on{background:var(--almond);color:var(--coffee)}
 
-/* 登入頁沒有 nav，切換器改浮在右上 */
-.auth-page .lang-switch{
-  position:fixed;top:20px;right:20px;z-index:20;
-  background:rgba(0,5,0,.4);backdrop-filter:blur(8px);
+/* 導覽列項目多，中等寬度先收成漢堡選單，留空間給語言鈕 */
+@media(max-width:1400px){
+  nav .nav-toggle{display:block}
+  nav .nav-links{
+    position:absolute;top:100%;left:0;right:0;
+    flex-direction:column;gap:0;
+    background:rgba(0,5,0,.98);
+    max-height:0;overflow:hidden;transition:max-height .3s ease;
+  }
+  nav .nav-links.open{max-height:520px}
+  nav .nav-links a{padding:14px 28px;border-top:1px solid rgba(255,251,255,.1)}
 }
 
+/* 登入頁沒有 nav，浮在右上角 */
+.auth-page .lang-switch{position:fixed;top:18px;right:18px;z-index:30}
+.auth-page .lang-toggle{background:rgba(0,5,0,.5);backdrop-filter:blur(8px)}
+
 @media(max-width:900px){
-  .lang-switch{order:-1}
-  .lang-btn{padding:5px 9px;font-size:.84rem}
+  .logo span{font-size:1rem;letter-spacing:.08em}
+  .logo img{width:34px;height:34px}
 }
-@media(max-width:380px){
-  .lang-btn{padding:4px 7px;font-size:.8rem}
+@media(max-width:760px){
+  nav{flex-wrap:wrap;row-gap:8px}
+  nav .nav-cta{font-size:.86rem;padding:7px 13px}
 }
+@media(max-width:560px){
+  nav{gap:8px;padding:12px 14px}
+  .lang-toggle{padding:7px 11px;font-size:.82rem;gap:6px}
+  .lang-menu{min-width:190px}
+  .nav-cta{padding:7px 13px;font-size:.88rem}
+}
+@media(max-width:420px){
+  /* 極窄螢幕只留地球圖示，選單展開仍是完整名稱 */
+  .lang-current,.lang-caret{display:none}
+  .lang-toggle{padding:8px 10px}
+}
+

@@ -11,9 +11,9 @@
 
 const I18N_KEY = 'rf_lang';
 const LANGS = {
-  zh: { label: '中文', htmlLang: 'zh-Hant', dict: null },
-  ms: { label: 'BM',   htmlLang: 'ms',      dict: () => window.LANG_MS },
-  en: { label: 'EN',   htmlLang: 'en',      dict: () => window.LANG_EN },
+  zh: { label: '中文',          htmlLang: 'zh-Hant', dict: null },
+  en: { label: 'ENGLISH',       htmlLang: 'en',      dict: () => window.LANG_EN },
+  ms: { label: 'BAHASA MELAYU', htmlLang: 'ms',      dict: () => window.LANG_MS },
 };
 
 const I18N = {
@@ -28,8 +28,25 @@ const I18N = {
 
   translate(s) {
     if (!this.dict) return s;
-    const t = this.dict[this.norm(s)];
-    return t === undefined ? s : t;
+    const key = this.norm(s);
+
+    // 1) 完全比對
+    const t = this.dict[key];
+    if (t !== undefined) return t;
+
+    // 2) 數字樣板：把數字抽成 {n} 再查，例如
+    //    「36 棵」→ 樣板「{n} 棵」；「上架 36 棵」→「上架 {n} 棵」
+    //    這樣帶數字的動態字串不必逐一列進字典。
+    const nums = [];
+    const tpl = key.replace(/\d[\d,.]*/g, m => { nums.push(m); return '{n}'; });
+    if (nums.length) {
+      const tt = this.dict[tpl];
+      if (tt !== undefined) {
+        let i = 0;
+        return tt.replace(/\{n\}/g, () => nums[i++] ?? '');
+      }
+    }
+    return s;
   },
 
   /** 走訪整棵樹，翻譯文字節點與特定屬性 */
@@ -93,28 +110,57 @@ const I18N = {
   syncSwitch() {
     document.querySelectorAll('.lang-btn').forEach(b =>
       b.classList.toggle('on', b.dataset.lang === this.lang));
+    const cur = document.querySelector('.lang-current');
+    if (cur) cur.textContent = LANGS[this.lang].label;
   },
 
-  /** 在導覽列插入語言切換器 */
+  /**
+   * 在導覽列插入語言切換器。
+   * 三個語言全名並排會撐破導覽列（實測 520–768px 與 1280px 以上都溢出），
+   * 所以做成下拉：收合時只顯示目前語言，展開後三個都是完整名稱。
+   */
   mountSwitch() {
     const nav = document.querySelector('nav');
     if (!nav || nav.querySelector('.lang-switch')) return;
 
     const box = document.createElement('div');
     box.className = 'lang-switch';
-    box.setAttribute('role', 'group');
-    box.setAttribute('aria-label', '語言 / Language');
-    box.innerHTML = Object.entries(LANGS).map(([k, v]) =>
-      `<button class="lang-btn" data-lang="${k}" type="button">${v.label}</button>`).join('');
+    box.innerHTML = `
+      <button class="lang-toggle" type="button" aria-haspopup="true" aria-expanded="false"
+              aria-label="切換語言 / Change language">
+        <span aria-hidden="true">🌐</span>
+        <span class="lang-current">中文</span>
+        <span class="lang-caret" aria-hidden="true">▾</span>
+      </button>
+      <div class="lang-menu" role="menu">
+        ${Object.entries(LANGS).map(([k, v]) =>
+          `<button class="lang-btn" data-lang="${k}" type="button" role="menuitem">${v.label}</button>`).join('')}
+      </div>`;
 
-    // 放在 CTA 前面
     const cta = nav.querySelector('.nav-cta');
     cta ? nav.insertBefore(box, cta) : nav.appendChild(box);
 
+    const toggle = box.querySelector('.lang-toggle');
+    const close = () => {
+      box.classList.remove('open');
+      toggle.setAttribute('aria-expanded', 'false');
+    };
+
+    toggle.addEventListener('click', e => {
+      e.stopPropagation();
+      const open = box.classList.toggle('open');
+      toggle.setAttribute('aria-expanded', String(open));
+    });
+
     box.addEventListener('click', e => {
       const b = e.target.closest('.lang-btn');
-      if (b) I18N.set(b.dataset.lang);
+      if (!b) return;
+      I18N.set(b.dataset.lang);
+      close();
     });
+
+    document.addEventListener('click', e => { if (!box.contains(e.target)) close(); });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
   },
 
   /** 監看動態新增的內容並即時翻譯 */
