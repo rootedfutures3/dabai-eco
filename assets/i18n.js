@@ -14,6 +14,7 @@ const LANGS = {
   zh: { label: '中文',          htmlLang: 'zh-Hant', dict: null },
   en: { label: 'ENGLISH',       htmlLang: 'en',      dict: () => window.LANG_EN },
   ms: { label: 'BAHASA MELAYU', htmlLang: 'ms',      dict: () => window.LANG_MS },
+  iba:{ label: 'JAKU IBAN',     htmlLang: 'iba',     dict: () => window.LANG_IBA },
 };
 
 const I18N = {
