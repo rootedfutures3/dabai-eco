@@ -88,19 +88,25 @@ const Store = {
   addOrder(order) {
     const db = Store.read();
     db.orders.push(order);
-    return Store.write(db).orders;
+    Store.write(db);
+    push('orders', order);
+    return db.orders;
   },
 
   addReport(report) {
     const db = Store.read();
     db.reports.unshift(report);
-    return Store.write(db).reports;
+    Store.write(db);
+    push('reports', report);
+    return db.reports;
   },
 
   addLead(lead) {
     const db = Store.read();
     db.leads.unshift(lead);
-    return Store.write(db).leads;
+    Store.write(db);
+    push('leads', lead);
+    return db.leads;
   },
 
   reset() {
@@ -141,8 +147,14 @@ const Store = {
     const db = Store.read();
     db.trees = db.trees || [];
     const i = db.trees.findIndex(t => t.id === tree.id);
-    if (i >= 0) db.trees[i] = { ...db.trees[i], ...tree };
-    else db.trees.push(tree);
+    if (i >= 0) {
+      db.trees[i] = { ...db.trees[i], ...tree };
+      if (SB.on) SB.patch('trees', 'id', tree.id, MAP.trees.out(db.trees[i]))
+        .catch(e => console.warn('[雲端更新失敗] trees', e.message));
+    } else {
+      db.trees.push(tree);
+      push('trees', tree);
+    }
     return Store.write(db).trees;
   },
 
@@ -152,7 +164,9 @@ const Store = {
     db.messages = db.messages || [];
     m.id = (db.messages.at(-1)?.id || 0) + 1;
     db.messages.push(m);
-    return Store.write(db).messages;
+    Store.write(db);
+    push('messages', m);
+    return db.messages;
   },
 
   /** 下一個訂單編號，格式 RF-YYYY-NNNN */
@@ -161,4 +175,138 @@ const Store = {
     const n = db.orders.length + 1;
     return `RF-${year}-${String(n).padStart(4, '0')}`;
   },
+};
+
+
+/* ============================================================
+   雲端資料庫（Supabase）
+   ------------------------------------------------------------
+   設計原則：不改動既有程式碼的呼叫方式。
+   - 開頁時先把雲端資料一次載入記憶體快取
+   - Store.read() 維持同步，回傳快取
+   - 寫入時先更新快取（畫面立即反應），再非同步推到雲端
+   沒設定 config.js 時完全走 localStorage，行為與過去相同。
+   ============================================================ */
+
+const SB = {
+  on: typeof CLOUD_ON !== 'undefined' && CLOUD_ON,
+  url: typeof SUPABASE_URL !== 'undefined' ? SUPABASE_URL : '',
+  key: typeof SUPABASE_ANON_KEY !== 'undefined' ? SUPABASE_ANON_KEY : '',
+
+  head(extra) {
+    return Object.assign({
+      apikey: SB.key,
+      Authorization: 'Bearer ' + SB.key,
+      'Content-Type': 'application/json',
+    }, extra || {});
+  },
+
+  async get(tableName) {
+    const r = await fetch(`${SB.url}/rest/v1/${tableName}?select=*`, { headers: SB.head() });
+    if (!r.ok) throw new Error(`讀取 ${tableName} 失敗（${r.status}）`);
+    return r.json();
+  },
+
+  async insert(tableName, rows) {
+    const r = await fetch(`${SB.url}/rest/v1/${tableName}`, {
+      method: 'POST',
+      headers: SB.head({ Prefer: 'resolution=merge-duplicates,return=minimal' }),
+      body: JSON.stringify(rows),
+    });
+    if (!r.ok) throw new Error(`寫入 ${tableName} 失敗（${r.status}）：${await r.text()}`);
+  },
+
+  async patch(tableName, pk, pkVal, patch) {
+    const r = await fetch(`${SB.url}/rest/v1/${tableName}?${pk}=eq.${encodeURIComponent(pkVal)}`, {
+      method: 'PATCH',
+      headers: SB.head({ Prefer: 'return=minimal' }),
+      body: JSON.stringify(patch),
+    });
+    if (!r.ok) throw new Error(`更新 ${tableName} 失敗（${r.status}）`);
+  },
+};
+
+/* 欄位對應：資料庫用 snake_case，前端沿用既有的 camelCase */
+const MAP = {
+  trees: {
+    out: t => ({ id:t.id, crop:t.crop, variety:t.variety, age:t.age, kg:t.kg, price:t.price,
+                 orchard:t.orchard, area:t.area, farmer:t.farmer, owner:t.owner,
+                 listed:t.listed, status:t.status }),
+    in:  r => ({ ...r }),
+  },
+  orders: {
+    out: o => ({ no:o.no, date:o.date, tree_id:o.treeId, crop:o.crop, customer:o.customer,
+                 email:o.email, phone:o.phone, amount:o.amount, paid:o.paid,
+                 channel:o.channel, status:o.status, buyer:o.buyer || null }),
+    in:  r => ({ no:r.no, date:r.date, treeId:r.tree_id, crop:r.crop, customer:r.customer,
+                 email:r.email, phone:r.phone, amount:r.amount, paid:r.paid,
+                 channel:r.channel, status:r.status, buyer:r.buyer }),
+  },
+  reports: {
+    out: r => ({ at:r.at, tree_id:r.treeId, by_who:r.by, stage:r.stage,
+                 health:r.health, note:r.note, photos:r.photos }),
+    in:  r => ({ at:r.at, treeId:r.tree_id, by:r.by_who, stage:r.stage,
+                 health:r.health, note:r.note, photos:r.photos }),
+  },
+  leads: {
+    out: l => ({ date:l.date, company:l.company, contact:l.contact, title:l.title,
+                 email:l.email, need:l.need, budget:l.budget, stage:l.stage }),
+    in:  r => ({ ...r }),
+  },
+  messages: {
+    out: m => ({ tree_id:m.treeId, from_who:m.from, to_who:m.to, at:m.at, text:m.text }),
+    in:  r => ({ id:r.id, treeId:r.tree_id, from:r.from_who, to:r.to_who, at:r.at, text:r.text }),
+  },
+};
+
+/** 寫入雲端（失敗只記錄，不阻斷畫面 —— 資料仍在本機快取） */
+function push(tableName, row) {
+  if (!SB.on) return;
+  SB.insert(tableName, [MAP[tableName].out(row)])
+    .catch(e => console.warn('[雲端寫入失敗]', tableName, e.message));
+}
+
+/** 開機：載入雲端資料。沒設定就直接沿用 localStorage。 */
+Store.boot = async function () {
+  if (!SB.on) return { mode: 'local' };
+
+  try {
+    const [trees, orders, reports, leads, messages] = await Promise.all(
+      ['trees','orders','reports','leads','messages'].map(t => SB.get(t)));
+
+    const db = Store.read();
+
+    // 首次連線：雲端還是空的 → 把示範資料推上去
+    if (!trees.length && typeof TREES !== 'undefined') {
+      const seed = TREES.map(t => ({ ...t, owner:'system', listed:true }));
+      await SB.insert('trees', seed.map(MAP.trees.out));
+      db.trees = seed;
+    } else {
+      db.trees = trees.map(MAP.trees.in);
+    }
+
+    if (!orders.length && db.orders?.length) {
+      await SB.insert('orders', db.orders.map(MAP.orders.out));
+    } else if (orders.length) {
+      db.orders = orders.map(MAP.orders.in);
+    }
+
+    if (reports.length)  db.reports  = reports.map(MAP.reports.in);
+    if (leads.length)    db.leads    = leads.map(MAP.leads.in);
+    if (messages.length) db.messages = messages.map(MAP.messages.in);
+
+    Store.write(db);
+    return { mode: 'cloud', trees: db.trees.length, orders: db.orders.length };
+
+  } catch (e) {
+    console.warn('[雲端連線失敗，改用本機資料]', e.message);
+    return { mode: 'local', error: e.message };
+  }
+};
+
+/** 等資料庫就緒後再執行（取代直接綁 DOMContentLoaded） */
+Store.onReady = function (fn) {
+  const go = () => Store.boot().then(info => fn(info)).catch(() => fn({ mode: 'local' }));
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', go);
+  else go();
 };

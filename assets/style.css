@@ -1122,3 +1122,33 @@ body.auth-page{background:var(--black);overflow-x:hidden}
   .orbs i,.drift-i,.handoff img,.auth-card{animation:none}
   .auth-submit:hover::after{animation:none}
 }
+
+/* ============================================
+   語言切換
+   ============================================ */
+.lang-switch{
+  display:flex;gap:2px;flex-shrink:0;
+  background:rgba(255,251,255,.1);border:1px solid rgba(241,218,191,.28);
+  border-radius:99px;padding:3px;
+}
+.lang-btn{
+  background:none;border:none;cursor:pointer;font-family:inherit;
+  color:rgba(255,251,255,.7);font-size:.86rem;font-weight:700;
+  padding:5px 11px;border-radius:99px;transition:.2s;white-space:nowrap;
+}
+.lang-btn:hover{color:var(--almond)}
+.lang-btn.on{background:var(--almond);color:var(--coffee)}
+
+/* 登入頁沒有 nav，切換器改浮在右上 */
+.auth-page .lang-switch{
+  position:fixed;top:20px;right:20px;z-index:20;
+  background:rgba(0,5,0,.4);backdrop-filter:blur(8px);
+}
+
+@media(max-width:900px){
+  .lang-switch{order:-1}
+  .lang-btn{padding:5px 9px;font-size:.84rem}
+}
+@media(max-width:380px){
+  .lang-btn{padding:4px 7px;font-size:.8rem}
+}

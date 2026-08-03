@@ -458,7 +458,7 @@ function vOverview(el) {
   const paid = db.orders.reduce((s, o) => s + o.paid, 0);
   el.innerHTML = `
     ${kpis([
-      ['帳號', db.users.length + ' 個', '果農／收購商／管理'],
+      ['帳號數', db.users.length + ' 個', '果農／收購商／管理'],
       ['果樹資產', trees.length + ' 棵', `上架 ${trees.filter(t => t.listed).length} 棵`],
       ['認養訂單', db.orders.length + ' 筆', ''],
       ['已收款項', money(paid), ''],
