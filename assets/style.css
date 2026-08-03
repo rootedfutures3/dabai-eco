@@ -803,6 +803,17 @@ footer{background:var(--black);color:rgba(255,251,255,.62);padding:44px 24px;fon
    使它成為畫面中唯一的彩色元素而非衝突來源。
    ============================================ */
 .logo{display:flex;align-items:center;gap:11px}
+/* 中文品牌名只在中文模式顯示 —— I18N 會把語言寫進 <html lang>，直接用它判斷 */
+.logo-zh{display:none}
+html[lang="zh-Hant"] .logo-zh{
+  display:block;font-style:normal;font-weight:700;
+  font-size:.72em;letter-spacing:.34em;
+  color:var(--almond);opacity:.92;margin-top:1px;
+}
+.logo-wm{display:flex;flex-direction:column;line-height:1.15}
+html[lang="zh-Hant"] .foot-brand .logo-zh{
+  display:inline;margin-left:10px;letter-spacing:.2em;font-size:.86em;
+}
 .logo img{
   width:40px;height:40px;flex-shrink:0;
   filter:drop-shadow(0 2px 6px rgba(0,5,0,.45));
