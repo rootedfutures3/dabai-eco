@@ -55,12 +55,11 @@ const I18N = {
     root = root || document.body;
     if (!root || root.nodeType !== 1) return;
 
-    // 屬性
+    /* --- 屬性 --- */
     const ATTRS = ['placeholder', 'title', 'alt', 'aria-label'];
     // dataset 的 key 不能含連字號（aria-label 會丟例外），先轉成合法名稱
     const dkey = a => 'o' + a.replace(/-([a-z])/g, (m, c) => c.toUpperCase());
-    const withAttrs = [root, ...root.querySelectorAll('*')];
-    withAttrs.forEach(el => {
+    [root, ...root.querySelectorAll('*')].forEach(el => {
       if (el.nodeType !== 1) return;
       ATTRS.forEach(a => {
         if (!el.hasAttribute(a)) return;
@@ -68,30 +67,79 @@ const I18N = {
         if (el.dataset[k] === undefined) el.dataset[k] = el.getAttribute(a);
         el.setAttribute(a, this.translate(el.dataset[k]));
       });
-      // select 的 option 文字
-      if (el.tagName === 'OPTION' && !el.dataset.oText) el.dataset.oText = el.textContent;
-      if (el.tagName === 'OPTION') el.textContent = this.translate(el.dataset.oText);
+      if (el.tagName === 'OPTION') {
+        if (el.dataset.oText === undefined) el.dataset.oText = el.textContent;
+        el.textContent = this.translate(el.dataset.oText);
+      }
     });
 
-    // 文字節點
+    /* --- 第一輪：整個元素比對 ---
+       像「🧪 <b>示範系統</b> —— 沒有伺服器…」這種句子會被 <b> 切成好幾個
+       文字節點，逐節點翻譯永遠對不上整句的 key。所以先用元素的完整
+       textContent 去查字典，查得到就整段替換（內嵌的 <b> 會被攤平，
+       這是可接受的取捨）。查不到才交給第二輪逐節點處理。 */
+    const BLOCKS = 'p,li,h1,h2,h3,h4,h5,b,strong,span,small,em,i,dt,dd,td,th,button,a,label,summary,figcaption,div';
+    const cands = [root, ...root.querySelectorAll(BLOCKS)];
+    const handled = new Set();
+
+    cands.forEach(el => {
+      if (el.nodeType !== 1) return;
+      if (handled.has(el)) return;
+      // 已被祖先整段處理過就跳過
+      for (let a = el.parentElement; a; a = a.parentElement) if (handled.has(a)) return;
+      // 品牌字標不翻譯
+      if (el.closest('script,style,code,pre,.lang-menu,.lang-toggle,.logo,.foot-brand b')) return;
+      // div 只有「完全不含區塊子元素」時才當成一段文字，
+      // 否則像 <div class="reveal"><h2>…</h2><p>…</p></div> 會被誤當成單一段落
+      if (el.tagName === 'DIV' &&
+          el.querySelector('div,section,article,ul,ol,li,table,form,p,h1,h2,h3,h4,h5,h6,button')) return;
+
+      if (el.dataset.oHtml === undefined) {
+        const txt = this.norm(el.textContent);
+        if (!txt || txt.length > 400) return;
+        // 只有字典真的收錄整段時才記錄原文，避免無謂佔用
+        if (!this.dictHas(txt)) return;
+        el.dataset.oHtml = el.innerHTML;
+        el.dataset.oFull = txt;
+      }
+      const out = this.translate(el.dataset.oFull);
+      if (out !== el.dataset.oFull) {
+        el.textContent = out;
+        handled.add(el);
+      } else if (this.lang === 'zh') {
+        el.innerHTML = el.dataset.oHtml;   // 切回中文時還原原本的 <b> 等標記
+        handled.add(el);
+      }
+    });
+
+    /* --- 第二輪：剩下的文字節點 --- */
     const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
       acceptNode(n) {
         const p = n.parentElement;
         if (!p) return NodeFilter.FILTER_REJECT;
-        if (p.closest('script,style,code,pre')) return NodeFilter.FILTER_REJECT;
-        if (p.tagName === 'OPTION') return NodeFilter.FILTER_REJECT;   // 上面處理過
+        if (p.closest('script,style,code,pre,.lang-menu,.lang-toggle')) return NodeFilter.FILTER_REJECT;
+        if (p.tagName === 'OPTION') return NodeFilter.FILTER_REJECT;
+        for (let a = p; a; a = a.parentElement) if (handled.has(a)) return NodeFilter.FILTER_REJECT;
         return n.nodeValue.trim() ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT;
       },
     });
     const nodes = [];
     let n; while ((n = walker.nextNode())) nodes.push(n);
-
     nodes.forEach(node => {
       if (node.__o === undefined) node.__o = node.nodeValue;
-      const src = node.__o;
-      const out = this.translate(src);
+      const out = this.translate(node.__o);
       if (node.nodeValue !== out) node.nodeValue = out;
     });
+  },
+
+  /** 字典裡有沒有這個 key（含 {n} 樣板） */
+  dictHas(s) {
+    if (!this.dict) {
+      // 中文模式：只要任一語言字典收錄就先記下原文，供之後切換使用
+      const all = [window.LANG_MS, window.LANG_EN, window.LANG_IBA].filter(Boolean);
+      return all.some(d => d[s] !== undefined || d[s.replace(/\d[\d,.]*/g, '{n}')] !== undefined);
+    }
+    return this.dict[s] !== undefined || this.dict[s.replace(/\d[\d,.]*/g, '{n}')] !== undefined;
   },
 
   /** 切換語言 */
@@ -189,4 +237,5 @@ const I18N = {
   },
 };
 
+window.I18N = I18N;   // 供工具與除錯取用
 document.addEventListener('DOMContentLoaded', () => I18N.init());

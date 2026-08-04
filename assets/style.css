@@ -3,76 +3,90 @@
    ============================================ */
 
 /* ============================================
-   品牌色票（鐵律）
+   品牌色票 —— 取自 logo
    --------------------------------------------
-   Snow         #FFFBFF
-   Almond Cream #F1DABF
-   Taupe        #92817A
-   Dark Coffee  #362417
-   Black        #000500
+   直接從標誌圖檔取樣得到三個主色：
+     Black  #1D1B1B   R 字與 Dabai 果實
+     Gold   #C3A03A   葉片
+     Red    #942C2C   弧線與 SONG · SARAWAK
 
-   全站顏色只能來自這五色，或它們之間的明度混色
-   （不引入任何新色相）。三個延伸色的來源：
-     --almond-soft = Snow  × Almond 各半
-     --taupe-deep  = Taupe × Coffee 約 3:7
-     --coffee-mid  = Coffee × Taupe 約 65:35
-   Taupe 原色在 Snow 底上只有 3.6:1，不足以當內文，
-   因此次要文字一律使用 --taupe-deep（5.4:1）。
+   金色在白底只有 2.50:1，不能當內文，因此另外推導
+   深金 #89712F（白底 4.70:1）給淺底文字用，
+   亮金 #C6A544（黑底 7.24:1）給深底文字用。
+   紅色本身在白底就有 7.91:1，可直接當文字。
+
+   其餘皆為這三色與黑／白之間的明度階，不引入新色相。
    ============================================ */
 :root{
-  --snow:#FFFBFF;
-  --almond:#F1DABF;
-  --taupe:#92817A;
-  --coffee:#362417;
-  --black:#000500;
+  /* logo 三主色 */
+  --black:#1D1B1B;
+  --gold:#C3A03A;
+  --red:#942C2C;
+  --white:#FFFFFF;
 
-  --almond-soft:#F8EADF;
-  --taupe-deep:#76655C;
-  --coffee-mid:#56453A;
+  /* 明度階 */
+  --ink-deep:#121110;      /* 導覽列／頁尾的最深底 */
+  --black-mid:#3B3321;     /* 深色漸層中段（帶一點金） */
+  --gold-light:#C6A544;    /* 深底上的金 */
+  --gold-deep:#89712F;     /* 淺底上的金（可當內文） */
+  --red-light:#CFA0A0;     /* 深底上的紅 */
+  --cream:#FBF8F1;         /* 暖白，頁面主底 */
+  --cream-dim:#F4EDDF;     /* 淺色分隔帶 */
+  --warm-grey:#9A8F7A;     /* 邊框與次要圖示 */
+  --warm-grey-deep:#6B6660;/* 淺底上的次要文字 */
+
+  /* 舊名稱對應到新色票 —— 既有樣式沿用這些名稱，不必逐處改寫 */
+  --snow:var(--cream);
+  --almond:var(--gold-light);
+  --taupe:var(--warm-grey);
+  --coffee:var(--black);
+  --almond-soft:var(--cream-dim);
+  --taupe-deep:var(--warm-grey-deep);
+  --coffee-mid:var(--black-mid);
 
   /* 語意對應 */
-  --surface:var(--snow);
-  --surface-dim:var(--almond-soft);
-  --brand-deep:var(--black);
-  --brand:var(--coffee);
-  --brand-mid:var(--coffee-mid);
-  --ink:var(--coffee);
-  --ink-soft:var(--taupe-deep);
+  --surface:var(--cream);
+  --surface-dim:var(--cream-dim);
+  --brand-deep:var(--ink-deep);
+  --brand:var(--black);
+  --brand-mid:var(--black-mid);
+  --ink:var(--black);
+  --ink-soft:var(--warm-grey-deep);
 
-  /* 重點色：淺底用加深的 Taupe；深色區塊會覆寫為 Almond Cream */
-  --accent:var(--taupe-deep);
-  --accent-hi:var(--coffee);
-  --accent-ink:var(--snow);
+  /* 重點色：淺底用深金，深色區塊覆寫為亮金 */
+  --accent:var(--gold-deep);
+  --accent-hi:var(--black);
+  --accent-ink:var(--white);
 
-  /* 表單欄位：淺底預設，深色區塊會整組覆寫 */
-  --field-bg:var(--almond-soft);
-  --field-ink:var(--ink);
+  /* 表單欄位 */
+  --field-bg:var(--cream-dim);
+  --field-ink:var(--black);
   --field-line:var(--line);
-  --field-ph:var(--taupe-deep);
-  --field-ring:var(--coffee);
-  --note-ink:var(--ink-soft);
+  --field-ph:var(--warm-grey-deep);
+  --field-ring:var(--gold-deep);
+  --note-ink:var(--warm-grey-deep);
 
-  --line:rgba(54,36,23,.14);
-  --shadow:rgba(54,36,23,.10);
-  --shadow-lg:rgba(54,36,23,.18);
+  --line:rgba(29,27,27,.14);
+  --shadow:rgba(29,27,27,.10);
+  --shadow-lg:rgba(29,27,27,.20);
 
   --radius:18px;
 }
 
-/* 深色底的區塊：重點色自動切換為 Almond Cream */
+/* 深色底的區塊：重點色切換為亮金，欄位改深色樣式 */
 nav, .page-hero, header.hero, .dark-section, .cta-band, footer, .modal,
 .dark-card, .fact-ico, .flow-dot, .howto-num, .btn-claim, .orchard-top,
 .side-mid .badge, .avatar, th, .signin, .signin-card, .portal-bar{
-  --accent:var(--almond);
-  --accent-hi:var(--almond);
-  --accent-ink:var(--coffee);
+  --accent:var(--gold-light);
+  --accent-hi:var(--gold-light);
+  --accent-ink:var(--black);
 
-  --field-bg:rgba(255,251,255,.08);
-  --field-ink:var(--snow);
-  --field-line:rgba(255,251,255,.28);
-  --field-ph:rgba(255,251,255,.45);
-  --field-ring:var(--almond);
-  --note-ink:rgba(255,251,255,.6);
+  --field-bg:rgba(251,248,241,.09);
+  --field-ink:var(--cream);
+  --field-line:rgba(251,248,241,.28);
+  --field-ph:rgba(251,248,241,.45);
+  --field-ring:var(--gold-light);
+  --note-ink:rgba(251,248,241,.6);
 }
 
 *{margin:0;padding:0;box-sizing:border-box}
@@ -110,8 +124,6 @@ nav{
   background:rgba(0,5,0,.88);backdrop-filter:blur(12px);
   color:var(--snow);
 }
-.logo{font-size:1.22rem;font-weight:800;letter-spacing:.18em;white-space:nowrap}
-.logo em{font-style:normal;color:var(--almond)}
 .nav-links{display:flex;gap:18px;font-size:.96rem}
 .nav-links a{opacity:.8;transition:.2s;white-space:nowrap}
 .nav-links a:hover{opacity:1;color:var(--almond)}
@@ -635,7 +647,6 @@ footer{background:var(--black);color:rgba(255,251,255,.62);padding:44px 24px;fon
   section{padding:44px 14px}
   .page-hero{padding:110px 14px 44px}
   nav{padding:12px 14px;gap:8px}
-  .logo{font-size:1.05rem;letter-spacing:.12em}
   .nav-cta{padding:7px 14px;font-size:.88rem}
   .nav-links a{padding:14px 18px}
   .card,.side-card,.plan,.howto,.orchard-body{padding:22px 18px}
@@ -802,34 +813,6 @@ footer{background:var(--black);color:rgba(255,251,255,.62);padding:44px 24px;fon
    作法：讓 logo 維持原色作為品牌識別，周圍一律用色票中性色，
    使它成為畫面中唯一的彩色元素而非衝突來源。
    ============================================ */
-.logo{display:flex;align-items:center;gap:11px}
-/* 中文品牌名只在中文模式顯示 —— I18N 會把語言寫進 <html lang>，直接用它判斷 */
-.logo-zh{display:none}
-html[lang="zh-Hant"] .logo-zh{
-  display:block;font-style:normal;font-weight:700;
-  font-size:.72em;letter-spacing:.34em;
-  color:var(--almond);opacity:.92;margin-top:1px;
-}
-.logo-wm{display:flex;flex-direction:column;line-height:1.15}
-html[lang="zh-Hant"] .foot-brand .logo-zh{
-  display:inline;margin-left:10px;letter-spacing:.2em;font-size:.86em;
-}
-.logo img{
-  width:40px;height:40px;flex-shrink:0;
-  filter:drop-shadow(0 2px 6px rgba(0,5,0,.45));
-}
-.logo span{display:inline-block}
-@media(max-width:520px){
-  .logo span{font-size:.95rem;letter-spacing:.08em}
-  .logo img{width:34px;height:34px}
-}
-@media(max-width:560px){
-  .logo span{display:none}      /* 窄螢幕只留標誌，把寬度讓給選單與語言鈕 */
-  .logo img{width:36px;height:36px}
-}
-
-.foot-brand{display:flex;align-items:flex-start;gap:14px}
-.foot-brand img{width:56px;height:56px;flex-shrink:0}
 
 /* ============================================
    內部系統（ERP / 溝通者門戶）
@@ -1134,6 +1117,48 @@ body.auth-page{background:var(--black);overflow-x:hidden}
   .auth-submit:hover::after{animation:none}
 }
 
+
+/* ============================================
+   品牌字標
+   --------------------------------------------
+   TANJU 是平台名稱，ROOTED FUTURES 根築新局 是集團。
+   標誌一律使用原色，不做任何改色；深色底上以淺色圓底襯著，
+   讓黑色的 R 與果實維持原樣也看得清楚。
+   ============================================ */
+.logo{display:flex;align-items:center;gap:12px;white-space:nowrap}
+.logo img{
+  width:40px;height:40px;flex-shrink:0;
+  background:var(--cream);border-radius:50%;
+  padding:4px;box-sizing:content-box;
+  box-shadow:0 2px 10px rgba(18,17,16,.4);
+}
+.logo .logo-wm{display:flex;flex-direction:column;line-height:1.12}
+.logo-name{font-size:1.32rem;font-weight:800;letter-spacing:.24em;color:var(--cream)}
+.logo-sub{
+  font-style:normal;font-weight:700;
+  font-size:.58rem;letter-spacing:.16em;
+  color:var(--gold-light);opacity:.95;margin-top:4px;
+}
+.logo-zh{display:none}
+html[lang="zh-Hant"] .logo-zh{display:inline}
+
+.foot-brand{display:flex;align-items:flex-start;gap:14px}
+.foot-brand img{
+  width:56px;height:56px;flex-shrink:0;
+  background:var(--cream);border-radius:50%;padding:5px;box-sizing:content-box;
+}
+.foot-brand b{font-size:1.18rem;letter-spacing:.22em;color:var(--gold-light)}
+
+@media(max-width:900px){
+  .logo img{width:34px;height:34px}
+  .logo-name{font-size:1.1rem;letter-spacing:.16em}
+  .logo-sub{font-size:.54rem;letter-spacing:.1em}
+}
+@media(max-width:560px){
+  .logo .logo-wm{display:none}
+  .logo img{width:36px;height:36px}
+}
+
 /* ============================================
    語言切換（下拉式）
    --------------------------------------------
@@ -1188,7 +1213,6 @@ body.auth-page{background:var(--black);overflow-x:hidden}
 .auth-page .lang-toggle{background:rgba(0,5,0,.5);backdrop-filter:blur(8px)}
 
 @media(max-width:900px){
-  .logo span{font-size:1rem;letter-spacing:.08em}
   .logo img{width:34px;height:34px}
 }
 @media(max-width:760px){
@@ -1207,3 +1231,18 @@ body.auth-page{background:var(--black);overflow-x:hidden}
   .lang-toggle{padding:8px 10px}
 }
 
+
+/* 深色底上的大尺寸標誌：同樣以淺色圓底襯著，不改標誌本身的顏色 */
+.hero-mark img,
+.auth-brand-in img,
+.handoff img,
+.signin-card img{
+  background:var(--cream);
+  border-radius:50%;
+  padding:5%;
+  box-sizing:border-box;
+  box-shadow:0 18px 46px rgba(18,17,16,.55);
+}
+
+@media(max-width:560px){
+}
