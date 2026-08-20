@@ -34,7 +34,7 @@ const T_STATUS = {
 /* ============================================================
    啟動
    ============================================================ */
-document.addEventListener('DOMContentLoaded', () => {
+Store.onReady(() => {
   const shell = document.getElementById('app-nav');
   if (!shell) return;
 

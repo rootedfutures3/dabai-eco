@@ -8,7 +8,7 @@
 
 const SESSION = 'rf_app_session';
 
-document.addEventListener('DOMContentLoaded', () => {
+Store.onReady(() => {
   const gate = document.getElementById('auth');
   if (!gate) return;
 

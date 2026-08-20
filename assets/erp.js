@@ -2,12 +2,13 @@
    ERP 儀表板（示範）
    ------------------------------------------------------------
    資料全部來自 assets/store.js 的 localStorage 示範資料庫，
-   樹體資產則來自 assets/site.js 的 TREES 陣列。
+   樹體資產透過 Store.treeList() 取得（資料庫優先，否則用種子）。
    沒有後端、沒有權限控管 —— 這是給 demo 看流程用的。
    ============================================================ */
 
-document.addEventListener('DOMContentLoaded', () => {
+Store.onReady((info) => {
   if (!document.getElementById('kpis')) return;
+  showDbStatus(info);
   renderAll();
 
   // 分頁切換
@@ -30,6 +31,20 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 });
+
+/** 在頁面上標示目前是接雲端資料庫還是本機 localStorage */
+function showDbStatus(info) {
+  const box = document.querySelector('.demo-banner');
+  if (!box) return;
+  const cloud = info && info.mode === 'cloud';
+  box.innerHTML = cloud
+    ? `☁️ <b>已連線到雲端資料庫</b> —— 資料存在 Supabase，所有裝置共用同一份。
+       目前有 ${info.trees || 0} 棵樹、${info.orders || 0} 筆訂單、${info.users || 0} 個帳號。`
+    : `⚠️ <b>目前使用本機儲存</b> —— 尚未設定雲端資料庫，資料只存在<b>這台瀏覽器</b>，
+       換一台裝置看不到。設定方式見專案的 <code>assets/config.js</code>。`
+       + (info && info.error ? `<br><span class="dim">連線錯誤：${info.error}</span>` : '');
+  box.style.borderLeftColor = cloud ? 'var(--gold)' : 'var(--red)';
+}
 
 const money = n => 'RM ' + Number(n).toLocaleString('en-MY');
 
@@ -54,15 +69,15 @@ function renderKpis() {
   const paid      = db.orders.reduce((s, o) => s + o.paid, 0);
   const contract  = db.orders.reduce((s, o) => s + o.amount, 0);
   const unearned  = contract - paid;                       // 已簽未收
-  const adopted   = TREES.filter(t =>
+  const adopted   = Store.treeList().filter(t =>
     t.status === 'adopted' || db.orders.some(o => o.treeId === t.id)).length;
-  const rate      = Math.round(adopted / TREES.length * 100);
+  const rate      = Math.round(adopted / Store.treeList().length * 100);
 
   document.getElementById('kpis').innerHTML = [
     ['認養訂單', db.orders.length + ' 筆', '含本機新增的模擬訂單'],
     ['已收款項', money(paid), '預付金 + 全額'],
     ['待收尾款', money(unearned), 'Unearned Revenue'],
-    ['樹體資產', TREES.length + ' 棵', `已認養 ${adopted} 棵 · 認養率 ${rate}%`],
+    ['樹體資產', Store.treeList().length + ' 棵', `已認養 ${adopted} 棵 · 認養率 ${rate}%`],
     ['B2B 名單', db.leads.length + ' 家', '企業潛在客戶'],
     ['樹況回報', db.reports.length + ' 筆', '溝通者現場紀錄'],
   ].map(([k, v, s]) => `
@@ -96,7 +111,7 @@ function renderTrees() {
   // 有訂單綁定的樹一律視為已認養 —— 狀態以訂單為準，避免與訂單表打架
   const effective = t => db.orders.some(o => o.treeId === t.id) ? 'adopted' : t.status;
 
-  const rows = TREES
+  const rows = Store.treeList()
     .filter(t => (!crop || t.crop === crop) && (!st || effective(t) === st))
     .map(t => {
       const o = db.orders.find(x => x.treeId === t.id);

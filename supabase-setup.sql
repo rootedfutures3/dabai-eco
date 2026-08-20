@@ -3,7 +3,7 @@
 -- ------------------------------------------------------------
 -- 用法：Supabase 專案 → 左側 SQL Editor → New query
 --       把這整份貼上 → 按 Run
---       跑完到 Table Editor 應該會看到五張表。
+--       跑完到 Table Editor 應該會看到七張表。
 --
 -- ⚠️ 這份腳本開放了匿名讀寫（anon 角色）。
 --    這對「比賽 demo / MVP 市場驗證」是刻意的取捨：
@@ -11,6 +11,35 @@
 --    正式營運前務必改成：接 Supabase Auth，
 --    並把下方 policy 換成 auth.uid() 綁定的規則。
 -- ============================================================
+
+
+-- 平台帳號
+-- ⚠️ 密碼欄位為明文，僅供 Phase 1 demo。
+--    正式營運請改用 Supabase Auth（內建雜湊與 session 管理），
+--    並把這張表縮成只存個人資料，不存密碼。
+create table if not exists users (
+  u          text primary key,          -- 帳號
+  pass       text,                      -- demo 用明文密碼
+  role       text,                      -- admin | farmer | buyer
+  name       text,
+  org        text,
+  phone      text,
+  email      text,
+  area       text,
+  created_at timestamptz default now()
+);
+
+-- 農民／摘果者／溝通者 收益紀錄
+create table if not exists wages (
+  id         bigserial primary key,
+  month      text,
+  person     text,
+  role       text,
+  base       int,
+  bonus      int,
+  note       text,
+  created_at timestamptz default now()
+);
 
 -- 果樹資產（一樹一碼）
 create table if not exists trees (
@@ -90,6 +119,8 @@ create table if not exists messages (
 -- 開啟 RLS 後，預設是「全部拒絕」，再逐條開放。
 -- 下面開放 anon 讀寫，讓純前端的 demo 可以運作。
 -- ============================================================
+alter table users    enable row level security;
+alter table wages    enable row level security;
 alter table trees    enable row level security;
 alter table orders   enable row level security;
 alter table reports  enable row level security;
@@ -99,7 +130,7 @@ alter table messages enable row level security;
 do $$
 declare t text;
 begin
-  foreach t in array array['trees','orders','reports','leads','messages'] loop
+  foreach t in array array['users','trees','orders','reports','leads','wages','messages'] loop
     execute format('drop policy if exists "demo_read" on %I', t);
     execute format('drop policy if exists "demo_write" on %I', t);
     execute format('drop policy if exists "demo_update" on %I', t);

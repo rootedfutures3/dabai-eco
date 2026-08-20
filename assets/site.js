@@ -15,7 +15,7 @@ const FORM_ENDPOINT = 'https://formspree.io/f/xdaqvvro';
 // 進場動畫（漸進增強：JS 不可用時內容照常顯示）
 document.documentElement.classList.add('js');
 
-document.addEventListener('DOMContentLoaded', () => {
+Store.onReady(() => {
   const io = new IntersectionObserver(entries => {
     entries.forEach(e => {
       if (e.isIntersecting) { e.target.classList.add('on'); io.unobserve(e.target); }

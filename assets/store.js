@@ -126,7 +126,18 @@ const Store = {
     const db = Store.read();
     db.users.push(user);
     Store.write(db);
+    push('users', user);
     return user;
+  },
+
+  /**
+   * 目前的樹木清單 —— 資料庫裡有就用資料庫的，否則退回 site.js 的靜態種子。
+   * ERP 與溝通者門戶都應該用這個，直接讀 TREES 會看到過時資料。
+   */
+  treeList() {
+    const db = Store.read();
+    if (db.trees && db.trees.length) return db.trees;
+    return (typeof TREES !== 'undefined') ? TREES : [];
   },
 
   /* ---- 樹木資產（首次由 site.js 的 TREES 種子化，之後可編輯） ---- */
@@ -257,6 +268,18 @@ const MAP = {
     out: m => ({ tree_id:m.treeId, from_who:m.from, to_who:m.to, at:m.at, text:m.text }),
     in:  r => ({ id:r.id, treeId:r.tree_id, from:r.from_who, to:r.to_who, at:r.at, text:r.text }),
   },
+  users: {
+    out: u => ({ u:u.u, pass:u.pass, role:u.role, name:u.name,
+                 org:u.org, phone:u.phone, email:u.email, area:u.area }),
+    in:  r => ({ u:r.u, pass:r.pass, role:r.role, name:r.name,
+                 org:r.org, phone:r.phone, email:r.email, area:r.area }),
+  },
+  wages: {
+    out: w => ({ month:w.month, person:w.person, role:w.role,
+                 base:w.base, bonus:w.bonus, note:w.note }),
+    in:  r => ({ month:r.month, person:r.person, role:r.role,
+                 base:r.base, bonus:r.bonus, note:r.note }),
+  },
 };
 
 /** 寫入雲端（失敗只記錄，不阻斷畫面 —— 資料仍在本機快取） */
@@ -266,37 +289,43 @@ function push(tableName, row) {
     .catch(e => console.warn('[雲端寫入失敗]', tableName, e.message));
 }
 
-/** 開機：載入雲端資料。沒設定就直接沿用 localStorage。 */
+/** 開機：載入雲端資料。沒設定 config.js 就直接沿用 localStorage。 */
 Store.boot = async function () {
   if (!SB.on) return { mode: 'local' };
 
+  const TABLES = ['users', 'trees', 'orders', 'reports', 'leads', 'wages', 'messages'];
   try {
-    const [trees, orders, reports, leads, messages] = await Promise.all(
-      ['trees','orders','reports','leads','messages'].map(t => SB.get(t)));
+    const rows = {};
+    await Promise.all(TABLES.map(async t => { rows[t] = await SB.get(t); }));
 
     const db = Store.read();
+    const stats = {};
 
-    // 首次連線：雲端還是空的 → 把示範資料推上去
-    if (!trees.length && typeof TREES !== 'undefined') {
-      const seed = TREES.map(t => ({ ...t, owner:'system', listed:true }));
+    // trees 的種子來自 site.js 的 TREES（帶 owner / listed 欄位）
+    if (!rows.trees.length && typeof TREES !== 'undefined') {
+      const seed = (db.trees && db.trees.length)
+        ? db.trees
+        : TREES.map(t => ({ ...t, owner: 'system', listed: true }));
       await SB.insert('trees', seed.map(MAP.trees.out));
       db.trees = seed;
-    } else {
-      db.trees = trees.map(MAP.trees.in);
+    } else if (rows.trees.length) {
+      db.trees = rows.trees.map(MAP.trees.in);
     }
+    stats.trees = (db.trees || []).length;
 
-    if (!orders.length && db.orders?.length) {
-      await SB.insert('orders', db.orders.map(MAP.orders.out));
-    } else if (orders.length) {
-      db.orders = orders.map(MAP.orders.in);
+    // 其餘表：雲端空的就把本機種子推上去，否則以雲端為準
+    for (const t of ['users', 'orders', 'reports', 'leads', 'wages', 'messages']) {
+      if (!rows[t].length) {
+        const local = db[t] || [];
+        if (local.length) await SB.insert(t, local.map(MAP[t].out));
+      } else {
+        db[t] = rows[t].map(MAP[t].in);
+      }
+      stats[t] = (db[t] || []).length;
     }
-
-    if (reports.length)  db.reports  = reports.map(MAP.reports.in);
-    if (leads.length)    db.leads    = leads.map(MAP.leads.in);
-    if (messages.length) db.messages = messages.map(MAP.messages.in);
 
     Store.write(db);
-    return { mode: 'cloud', trees: db.trees.length, orders: db.orders.length };
+    return { mode: 'cloud', ...stats };
 
   } catch (e) {
     console.warn('[雲端連線失敗，改用本機資料]', e.message);
@@ -304,9 +333,18 @@ Store.boot = async function () {
   }
 };
 
-/** 等資料庫就緒後再執行（取代直接綁 DOMContentLoaded） */
+/**
+ * 等「DOM 就緒且資料庫載入完成」後再執行。
+ * 取代直接綁 DOMContentLoaded —— 否則雲端資料還沒回來就先渲染，
+ * 畫面會閃一次舊資料。boot() 只會執行一次，多個腳本共用同一個 Promise。
+ */
+Store._boot = null;
 Store.onReady = function (fn) {
-  const go = () => Store.boot().then(info => fn(info)).catch(() => fn({ mode: 'local' }));
+  const start = () => {
+    if (!Store._boot) Store._boot = Store.boot().catch(e => ({ mode: 'local', error: String(e) }));
+    return Store._boot;
+  };
+  const go = () => start().then(info => { try { fn(info); } catch (e) { console.error(e); } });
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', go);
   else go();
 };

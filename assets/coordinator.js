@@ -14,7 +14,7 @@ const DEMO_CODE = 'SONG2026';
 const SESSION_KEY = 'rf_coordinator_who';
 const QUEUE_KEY = 'rf_report_queue';
 
-document.addEventListener('DOMContentLoaded', () => {
+Store.onReady(() => {
   if (!document.getElementById('signin')) return;
 
   const signin = document.getElementById('signin');
@@ -137,7 +137,7 @@ function flushQueue() {
 }
 
 function fillTreeSelects() {
-  const opts = TREES.map(t =>
+  const opts = Store.treeList().map(t =>
     `<option value="${t.id}">${t.id} · ${CROP_NAME[t.crop]}（${t.orchard}）</option>`).join('');
   document.getElementById('r-tree').innerHTML = opts;
   document.getElementById('l-tree').innerHTML = opts;
@@ -187,7 +187,7 @@ function renderMyReports() {
 
 /* ---------- 採收標籤 ---------- */
 function renderLabel() {
-  const t = TREES.find(x => x.id === document.getElementById('l-tree').value);
+  const t = Store.treeList().find(x => x.id === document.getElementById('l-tree').value);
   if (!t) return;
   const basket = document.getElementById('l-basket').value || 'B-01';
   document.getElementById('label').innerHTML = `
