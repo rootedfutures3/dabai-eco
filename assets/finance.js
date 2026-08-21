@@ -37,9 +37,11 @@ const FIN_DEFAULTS = {
   fin_ins_claim:      '40',    // 預期理賠佔保費％
 
   /* --- 變動成本（隨樹數／重量增加） --- */
-  fin_c_tag:          '12',    // Tree ID 標牌與建檔 RM／棵
-  fin_c_survey:       '25',    // 顧問下田勘查與評級 RM／棵／年
-  fin_c_coord:        '18',    // 溝通者現場回報 RM／棵／年
+  /* 只放材料與耗材。勘查與回報的「人力」已經算在固定成本的人事津貼裡，
+     兩邊都算會重複計算，把毛利壓成負的。 */
+  fin_c_tag:          '6',     // Tree ID 標牌與掛牌耗材 RM／棵
+  fin_c_survey:       '8',     // 勘查耗材與土壤檢測 RM／棵／年（人力算在人事）
+  fin_c_coord:        '5',     // 回報耗材與通訊 RM／棵／年（人力算在人事）
   fin_c_logistics:    '1.8',   // 集貨與物流 RM／kg（果園→舢舨→碼頭→貨車）
   fin_c_pack:         '0.9',   // 包裝 RM／kg
   fin_c_payment:      '2.5',   // 金流手續費％（FPX／信用卡／DuitNow）
@@ -55,6 +57,10 @@ const FIN_DEFAULTS = {
   fin_f_ads_y2:       '9600',
   fin_f_admin_y1:     '1500',  // 註冊、會計、保險、雜支
   fin_f_admin_y2:     '3000',
+
+  /* 物流與包裝實務上是向買方另外收運費回收的，不是平台自己吸收。
+     預設全額回收；想模擬平台自行吸收就把它調低。 */
+  fin_ship_recover:   '100',
 };
 
 const FIN_LABELS = {
@@ -66,9 +72,10 @@ const FIN_LABELS = {
 
   fin_ins_rate:'投保比例（%）', fin_ins_fee:'保費（RM／棵）', fin_ins_claim:'理賠支出（佔保費%）',
 
-  fin_c_tag:'標牌與建檔（RM／棵）', fin_c_survey:'顧問勘查（RM／棵／年）',
-  fin_c_coord:'溝通者回報（RM／棵／年）', fin_c_logistics:'集貨物流（RM／kg）',
+  fin_c_tag:'標牌耗材（RM／棵）', fin_c_survey:'勘查耗材（RM／棵／年）',
+  fin_c_coord:'回報耗材（RM／棵／年）', fin_c_logistics:'集貨物流（RM／kg）',
   fin_c_pack:'包裝（RM／kg）', fin_c_payment:'金流手續費（%）',
+  fin_ship_recover:'物流費回收（%）',
 
   fin_f_people_y1:'人事津貼（RM／年）', fin_f_people_y2:'人事津貼（RM／年）',
   fin_f_travel_y1:'交通與船資（RM／年）', fin_f_travel_y2:'交通與船資（RM／年）',
@@ -113,10 +120,16 @@ function financeYear(y) {
   const premium   = insured * fin('fin_ins_fee');
   const claims    = premium * fin('fin_ins_claim') / 100;
 
+  // ④ 物流費回收：運費向買方另外收，不是平台吸收
+  const cLogRaw  = sellable * fin('fin_c_logistics');
+  const cPackRaw = sellable * fin('fin_c_pack');
+  const recover  = (cLogRaw + cPackRaw) * fin('fin_ship_recover') / 100;
+
   const revenue = [
     ['① 認養佣金', `${adopted} 棵 × RM ${fee} × ${comm * 100}%`, rev1],
     ['② 直銷佣金', `${Math.round(sellable)} kg × RM ${fin('fin_price_kg')} × ${dcomm * 100}%`, rev2],
     ['③ 果樹保險保費', `${insured} 棵 × RM ${fin('fin_ins_fee')}`, premium],
+    ['④ 物流費回收', `向買方收取，回收 ${fin('fin_ship_recover')}%`, recover],
   ];
   const revTotal = revenue.reduce((s, r) => s + r[2], 0);
 
@@ -124,14 +137,14 @@ function financeYear(y) {
   const cTag   = trees * fin('fin_c_tag');
   const cSurv  = trees * fin('fin_c_survey');
   const cCoord = trees * fin('fin_c_coord');
-  const cLog   = sellable * fin('fin_c_logistics');
-  const cPack  = sellable * fin('fin_c_pack');
+  const cLog   = cLogRaw;
+  const cPack  = cPackRaw;
   const cPay   = (gmv + sales) * fin('fin_c_payment') / 100;
 
   const variable = [
-    ['Tree ID 標牌與建檔', `${trees} 棵 × RM ${fin('fin_c_tag')}`, cTag],
-    ['顧問下田勘查與評級', `${trees} 棵 × RM ${fin('fin_c_survey')}`, cSurv],
-    ['溝通者現場回報',     `${trees} 棵 × RM ${fin('fin_c_coord')}`, cCoord],
+    ['Tree ID 標牌耗材', `${trees} 棵 × RM ${fin('fin_c_tag')}`, cTag],
+    ['勘查耗材與土壤檢測', `${trees} 棵 × RM ${fin('fin_c_survey')}`, cSurv],
+    ['回報耗材與通訊',     `${trees} 棵 × RM ${fin('fin_c_coord')}`, cCoord],
     ['集貨與物流',         `${Math.round(sellable)} kg × RM ${fin('fin_c_logistics')}`, cLog],
     ['包裝',               `${Math.round(sellable)} kg × RM ${fin('fin_c_pack')}`, cPack],
     ['金流手續費',         `流水 RM ${Math.round(gmv + sales).toLocaleString('en-MY')} × ${fin('fin_c_payment')}%`, cPay],
@@ -192,7 +205,8 @@ function renderFinance() {
     + group('收入 ② 直銷', ['fin_kg_per_tree', 'fin_price_kg', 'fin_direct_comm', 'fin_direct_loss'])
     + group('收入 ③ 果樹保險', ['fin_ins_rate', 'fin_ins_fee', 'fin_ins_claim'])
     + group('變動成本', ['fin_c_tag', 'fin_c_survey', 'fin_c_coord',
-                        'fin_c_logistics', 'fin_c_pack', 'fin_c_payment'])
+                        'fin_c_logistics', 'fin_c_pack', 'fin_c_payment',
+                        'fin_ship_recover'])
     + group('固定成本 · 第 1 年', ['fin_f_people_y1', 'fin_f_travel_y1', 'fin_f_system_y1',
                                  'fin_f_ads_y1', 'fin_f_admin_y1'])
     + group('固定成本 · 第 2 年', ['fin_f_people_y2', 'fin_f_travel_y2', 'fin_f_system_y2',
@@ -295,7 +309,7 @@ function drawFinance() {
     <p>
       第 2 年擴到 <b>${y2.trees} 棵</b>，營收 <b>${m(y2.revTotal)}</b>、
       淨利 <b class="${y2.net < 0 ? 'neg' : 'pos'}">${m(y2.net)}</b>（淨利率 ${pc(y2.netMargin)}）。
-      ${be ? `以第 2 年的固定成本推算，約需 <b>${be} 棵樹</b>損益兩平。` : ''}
+      ${be ? `<span>以第 2 年的固定成本推算，約需 <b>${be} 棵樹</b>損益兩平。</span>` : ''}
     </p>
     <p>
       <b>槓桿在哪：</b>每棵樹貢獻約 <b>${m(y2.perTree)}</b> 毛利，而固定成本幾乎不隨樹數增加 ——

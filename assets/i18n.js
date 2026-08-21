@@ -39,7 +39,8 @@ const I18N = {
     //    「36 棵」→ 樣板「{n} 棵」；「上架 36 棵」→「上架 {n} 棵」
     //    這樣帶數字的動態字串不必逐一列進字典。
     const nums = [];
-    const tpl = key.replace(/\d[\d,.]*/g, m => { nums.push(m); return '{n}'; });
+    // 負號要一起吃掉，否則「淨利率 -13.7%」會被拆成「-{n}%」而查不到字典
+    const tpl = key.replace(/-?\d[\d,.]*/g, m => { nums.push(m); return '{n}'; });
     if (nums.length) {
       const tt = this.dict[tpl];
       if (tt !== undefined) {
@@ -47,7 +48,67 @@ const I18N = {
         return tt.replace(/\{n\}/g, () => nums[i++] ?? '');
       }
     }
+    // 3) 自由樣板：字典 key 裡寫 {a}、{b} 之類的佔位符，
+    //    用來對付程式產生、中間夾著人名地名的字串，例如
+    //      '{a}, Sarawak · 果農：{b}'
+    //    這樣就不必把每一個果農的名字都列進字典。
+    for (const [re, out, slots] of this.patterns()) {
+      const m = key.match(re);
+      if (!m) continue;
+      // 依名字對應，不能照順序填 —— 譯文的語序常常和中文不一樣，
+      // 例如 '{a}｜{b} 年生的{c}' 的馬來文是 '{a} — pokok {c} berusia {b} tahun'。
+      const val = {};
+      // 擷取到的片段自己也可能查得到字典 —— 例如 '{a}, Sarawak · 果農：{b}'
+      // 裡的 {b} 是「Ak. Jelani 一家」，字典裡有它，就一起翻掉。
+      slots.forEach((name, i) => {
+        const raw = m[i + 1] ?? '';
+        val[name] = this.dict[this.norm(raw)] ?? raw;
+      });
+      return out.replace(/\{([a-z])\}/g, (_, name) => val[name] ?? '');
+    }
+
     return s;
+  },
+
+  /**
+   * 程式改寫過某個元素的內容之後要呼叫這個。
+   *
+   * apply() 會把元素的原文記在 data-o-full / data-o-html，之後切語言都
+   * 依那份快取翻譯。如果程式在那之後才用 innerHTML 換掉內容（例如 ERP
+   * 開頁連上雲端後改寫狀態列），快取就過期了 —— 一切語言就會跳回舊句子。
+   * 呼叫這個把快取清掉並重譯，畫面才會跟著新內容走。
+   */
+  refresh(el) {
+    if (!el) return;
+    el.querySelectorAll('[data-o-full],[data-o-html],[data-o-text]').forEach(n => {
+      delete n.dataset.oFull; delete n.dataset.oHtml; delete n.dataset.oText;
+    });
+    delete el.dataset.oFull; delete el.dataset.oHtml; delete el.dataset.oText;
+    // 文字節點的原文記在 __o 上，一併清掉
+    const w = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+    let n; while ((n = w.nextNode())) delete n.__o;
+    this.apply(el);
+  },
+
+  /** 把字典裡含佔位符的 key 編成正則。每個語言只算一次。 */
+  patterns() {
+    if (this._pats && this._patsLang === this.lang) return this._pats;
+    const list = [];
+    for (const k of Object.keys(this.dict)) {
+      if (!/\{[a-z]\}/.test(k)) continue;
+      // 先把非佔位符的部分逐字轉義，再把佔位符換成擷取群組
+      // slots 記下佔位符在「原文」裡出現的順序，之後才能對回名字
+      const slots = [];
+      const re = k.split(/(\{[a-z]\})/).map(part => {
+        const hit = part.match(/^\{([a-z])\}$/);
+        if (hit) { slots.push(hit[1]); return '(.+?)'; }
+        return part.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      }).join('');
+      list.push([new RegExp('^' + re + '$'), this.dict[k], slots]);
+    }
+    this._pats = list;
+    this._patsLang = this.lang;
+    return list;
   },
 
   /** 走訪整棵樹，翻譯文字節點與特定屬性 */
@@ -101,6 +162,16 @@ const I18N = {
 
          這些一律跳過，交給第二輪逐節點翻譯處理。 */
       if (el.querySelector('input,select,textarea,img,svg,video,iframe,canvas')) return;
+
+      /* 整段替換是用 textContent 寫回去的，子元素會連同樣式一起消失。
+         大多數情況這樣沒問題（句子裡的 <b> 本來就該被整句取代），
+         但排版用的容器不行 —— 例如成長率徽章和說明文字並排的那種。
+         那些地方標上 data-i18n-keep，這裡就跳過，改用逐節點翻譯。
+
+         用明確標記而不是猜（例如「子元素有沒有 class」）：
+         <h1>果園列表 · <span class="accent">開放認養</span></h1>
+         的 .accent 也是有 class 的，但它就是句子的一部分，該整句翻。 */
+      if (el.hasAttribute('data-i18n-keep')) return;
       if (el.tagName === 'DIV' &&
           el.querySelector('div,section,article,ul,ol,li,table,form,p,h1,h2,h3,h4,h5,h6,button,label')) return;
 

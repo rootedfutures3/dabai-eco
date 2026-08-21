@@ -5,19 +5,19 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ERP 儀表板（示範）— TANJU</title>
 <meta name="robots" content="noindex">
-<link rel="icon" type="image/png" sizes="32x32" href="assets/img/favicon-32.png?v=a5c01083">
-<link rel="stylesheet" href="assets/style.css?v=a5c01083">
-<script src="assets/config.js?v=a5c01083" defer></script>
-<script src="assets/perm.js?v=a5c01083" defer></script>
-<script src="assets/store.js?v=a5c01083" defer></script>
-<script src="assets/site.js?v=a5c01083" defer></script>
-<script src="assets/erp.js?v=a5c01083" defer></script>
-<script src="assets/finance.js?v=a5c01083" defer></script>
-<script src="assets/social.js?v=a5c01083" defer></script>
-<script src="assets/lang/ms.js?v=a5c01083" defer></script>
-<script src="assets/lang/en.js?v=a5c01083" defer></script>
-<script src="assets/lang/iba.js?v=a5c01083" defer></script>
-<script src="assets/i18n.js?v=a5c01083" defer></script>
+<link rel="icon" type="image/png" sizes="32x32" href="assets/img/favicon-32.png?v=f71c63b3">
+<link rel="stylesheet" href="assets/style.css?v=f71c63b3">
+<script src="assets/config.js?v=f71c63b3" defer></script>
+<script src="assets/perm.js?v=f71c63b3" defer></script>
+<script src="assets/store.js?v=f71c63b3" defer></script>
+<script src="assets/site.js?v=f71c63b3" defer></script>
+<script src="assets/erp.js?v=f71c63b3" defer></script>
+<script src="assets/finance.js?v=f71c63b3" defer></script>
+<script src="assets/social.js?v=f71c63b3" defer></script>
+<script src="assets/lang/ms.js?v=f71c63b3" defer></script>
+<script src="assets/lang/en.js?v=f71c63b3" defer></script>
+<script src="assets/lang/iba.js?v=f71c63b3" defer></script>
+<script src="assets/i18n.js?v=f71c63b3" defer></script>
 </head>
 <body class="admin">
 
@@ -26,7 +26,7 @@
   <!-- ============ 左側功能列 ============ -->
   <aside class="side" id="side">
     <a class="side-brand" href="index.html">
-      <img src="assets/img/logo.png?v=a5c01083" alt="" width="38" height="38">
+      <img src="assets/img/logo.png?v=f71c63b3" alt="" width="38" height="38">
       <span><b>TANJU</b><i>ROOTED FUTURES</i></span>
     </a>
 
@@ -83,8 +83,30 @@
     </div>
 
     <div class="tab-pane on" data-panel="overview">
-      <h3 class="panel-h">營運總覽 <small>Overview</small></h3>
-      <div class="kpi-row" id="kpis"></div>
+      <h3 class="panel-h">營運總覽 <small>Dashboard</small></h3>
+
+      <p class="panel-note">
+        這個月賺了多少、花了多少、比上個月成長多少 —— 一眼看完。
+        數字全部來自資料庫裡的真實訂單與撥款紀錄，不是寫死的。
+      </p>
+
+      <h4 class="sub-h">本月表現 <small>This Month</small></h4>
+      <div class="big-kpis" id="month-kpis"></div>
+
+      <h4 class="sub-h">逐月走勢 <small>Monthly Trend</small></h4>
+      <div class="chart-card">
+        <!-- data-i18n-keep：這幾個 span 的文字剛好是字典裡的 key，
+             整段翻譯會用 textContent 寫回去，把裡面的色塊 <i> 一起抹掉。 -->
+        <div class="chart-legend">
+          <span data-i18n-keep><i class="sw sw-rev"></i>平台收入</span>
+          <span data-i18n-keep><i class="sw sw-cost"></i>平台支出</span>
+          <span data-i18n-keep><i class="sw sw-net"></i>淨利</span>
+        </div>
+        <div class="chart-scroll" id="month-chart"></div>
+      </div>
+
+      <h4 class="sub-h">逐月明細 <small>Month by Month</small></h4>
+      <div class="table-scroll"><table id="t-months"></table></div>
 
       <div class="ov-grid">
         <div>
@@ -92,8 +114,8 @@
           <div class="table-scroll"><table id="t-recent"></table></div>
         </div>
         <div>
-          <h4 class="sub-h">這個月 <small>This Month</small></h4>
-          <div class="table-scroll"><table id="t-month"></table></div>
+          <h4 class="sub-h">累計 <small>All Time</small></h4>
+          <div class="kpi-row" id="kpis"></div>
         </div>
       </div>
     </div>
@@ -283,7 +305,7 @@
 
 <footer class="admin-foot">
   <div class="foot-grid">
-    <div class="foot-brand"><img src="assets/img/logo.png?v=a5c01083" alt="TANJU · ROOTED FUTURES 根築新局" width="56" height="56"><div><b>TANJU</b><br>ROOTED FUTURES<span class="logo-zh"> 根築新局</span><br>Social Enterprise · Song, Sarawak</div></div>
+    <div class="foot-brand"><img src="assets/img/logo.png?v=f71c63b3" alt="TANJU · ROOTED FUTURES 根築新局" width="56" height="56"><div><b>TANJU</b><br>ROOTED FUTURES<span class="logo-zh"> 根築新局</span><br>Social Enterprise · Song, Sarawak</div></div>
     <div class="foot-links">
       <a href="index.html">回前台</a>
       <a href="erp.html">ERP 儀表板</a>

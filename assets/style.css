@@ -1571,3 +1571,72 @@ nav.admin-top{
   background:var(--field-bg,#fff);color:var(--field-ink,var(--ink));
 }
 .perm-pick:disabled{opacity:.55;cursor:not-allowed}
+
+/* ============================================================
+   營運總覽 Dashboard
+   ============================================================ */
+
+.big-kpis{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(min(210px,100%),1fr));
+  gap:16px;margin-bottom:34px;
+}
+.big-kpi{
+  background:var(--snow);border:1px solid var(--line);
+  border-left:4px solid var(--taupe);border-radius:var(--radius);
+  padding:20px 22px;
+}
+.big-kpi.rev{border-left-color:var(--gold)}
+.big-kpi.cost{border-left-color:var(--taupe-deep)}
+.big-kpi.net{border-left-color:#2E6B3E}
+.big-kpi.neg{border-left-color:var(--red)}
+.big-kpi.gmv{border-left-color:var(--coffee)}
+
+.bk-k{display:block;font-size:.88rem;color:var(--ink-soft);margin-bottom:6px}
+.bk-v{
+  display:block;font-size:1.72rem;line-height:1.2;color:var(--ink);
+  font-variant-numeric:tabular-nums;
+}
+.bk-s{display:flex;align-items:center;gap:8px;margin-top:8px;flex-wrap:wrap}
+.bk-hint{font-size:.84rem;color:var(--taupe-deep)}
+
+.delta{
+  font-size:.82rem;font-weight:700;white-space:nowrap;
+  padding:2px 8px;border-radius:999px;
+}
+/* 綠漲紅跌，但不只靠顏色 —— ▲▼ 本身就帶著方向 */
+.delta.up{color:#1F5130;background:rgba(46,107,62,.13)}
+.delta.down{color:#7A2020;background:rgba(148,44,44,.12)}
+
+/* --- 長條圖 --- */
+.chart-card{
+  background:var(--snow);border:1px solid var(--line);
+  border-radius:var(--radius);padding:18px 20px 12px;margin-bottom:30px;
+}
+.chart-legend{
+  display:flex;gap:20px;flex-wrap:wrap;margin-bottom:12px;
+  font-size:.88rem;color:var(--ink-soft);
+}
+.chart-legend span{display:flex;align-items:center;gap:7px}
+.sw{width:12px;height:12px;border-radius:3px;display:inline-block}
+.sw-rev{background:var(--gold)}
+.sw-cost{background:var(--taupe-deep)}
+.sw-net{background:#2E6B3E}
+
+.chart-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.chart-scroll svg{display:block;max-width:none}
+.chart-scroll .b-rev{fill:var(--gold)}
+.chart-scroll .b-cost{fill:var(--taupe-deep)}
+.chart-scroll .b-net{fill:#2E6B3E}
+.chart-scroll .b-neg{fill:var(--red)}
+.chart-scroll .grid{stroke:var(--line);stroke-width:1;stroke-dasharray:3 4}
+.chart-scroll .axis{stroke:var(--taupe);stroke-width:1}
+.chart-scroll .x-lab{fill:var(--ink-soft);font-size:11px}
+.chart-scroll .x-yr{fill:var(--taupe-deep);font-size:10px}
+.chart-scroll .y-lab{fill:var(--taupe-deep);font-size:10px}
+.chart-scroll rect{transition:opacity .15s}
+.chart-scroll rect:hover{opacity:.75}
+
+@media(max-width:560px){
+  .bk-v{font-size:1.45rem}
+  .chart-card{padding:14px 14px 10px}
+}

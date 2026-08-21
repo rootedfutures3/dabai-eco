@@ -91,6 +91,10 @@ function showDbStatus(info) {
        換一台裝置看不到。設定方式見專案的 <code>assets/config.js</code>。`
        + (info && info.error ? `<br><span class="dim">連線錯誤：${info.error}</span>` : '');
   box.style.borderLeftColor = cloud ? 'var(--gold)' : 'var(--red)';
+
+  // 這段是連上雲端之後才換掉的內容，i18n 先前快取的原文已經過期，
+  // 要它重新抓一次，否則切語言會跳回上面那段示範系統的舊文字。
+  if (typeof I18N !== 'undefined') I18N.refresh(box);
 }
 
 const money = n => 'RM ' + Number(n).toLocaleString('en-MY');
@@ -427,39 +431,189 @@ function showMe() {
   }
 }
 
-/* ---------- 總覽 ---------- */
+/* ============================================================
+   營運總覽 Dashboard
+   ------------------------------------------------------------
+   回答三個問題：這個月賺了多少、花了多少、比上個月成長多少。
+
+   會計上要分清楚兩件事：
+     · 平台收入 —— 只有佣金是我們的錢
+     · 代收代付 —— 認養金裡果農那 80% 只是流過我們手上，
+       它不是我們的收入，撥出去也不是我們的成本
+   所以下面把「代收代付」單獨列出來，不混進損益。
+   ============================================================ */
+
+/** 取近 n 個月（含本月）的 YYYY-MM 清單，舊到新。 */
+function recentMonths(n) {
+  const out = [];
+  const d = new Date();
+  d.setDate(1);
+  for (let i = n - 1; i >= 0; i--) {
+    const m = new Date(d.getFullYear(), d.getMonth() - i, 1);
+    out.push(`${m.getFullYear()}-${String(m.getMonth() + 1).padStart(2, '0')}`);
+  }
+  return out;
+}
+
+/** 某個月份的收入、支出與代收代付。 */
+function monthStats(ym) {
+  const db = Store.read();
+  const inM = a => String(a || '').startsWith(ym);
+
+  const orders = (db.orders || []).filter(o => inM(o.date));
+  const gmv    = orders.reduce((s, o) => s + Number(o.amount || 0), 0);
+  const fee    = orders.reduce((s, o) => s + Store.split(o).fee, 0);
+
+  // 平台自己的支出：工資與津貼。撥給果農的錢是代收代付，不算。
+  const wages   = (db.wages || []).filter(w => inM(w.month))
+                    .reduce((s, w) => s + Number(w.base || 0) + Number(w.bonus || 0), 0);
+  const payouts = (db.payouts || []).filter(p => inM(p.date))
+                    .reduce((s, p) => s + Number(p.amount || 0), 0);
+
+  return {
+    ym, gmv, revenue: fee, cost: wages, passthrough: payouts,
+    net: fee - wages,
+    orders: orders.length,
+    reports: (db.reports || []).filter(r => inM(r.at)).length,
+    posts:   (db.posts   || []).filter(p => inM(p.at)).length,
+  };
+}
+
+/** 成長率。上個月是 0 的時候沒有百分比可言，回傳 null 讓畫面顯示「—」。 */
+function growth(now, prev) {
+  if (!prev) return null;
+  return (now - prev) / Math.abs(prev) * 100;
+}
 
 function renderOverview() {
-  const db = Store.read();
+  const months = recentMonths(12).map(monthStats);
+  const cur  = months[months.length - 1];
+  const prev = months[months.length - 2] || { revenue: 0, cost: 0, net: 0, gmv: 0 };
 
-  /* 最近動態：訂單、樹況回報、撥款、貼文混在一起，依時間排 */
+  drawMonthKpis(cur, prev);
+  drawMonthChart(months);
+  drawMonthTable(months);
+  drawRecent();
+}
+
+/** 大字卡：收入、支出、淨利、流水，各自帶一個和上月比較的箭頭。 */
+function drawMonthKpis(cur, prev) {
+  const box = document.getElementById('month-kpis');
+  if (!box) return;
+
+  const card = (label, value, g, hint, tone) => {
+    const arrow = g === null ? ''
+      : `<span class="delta ${g >= 0 ? 'up' : 'down'}">
+           ${g >= 0 ? '▲' : '▼'} ${Math.abs(g).toFixed(0)}%
+         </span>`;
+    return `
+      <div class="big-kpi ${tone || ''}">
+        <span class="bk-k">${label}</span>
+        <b class="bk-v">${money(value)}</b>
+        <span class="bk-s" data-i18n-keep>${arrow}<span class="bk-hint">${hint}</span></span>
+      </div>`;
+  };
+
+  box.innerHTML =
+      card('本月平台收入', cur.revenue, growth(cur.revenue, prev.revenue), '認養佣金', 'rev')
+    + card('本月平台支出', cur.cost,    growth(cur.cost, prev.cost),       '工資與津貼', 'cost')
+    + card('本月淨利',     cur.net,     growth(cur.net, prev.net),
+           cur.net >= 0 ? '收入減支出' : '尚未打平', cur.net >= 0 ? 'net' : 'neg')
+    + card('本月平台流水', cur.gmv,     growth(cur.gmv, prev.gmv),
+           `認養訂單 ${cur.orders} 筆`, 'gmv');
+}
+
+/**
+ * 逐月長條圖。用純 SVG 畫，不拉任何圖表函式庫 ——
+ * 這樣沒有額外的載入成本，也不會有 CDN 連不上的問題。
+ */
+function drawMonthChart(months) {
+  const box = document.getElementById('month-chart');
+  if (!box) return;
+
+  const W = Math.max(680, months.length * 76);
+  const H = 260, PAD_B = 44, PAD_T = 18, PAD_L = 8;
+  const top = Math.max(
+    ...months.map(m => Math.max(m.revenue, m.cost, Math.abs(m.net))), 1);
+  const plotH = H - PAD_B - PAD_T;
+  const slot  = (W - PAD_L * 2) / months.length;
+  const bw    = Math.min(16, slot / 4.4);
+  const y     = v => PAD_T + plotH - (v / top) * plotH;
+
+  const bars = months.map((m, i) => {
+    const cx = PAD_L + slot * i + slot / 2;
+    const one = (v, off, cls, label) => {
+      const h = Math.max(Math.abs(v) / top * plotH, v === 0 ? 0 : 1.5);
+      const yy = v >= 0 ? y(Math.abs(v)) : PAD_T + plotH;
+      return `<rect class="${cls}" x="${(cx + off - bw / 2).toFixed(1)}" y="${yy.toFixed(1)}"
+                    width="${bw.toFixed(1)}" height="${h.toFixed(1)}" rx="2">
+                <title>${m.ym}｜${label}：${money(v)}</title></rect>`;
+    };
+    return one(m.revenue, -bw - 2, 'b-rev', '收入')
+         + one(m.cost, 0, 'b-cost', '支出')
+         + one(m.net, bw + 2, m.net >= 0 ? 'b-net' : 'b-neg', '淨利')
+         + `<text class="x-lab" x="${cx.toFixed(1)}" y="${H - PAD_B + 18}"
+                  text-anchor="middle">${m.ym.slice(5)}</text>`
+         + (i === 0 || m.ym.slice(5) === '01'
+             ? `<text class="x-yr" x="${cx.toFixed(1)}" y="${H - PAD_B + 33}"
+                      text-anchor="middle">${m.ym.slice(0, 4)}</text>` : '');
+  }).join('');
+
+  // 三條水平參考線，讓高度可以被讀出數量級
+  const grid = [0, 0.5, 1].map(f => `
+    <line class="grid" x1="${PAD_L}" x2="${W - PAD_L}"
+          y1="${y(top * f).toFixed(1)}" y2="${y(top * f).toFixed(1)}"/>
+    <text class="y-lab" x="${PAD_L}" y="${(y(top * f) - 4).toFixed(1)}">${money(top * f)}</text>`).join('');
+
+  box.innerHTML = `
+    <svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img"
+         aria-label="逐月平台收入、支出與淨利長條圖">
+      ${grid}
+      <line class="axis" x1="${PAD_L}" x2="${W - PAD_L}"
+            y1="${PAD_T + plotH}" y2="${PAD_T + plotH}"/>
+      ${bars}
+    </svg>`;
+}
+
+function drawMonthTable(months) {
+  const el = document.getElementById('t-months');
+  if (!el) return;
+
+  const pct = g => g === null
+    ? '<span class="dim">—</span>'
+    : `<span class="delta ${g >= 0 ? 'up' : 'down'}">${g >= 0 ? '▲' : '▼'} ${Math.abs(g).toFixed(0)}%</span>`;
+
+  // 新的在上面，比較符合看報表的習慣
+  const rows = [...months].reverse().map((m, i, arr) => {
+    const prev = arr[i + 1];
+    return [
+      `<b>${m.ym}</b>`,
+      `<span class="num">${money(m.gmv)}</span>`,
+      `<span class="num">${money(m.revenue)}</span>`,
+      `<span class="num">${money(m.cost)}</span>`,
+      `<span class="num ${m.net < 0 ? 'neg' : 'pos'}">${money(m.net)}</span>`,
+      pct(prev ? growth(m.revenue, prev.revenue) : null),
+      `<span class="dim num">${money(m.passthrough)}</span>`,
+      `${m.orders} / ${m.reports} / ${m.posts}`,
+    ];
+  });
+
+  el.innerHTML = table(
+    ['月份', '平台流水 GMV', '平台收入', '平台支出', '淨利',
+     '收入成長', '代撥果農', '訂單/回報/貼文'], rows);
+}
+
+function drawRecent() {
+  const db = Store.read();
   const feed = [
     ...(db.orders  || []).map(o => [o.date, '🧾 認養訂單', `${o.no} · ${o.treeId} · ${o.customer}`]),
     ...(db.reports || []).map(r => [r.at,   '📋 樹況回報', `${r.treeId} · ${r.stage} · ${r.health}`]),
     ...(db.payouts || []).map(p => [p.date, '💰 撥款',     `${p.ref} · ${p.farmer || p.treeId} · ${money(p.amount)}`]),
     ...(db.posts   || []).map(p => [p.at,   '📣 社群貼文', `${p.channel} · ${(p.title || '').slice(0, 24)}`]),
-  ].sort((a, b) => String(b[0]).localeCompare(String(a[0]))).slice(0, 12);
+  ].sort((a, b) => String(b[0]).localeCompare(String(a[0]))).slice(0, 10);
 
-  document.getElementById('t-recent').innerHTML = table(
-    ['時間', '類型', '內容'], feed.map(f => [f[0], f[1], f[2]]));
-
-  /* 這個月的幾個數字 */
-  const ym = today().slice(0, 7);
-  const inMonth = a => String(a || '').startsWith(ym);
-  const mo = (db.orders || []).filter(o => inMonth(o.date));
-  const mp = (db.payouts || []).filter(p => inMonth(p.date));
-  const rate = Store.settingNum('commission_rate', 20);
-
-  document.getElementById('t-month').innerHTML = table(
-    ['項目', ''],
-    [
-      ['新增認養訂單', `${mo.length} 筆`],
-      ['本月流水 GMV', money(mo.reduce((s, o) => s + o.amount, 0))],
-      [`平台佣金（${rate}%）`, money(mo.reduce((s, o) => s + Store.split(o).fee, 0))],
-      ['撥給果農', money(mp.reduce((s, p) => s + Number(p.amount), 0))],
-      ['樹況回報', `${(db.reports || []).filter(r => inMonth(r.at)).length} 筆`],
-      ['社群貼文', `${(db.posts || []).filter(p => inMonth(p.at)).length} 篇`],
-    ]);
+  document.getElementById('t-recent').innerHTML =
+    table(['時間', '類型', '內容'], feed);
 }
 
 /* ============================================================
