@@ -24,6 +24,30 @@ Store.onReady((info) => {
   ['erp-crop', 'erp-status'].forEach(id =>
     document.getElementById(id).addEventListener('change', renderTrees));
 
+  // 佣金比例
+  document.getElementById('rate-save').addEventListener('click', () => {
+    const c = parseFloat(document.getElementById('rate-commission').value);
+    const d = parseFloat(document.getElementById('rate-deposit').value);
+    if (!Number.isFinite(c) || c < 0 || c > 100) return alert('佣金％請填 0–100 之間的數字。');
+    if (!Number.isFinite(d) || d < 0 || d > 100) return alert('訂金％請填 0–100 之間的數字。');
+    if (c + d > 100) return alert(`佣金 ${c}% ＋ 訂金 ${d}% 超過 100%，果農的尾款會變成負數。`);
+    Store.saveSetting('commission_rate', c);
+    Store.saveSetting('deposit_share', d);
+    renderCommission();
+    renderKpis();
+    if (typeof renderFinance === 'function') renderFinance();
+  });
+
+  // 即時預覽（還沒按儲存就先看得到分帳結果）
+  ['rate-commission', 'rate-deposit'].forEach(id =>
+    document.getElementById(id).addEventListener('input', previewRates));
+
+  // 撥款
+  document.getElementById('t-commission').addEventListener('click', e => {
+    const b = e.target.closest('[data-payout]');
+    if (b) makePayout(b.dataset.payout);
+  });
+
   document.getElementById('db-reset').addEventListener('click', () => {
     if (confirm('確定要清除本機的示範資料，回到初始狀態嗎？')) {
       Store.reset();
@@ -37,9 +61,14 @@ function showDbStatus(info) {
   const box = document.querySelector('.demo-banner');
   if (!box) return;
   const cloud = info && info.mode === 'cloud';
+  const missing = (info && info.missing) || [];
+  const warn = missing.length
+    ? `<br><span class="dim">⚠️ 以下資料表尚未建立，目前只存在這台裝置：<b>${missing.join('、')}</b>。
+       到 Supabase 的 SQL Editor 跑一次專案裡的 <code>supabase-setup-v2.sql</code> 就會同步到雲端。</span>`
+    : '';
   box.innerHTML = cloud
     ? `☁️ <b>已連線到雲端資料庫</b> —— 資料存在 Supabase，所有裝置共用同一份。
-       目前有 ${info.trees || 0} 棵樹、${info.orders || 0} 筆訂單、${info.users || 0} 個帳號。`
+       目前有 ${info.trees || 0} 棵樹、${info.orders || 0} 筆訂單、${info.users || 0} 個帳號。${warn}`
     : `⚠️ <b>目前使用本機儲存</b> —— 尚未設定雲端資料庫，資料只存在<b>這台瀏覽器</b>，
        換一台裝置看不到。設定方式見專案的 <code>assets/config.js</code>。`
        + (info && info.error ? `<br><span class="dim">連線錯誤：${info.error}</span>` : '');
@@ -61,6 +90,9 @@ function renderAll() {
   renderCustomers();
   renderReports();
   renderWages();
+  renderCommission();
+  renderSocial();
+  renderFinance();
 }
 
 /* ---------- KPI ---------- */
@@ -179,4 +211,142 @@ function renderWages() {
   ]);
   document.getElementById('t-wages').innerHTML = table(
     ['月份', '對象', '身分', '基本', '分潤／獎金', '合計', '備註'], rows);
+}
+
+/* ============================================================
+   佣金與分潤
+   ------------------------------------------------------------
+   商業模式（依 2026-08-18 教練會議確認）：
+     認養人付 RM 100 → 果農拿 RM 80，平台留 RM 20（20% 佣金）。
+   果農那 80% 再拆兩段，預設 55% 在開花前先撥、25% 採收後結清——
+   認養制的重點就是錢要在開花前到果農手上。
+   ============================================================ */
+
+function renderCommission() {
+  const rate = Store.settingNum('commission_rate', 20);
+  const dep  = Store.settingNum('deposit_share', 55);
+
+  const rc = document.getElementById('rate-commission');
+  const rd = document.getElementById('rate-deposit');
+  if (rc && document.activeElement !== rc) rc.value = rate;
+  if (rd && document.activeElement !== rd) rd.value = dep;
+
+  const ex = document.getElementById('rate-explain');
+  if (ex) {
+    const bal = 100 - rate - dep;
+    ex.innerHTML = bal < 0
+      ? `⚠️ <b>比例不合理</b> —— 佣金 ${rate}% ＋ 開花前訂金 ${dep}% 已經超過 100%，
+         果農的尾款會變成負數。請把訂金％調低。`
+      : `每 RM 100 的認養金：<b>果農拿 RM ${fmt(100 - rate)}</b>
+         （開花前先撥 RM ${fmt(dep)}、採收後再撥 RM ${fmt(bal)}），
+         <b>平台留 RM ${fmt(rate)}</b> 作為營運收入。`;
+    ex.style.color = bal < 0 ? 'var(--red)' : '';
+  }
+
+  const db = Store.read();
+  const orders = db.orders || [];
+  const sums = orders.reduce((a, o) => {
+    const s = Store.split(o);
+    a.amount += s.amount; a.fee += s.fee; a.farmer += s.farmer;
+    a.paidOut += s.paidOut; a.pending += s.pending;
+    return a;
+  }, { amount:0, fee:0, farmer:0, paidOut:0, pending:0 });
+
+  const kpi = document.getElementById('comm-kpis');
+  if (kpi) kpi.innerHTML = [
+    ['認養合約總額', money(sums.amount), `${orders.length} 筆訂單`],
+    ['平台佣金收入', money(sums.fee),    `佣金率 ${rate}%`],
+    ['果農應得總額', money(sums.farmer), `合約的 ${fmt(100 - rate)}%`],
+    ['已撥給果農',   money(sums.paidOut), `${(db.payouts || []).length} 筆撥款`],
+    ['尚待撥款',     money(sums.pending), sums.pending > 0 ? '需安排轉帳' : '已結清'],
+  ].map(([k, v, s]) => `
+    <div class="kpi-card"><span class="k">${k}</span><b>${v}</b><small>${s}</small></div>
+  `).join('');
+
+  /* 逐筆拆帳 */
+  const rows = [...orders].reverse().map(o => {
+    const s = Store.split(o);
+    const done = s.pending <= 0.005;
+    return [
+      `<b>${o.no}</b>`,
+      `<span class="pill">${o.treeId}</span>`,
+      o.customer,
+      money(s.amount),
+      `<span class="num fee">${money(s.fee)}</span>`,
+      `<span class="num">${money(s.farmer)}</span>`,
+      money(s.paidOut),
+      done ? '<span class="badge-ok">已結清</span>'
+           : `<span class="badge-wait">${money(s.pending)}</span>`,
+      done ? '—'
+           : `<button class="mini-btn" data-payout="${o.no}">撥款</button>`,
+    ];
+  });
+  document.getElementById('t-commission').innerHTML = table(
+    ['訂單編號', 'Tree ID', '認養人', '合約總額', `平台佣金 ${rate}%`,
+     `果農應得 ${fmt(100 - rate)}%`, '已撥', '待撥', ''], rows);
+
+  /* 撥款紀錄 */
+  const pays = [...(db.payouts || [])].reverse().map(p => [
+    `<b>${p.ref}</b>`, p.date, p.orderNo || '—',
+    `<span class="pill">${p.treeId || '—'}</span>`,
+    p.farmer || '—',
+    { deposit:'開花前訂金', balance:'採收後尾款', adjust:'調整' }[p.kind] || p.kind,
+    `<span class="num">${money(p.amount)}</span>`,
+    p.method || '—',
+    `<span class="badge-ok">${p.status || '已撥款'}</span>`,
+  ]);
+  document.getElementById('t-payouts').innerHTML = table(
+    ['撥款編號', '日期', '訂單', 'Tree ID', '果農', '性質', '金額', '方式', '狀態'], pays);
+}
+
+/** 建立一筆撥款。優先撥「開花前訂金」，訂金撥完才輪到尾款。 */
+function makePayout(orderNo) {
+  const db = Store.read();
+  const o = (db.orders || []).find(x => x.no === orderNo);
+  if (!o) return;
+  const s = Store.split(o);
+  if (s.pending <= 0.005) return;
+
+  const depDone = s.paidOut >= s.deposit - 0.005;
+  const kind    = depDone ? 'balance' : 'deposit';
+  const amount  = Math.round(Math.min(s.pending, depDone ? s.balance : s.deposit - s.paidOut) * 100) / 100;
+
+  const tree   = Store.treeList().find(t => t.id === o.treeId) || {};
+  const label  = kind === 'deposit' ? '開花前訂金' : '採收後尾款';
+  if (!confirm(`要撥 ${money(amount)} 給「${tree.farmer || o.treeId}」嗎？\n（${o.no} · ${label}）`)) return;
+
+  Store.addPayout({
+    ref: Store.nextPayoutRef(new Date().getFullYear()),
+    date: today(),
+    orderNo: o.no,
+    treeId: o.treeId,
+    farmer: tree.farmer || '',
+    kind, amount,
+    method: 'DuitNow 轉帳',
+    status: '已撥款',
+    note: label,
+  });
+  renderCommission();
+  renderKpis();
+}
+
+const fmt = n => (Math.round(Number(n) * 100) / 100).toLocaleString('en-MY');
+function today() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+
+/** 使用者還在打字時，先算給他看，但不寫進資料庫。 */
+function previewRates() {
+  const c = parseFloat(document.getElementById('rate-commission').value);
+  const d = parseFloat(document.getElementById('rate-deposit').value);
+  const ex = document.getElementById('rate-explain');
+  if (!ex || !Number.isFinite(c) || !Number.isFinite(d)) return;
+  const bal = 100 - c - d;
+  ex.innerHTML = bal < 0
+    ? `⚠️ <b>比例不合理</b> —— 佣金 ${c}% ＋ 開花前訂金 ${d}% 超過 100%。`
+    : `（未儲存）每 RM 100：果農 RM ${fmt(100 - c)}
+       （開花前 RM ${fmt(d)}、採收後 RM ${fmt(bal)}），平台 RM ${fmt(c)}。`;
+  ex.style.color = bal < 0 ? 'var(--red)' : '';
 }

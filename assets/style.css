@@ -1246,3 +1246,115 @@ html[lang="zh-Hant"] .logo-zh{display:inline}
 
 @media(max-width:560px){
 }
+
+
+/* ============================================================
+   佣金分潤 · 財務模型 · 社群發文
+   ============================================================ */
+
+.panel-note{
+  font-size:.98rem;color:var(--ink-soft);max-width:78ch;
+  margin:-6px 0 22px;line-height:1.7;
+}
+
+/* --- 佣金比例設定 --- */
+.rate-box{
+  background:var(--snow);border:1px solid var(--line);border-radius:var(--radius);
+  padding:22px 24px;margin-bottom:26px;
+  display:flex;flex-wrap:wrap;gap:18px;align-items:flex-end;
+}
+.rate-box .fld{flex:1;min-width:190px}
+.rate-box label{display:block;color:var(--ink-soft);font-size:.87rem;margin-bottom:6px}
+.rate-box input{
+  width:100%;padding:11px 13px;font-size:1rem;
+  border:1px solid var(--line);border-radius:10px;
+  background:var(--field-bg,#fff);color:var(--field-ink,var(--ink));
+}
+.rate-box input:focus{outline:2px solid var(--coffee);border-color:var(--coffee)}
+.rate-box .btn{flex:0 0 auto}
+.rate-explain{
+  flex:1 0 100%;margin:2px 0 0;font-size:.95rem;
+  color:var(--ink-soft);line-height:1.65;
+}
+
+.num{font-variant-numeric:tabular-nums;white-space:nowrap}
+.num.fee{color:var(--gold-deep);font-weight:700}
+.pos{color:#2E6B3E}
+.neg{color:var(--red)}
+
+.mini-btn{
+  border:1px solid var(--line);background:var(--snow);color:var(--ink);
+  border-radius:8px;padding:6px 12px;font-size:.88rem;font-weight:600;
+  cursor:pointer;font-family:inherit;white-space:nowrap;
+}
+.mini-btn:hover{border-color:var(--coffee);color:var(--coffee)}
+.mini-btn.primary{background:var(--coffee);color:var(--almond);border-color:var(--coffee)}
+.mini-btn.primary:hover{background:var(--black);color:var(--almond)}
+.mini-btn[disabled]{opacity:.5;cursor:default}
+
+/* --- 財務模型 --- */
+.fin-inputs{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(min(230px,100%),1fr));
+  gap:18px;margin-bottom:8px;
+}
+.fin-group{
+  background:var(--snow);border:1px solid var(--line);
+  border-radius:var(--radius);padding:18px 20px;
+}
+.fin-group h5{
+  font-size:.94rem;color:var(--coffee);margin:0 0 14px;
+  padding-bottom:9px;border-bottom:1px solid var(--line);
+}
+.fin-group .fld + .fld{margin-top:12px}
+.fin-group label{display:block;font-size:.85rem;color:var(--ink-soft);margin-bottom:5px}
+.fin-group input{
+  width:100%;padding:9px 11px;font-size:.98rem;
+  border:1px solid var(--line);border-radius:9px;
+  background:var(--field-bg,#fff);color:var(--field-ink,var(--ink));
+  font-variant-numeric:tabular-nums;
+}
+.fin-group input:focus{outline:2px solid var(--coffee);border-color:var(--coffee)}
+
+.fin-verdict{
+  margin-top:26px;padding:22px 26px;
+  /* 用米底而不是金底 —— 結論裡的紅色負數放在飽和的金色上對比不足 */
+  background:var(--cream);border:1px solid var(--line);border-left:4px solid var(--gold);
+  border-radius:var(--radius);
+}
+.fin-verdict p{font-size:1rem;line-height:1.8;color:var(--ink);max-width:80ch}
+.fin-verdict p + p{margin-top:12px}
+
+/* --- 社群發文 --- */
+.post-maker{margin-bottom:30px}
+.post-maker .btn{margin-top:6px}
+.post-cards{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(min(320px,100%),1fr));
+  gap:18px;margin-top:24px;
+}
+.post-card{
+  background:var(--snow);border:1px solid var(--line);
+  border-radius:var(--radius);padding:18px 20px;
+}
+.post-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;gap:10px}
+.post-head b{font-size:1rem}
+.post-count{
+  font-size:.82rem;color:var(--taupe-deep);
+  font-variant-numeric:tabular-nums;white-space:nowrap;
+}
+.post-count.over{color:var(--red);font-weight:700}
+.post-body{
+  width:100%;padding:12px 13px;font-family:inherit;font-size:.94rem;line-height:1.65;
+  border:1px solid var(--line);border-radius:10px;resize:vertical;
+  background:var(--field-bg,#fff);color:var(--field-ink,var(--ink));
+}
+.post-body:focus{outline:2px solid var(--coffee);border-color:var(--coffee)}
+.post-hint{font-size:.84rem;color:var(--taupe-deep);margin:8px 0 12px;line-height:1.55}
+.post-acts{display:flex;gap:9px;align-items:center;flex-wrap:wrap}
+.post-msg{font-size:.85rem}
+.post-msg.ok{color:#2E6B3E}
+.post-msg.bad{color:var(--red)}
+
+@media(max-width:560px){
+  .rate-box{padding:18px}
+  .fin-verdict{padding:18px 20px}
+}

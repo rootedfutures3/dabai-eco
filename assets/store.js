@@ -17,6 +17,26 @@ const STORE_KEY = 'rootedfutures_demo_v1';
 
 /* ---------- 種子資料（虛擬） ---------- */
 const SEED = {
+
+  /* 系統設定 —— 佣金比例等。存成陣列是為了直接對應資料庫的 key/value 表。 */
+  settings: [
+    { key:'commission_rate', value:'20', note:'平台佣金％ —— 向收購商／認養人收取，其餘給果農' },
+    { key:'deposit_share',   value:'55', note:'果農在開花前先拿到的％（佔合約總額）' },
+    { key:'currency',        value:'RM', note:'幣別' },
+  ],
+
+  /* 撥款紀錄 —— 實際付給果農的每一筆錢 */
+  payouts: [
+    { ref:'PO-2026-0001', date:'2026-01-15', orderNo:'RF-2026-0001', treeId:'DB-002', farmer:'Lim 氏果園（第二代）', kind:'deposit', amount:220, method:'DuitNow 轉帳', status:'已撥款', note:'開花前訂金' },
+    { ref:'PO-2026-0002', date:'2026-01-20', orderNo:'RF-2026-0002', treeId:'DR-002', farmer:'Nyawai 家族',          kind:'deposit', amount:649, method:'DuitNow 轉帳', status:'已撥款', note:'開花前訂金' },
+    { ref:'PO-2026-0003', date:'2026-02-12', orderNo:'RF-2026-0004', treeId:'DB-008', farmer:'Rumah Ugap 合作社',    kind:'deposit', amount:247.5, method:'銀行匯款', status:'已撥款', note:'企業包樹訂金' },
+  ],
+
+  /* 社群貼文 */
+  posts: [
+    { id:1, at:'2026-03-04 09:10', channel:'facebook',  topic:'tree',    topicId:'DB-001', lang:'zh', title:'DB-001 開花了', body:'Song 上游果園的 DB-001 今年花況密集，溝通者 Anding 剛回報完第一次追肥。這棵樹已經被認養，收成會直接寄到認養人手上。', tags:'#Dabai #砂拉越 #包樹認養 #TANJU', status:'已發布', link:'', scheduled:'' },
+    { id:2, at:'2026-03-06 18:40', channel:'instagram', topic:'product', topicId:'kuaci', lang:'en', title:'Dabai Kuaci', body:'The seed everyone used to throw away. Roasted, salted, addictive. Zero-waste snacking from the Borneo rainforest.', tags:'#dabai #sarawak #zerowaste #borneo #TANJU', status:'草稿', link:'', scheduled:'' },
+  ],
   /* 使用者帳號（示範）—— 密碼一律為 admin，僅供 demo */
   users: [
     { u:'admin',  pass:'admin', role:'admin',  name:'平台管理員', org:'ROOTED FUTURES', phone:'+60 82-000 000', email:'admin@example.com', area:'Song' },
@@ -186,7 +206,98 @@ const Store = {
     const n = db.orders.length + 1;
     return `RF-${year}-${String(n).padStart(4, '0')}`;
   },
+
+  /* ---------- 系統設定（佣金比例等） ---------- */
+
+  /** 讀一個設定值。查不到就回傳 fallback，不會讓畫面炸掉。 */
+  setting(key, fallback) {
+    const row = (Store.read().settings || []).find(s => s.key === key);
+    return row === undefined ? fallback : row.value;
+  },
+
+  /** 數字型設定（佣金％之類）。非數字一律退回 fallback。 */
+  settingNum(key, fallback) {
+    const n = parseFloat(Store.setting(key, ''));
+    return Number.isFinite(n) ? n : fallback;
+  },
+
+  saveSetting(key, value) {
+    const db = Store.read();
+    db.settings = db.settings || [];
+    const row = db.settings.find(s => s.key === key);
+    if (row) { row.value = String(value); }
+    else { db.settings.push({ key, value: String(value), note: '' }); }
+    Store.write(db);
+    if (row) patchRow('settings', 'key', key, { value: String(value) });
+    else push('settings', { key, value: String(value), note: '' });
+  },
+
+  /* ---------- 佣金拆帳 ---------- */
+
+  /**
+   * 一筆訂單的錢怎麼分。
+   *   平台佣金 = 合約總額 × commission_rate%
+   *   果農應得 = 合約總額 − 平台佣金
+   * 果農那份再拆兩段：開花前訂金（佔合約總額 deposit_share%）與採收後尾款。
+   * 全部以「合約總額」為基準，而不是「已收金額」——
+   * 因為認養制的重點就是錢要在開花前先到果農手上。
+   */
+  split(order) {
+    const rate = Store.settingNum('commission_rate', 20);
+    const dep  = Store.settingNum('deposit_share', 55);
+    const amount = Number(order.amount) || 0;
+    const fee    = round2(amount * rate / 100);
+    const farmer = round2(amount - fee);
+    const deposit = round2(Math.min(farmer, amount * dep / 100));
+    const balance = round2(farmer - deposit);
+    const paidOut = round2(Store.payoutsFor(order.no).reduce((s, p) => s + Number(p.amount), 0));
+    return { rate, amount, fee, farmer, deposit, balance, paidOut,
+             pending: round2(farmer - paidOut) };
+  },
+
+  payoutsFor(orderNo) {
+    return (Store.read().payouts || []).filter(p => p.orderNo === orderNo);
+  },
+
+  nextPayoutRef(year) {
+    const n = (Store.read().payouts || []).length + 1;
+    return `PO-${year}-${String(n).padStart(4, '0')}`;
+  },
+
+  addPayout(p) {
+    const db = Store.read();
+    db.payouts = db.payouts || [];
+    db.payouts.push(p);
+    Store.write(db);
+    push('payouts', p);
+    return p;
+  },
+
+  /* ---------- 社群貼文 ---------- */
+
+  addPost(post) {
+    const db = Store.read();
+    db.posts = db.posts || [];
+    post.id = db.posts.reduce((m, p) => Math.max(m, p.id || 0), 0) + 1;
+    db.posts.push(post);
+    Store.write(db);
+    push('posts', post);
+    return post;
+  },
+
+  /** 更新貼文狀態。雲端用 id 當主鍵，本機同步改一份。 */
+  updatePost(id, patch) {
+    const db = Store.read();
+    const p = (db.posts || []).find(x => x.id === id);
+    if (!p) return;
+    Object.assign(p, patch);
+    Store.write(db);
+    patchRow('posts', 'id', id, MAP.posts.out(p));
+  },
 };
+
+/** 金額一律進位到分，避免 0.1+0.2 這種浮點誤差寫進帳本。 */
+function round2(n) { return Math.round((Number(n) || 0) * 100) / 100; }
 
 
 /* ============================================================
@@ -274,6 +385,25 @@ const MAP = {
     in:  r => ({ u:r.u, pass:r.pass, role:r.role, name:r.name,
                  org:r.org, phone:r.phone, email:r.email, area:r.area }),
   },
+  settings: {
+    out: x => ({ key:x.key, value:x.value, note:x.note }),
+    in:  r => ({ key:r.key, value:r.value, note:r.note }),
+  },
+  payouts: {
+    out: p => ({ ref:p.ref, date:p.date, order_no:p.orderNo, tree_id:p.treeId, farmer:p.farmer,
+                 kind:p.kind, amount:p.amount, method:p.method, status:p.status, note:p.note }),
+    in:  r => ({ ref:r.ref, date:r.date, orderNo:r.order_no, treeId:r.tree_id, farmer:r.farmer,
+                 kind:r.kind, amount:Number(r.amount), method:r.method, status:r.status, note:r.note }),
+  },
+  posts: {
+    /* id 交給資料庫的 bigserial 產生，所以 out 不送 id */
+    out: p => ({ at:p.at, channel:p.channel, topic:p.topic, topic_id:p.topicId, lang:p.lang,
+                 title:p.title, body:p.body, tags:p.tags, status:p.status,
+                 link:p.link, scheduled:p.scheduled }),
+    in:  r => ({ id:r.id, at:r.at, channel:r.channel, topic:r.topic, topicId:r.topic_id, lang:r.lang,
+                 title:r.title, body:r.body, tags:r.tags, status:r.status,
+                 link:r.link, scheduled:r.scheduled }),
+  },
   wages: {
     out: w => ({ month:w.month, person:w.person, role:w.role,
                  base:w.base, bonus:w.bonus, note:w.note }),
@@ -289,14 +419,30 @@ function push(tableName, row) {
     .catch(e => console.warn('[雲端寫入失敗]', tableName, e.message));
 }
 
+/** 更新雲端既有的一列（失敗只記錄，本機快取已經改好了） */
+function patchRow(tableName, pk, pkVal, patch) {
+  if (!SB.on) return;
+  SB.patch(tableName, pk, pkVal, patch)
+    .catch(e => console.warn('[雲端更新失敗]', tableName, e.message));
+}
+
 /** 開機：載入雲端資料。沒設定 config.js 就直接沿用 localStorage。 */
 Store.boot = async function () {
   if (!SB.on) return { mode: 'local' };
 
-  const TABLES = ['users', 'trees', 'orders', 'reports', 'leads', 'wages', 'messages'];
+  const TABLES = ['users', 'trees', 'orders', 'reports', 'leads', 'wages', 'messages',
+                  'settings', 'payouts', 'posts'];
   try {
+    /* 有些資料表可能還沒建（例如剛加的 settings / payouts / posts，
+       要先到 Supabase 跑 supabase-setup-v2.sql）。
+       單一張表讀不到就當作空的，不要讓整個雲端連線垮掉。 */
     const rows = {};
-    await Promise.all(TABLES.map(async t => { rows[t] = await SB.get(t); }));
+    const missing = [];
+    await Promise.all(TABLES.map(async t => {
+      try { rows[t] = await SB.get(t); }
+      catch (e) { rows[t] = []; missing.push(t); }
+    }));
+    if (missing.length) console.warn('[資料表尚未建立，改用本機種子]', missing.join(', '));
 
     const db = Store.read();
     const stats = {};
@@ -314,10 +460,14 @@ Store.boot = async function () {
     stats.trees = (db.trees || []).length;
 
     // 其餘表：雲端空的就把本機種子推上去，否則以雲端為準
-    for (const t of ['users', 'orders', 'reports', 'leads', 'wages', 'messages']) {
+    for (const t of ['users', 'orders', 'reports', 'leads', 'wages', 'messages',
+                     'settings', 'payouts', 'posts']) {
       if (!rows[t].length) {
         const local = db[t] || [];
-        if (local.length) await SB.insert(t, local.map(MAP[t].out));
+        if (local.length && !missing.includes(t)) {
+          try { await SB.insert(t, local.map(MAP[t].out)); }
+          catch (e) { console.warn('[種子寫入失敗]', t, e.message); }
+        }
       } else {
         db[t] = rows[t].map(MAP[t].in);
       }
@@ -325,7 +475,7 @@ Store.boot = async function () {
     }
 
     Store.write(db);
-    return { mode: 'cloud', ...stats };
+    return { mode: 'cloud', missing, ...stats };
 
   } catch (e) {
     console.warn('[雲端連線失敗，改用本機資料]', e.message);

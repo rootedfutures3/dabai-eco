@@ -11,6 +11,8 @@
 <script src="assets/store.js?v=721929ae" defer></script>
 <script src="assets/site.js?v=721929ae" defer></script>
 <script src="assets/erp.js?v=721929ae" defer></script>
+<script src="assets/finance.js?v=721929ae" defer></script>
+<script src="assets/social.js?v=721929ae" defer></script>
 <script src="assets/lang/ms.js?v=721929ae" defer></script>
 <script src="assets/lang/en.js?v=721929ae" defer></script>
 <script src="assets/lang/iba.js?v=721929ae" defer></script>
@@ -60,6 +62,9 @@
       <button class="tab" data-tab="trees">樹體資產</button>
       <button class="tab" data-tab="customers">客戶名單</button>
       <button class="tab" data-tab="reports">樹況回報</button>
+      <button class="tab" data-tab="commission">佣金分潤</button>
+      <button class="tab" data-tab="finance">財務模型</button>
+      <button class="tab" data-tab="social">社群發文</button>
       <button class="tab" data-tab="wages">收益與工資</button>
     </div>
 
@@ -104,6 +109,115 @@
     <div class="tab-pane" data-panel="reports">
       <h3 class="panel-h">現場樹況回報 <small>Field Reports · 由溝通者門戶寫入</small></h3>
       <div class="table-scroll"><table id="t-reports"></table></div>
+    </div>
+
+
+    <div class="tab-pane" data-panel="commission">
+      <h3 class="panel-h">佣金與分潤 <small>Commission &amp; Farmer Payout</small></h3>
+
+      <p class="panel-note">
+        平台向<b>認養人／收購商</b>收取佣金，其餘全額給果農。
+        果農那份再拆成「開花前訂金」與「採收後尾款」——
+        重點是錢要在開花前就到果農手上，而不是等收成才有現金。
+      </p>
+
+      <div class="rate-box">
+        <div class="fld">
+          <label for="rate-commission">平台佣金％</label>
+          <input id="rate-commission" type="number" min="0" max="100" step="0.5">
+        </div>
+        <div class="fld">
+          <label for="rate-deposit">開花前訂金％（佔合約總額）</label>
+          <input id="rate-deposit" type="number" min="0" max="100" step="0.5">
+        </div>
+        <button class="btn btn-gold" id="rate-save" type="button">儲存比例</button>
+        <p class="rate-explain" id="rate-explain"></p>
+      </div>
+
+      <div class="kpi-row" id="comm-kpis"></div>
+
+      <h4 class="sub-h">逐筆拆帳</h4>
+      <div class="table-scroll"><table id="t-commission"></table></div>
+
+      <h4 class="sub-h">撥款紀錄 <small>Payout Ledger</small></h4>
+      <div class="table-scroll"><table id="t-payouts"></table></div>
+    </div>
+
+
+    <div class="tab-pane" data-panel="finance">
+      <h3 class="panel-h">財務模型 <small>Financial Plan · Year 1–2 Projection</small></h3>
+      <p class="panel-note">
+        三條營收線、毛利與淨利，第 1～2 年預測。所有假設值都可以改，
+        改完立刻重算，算好的表可以直接放進簡報的財務頁。
+        <b>刻意保守</b> —— 試點階段的數字灌水只會在 Q&amp;A 被拆穿。
+      </p>
+
+      <h4 class="sub-h">假設值 <small>Assumptions</small></h4>
+      <div class="fin-inputs" id="fin-inputs"></div>
+
+      <h4 class="sub-h">營收來源 <small>Revenue Streams</small></h4>
+      <div class="table-scroll"><table id="t-streams"></table></div>
+
+      <h4 class="sub-h">損益預測 <small>P&amp;L Projection</small></h4>
+      <div class="table-scroll"><table id="t-pnl"></table></div>
+
+      <div class="fin-verdict" id="fin-verdict"></div>
+    </div>
+
+    <div class="tab-pane" data-panel="social">
+      <h3 class="panel-h">社群一鍵發文 <small>Facebook · Instagram · YouTube · 小紅書</small></h3>
+
+      <div class="demo-banner" id="social-note">
+        ℹ️ <b>這一鍵做的是什麼</b> ——
+        文案由平台資料自動生成（挑一棵樹、一筆訂單或一項產品），按下發布會<b>複製文案到剪貼簿</b>
+        並直接開啟該平台的發文視窗，貼上即可送出，同時在資料庫留下一筆紀錄。
+        <br><br>
+        <b>還不能做到全自動代發</b>：Facebook／IG／YouTube 的官方 API 需要伺服器保管授權金鑰並通過平台審核，
+        小紅書則沒有開放的發文 API。GitHub Pages 是靜態網站，沒有地方藏金鑰。
+        等你有後端了，把網址填進 <code>assets/config.js</code> 的 <code>PUBLISH_ENDPOINT</code>，
+        這顆按鈕就會改成真的自動發布。
+      </div>
+
+      <div class="post-maker">
+        <div class="filters">
+          <div class="fld">
+            <label for="po-topic">題材</label>
+            <select id="po-topic">
+              <option value="tree">果樹 Tree ID</option>
+              <option value="order">認養捷報</option>
+              <option value="product">產品</option>
+              <option value="free">自由發揮</option>
+            </select>
+          </div>
+          <div class="fld">
+            <label for="po-subject">對象</label>
+            <select id="po-subject"></select>
+          </div>
+          <div class="fld">
+            <label for="po-lang">語言</label>
+            <select id="po-lang">
+              <option value="zh">中文</option>
+              <option value="en">English</option>
+              <option value="ms">Bahasa Melayu</option>
+            </select>
+          </div>
+          <div class="fld">
+            <label for="po-tone">語氣</label>
+            <select id="po-tone">
+              <option value="warm">溫暖故事</option>
+              <option value="data">數據說服</option>
+              <option value="short">短促吸睛</option>
+            </select>
+          </div>
+        </div>
+
+        <button class="btn btn-gold" id="po-gen" type="button">產生四個平台的文案</button>
+
+        <div class="post-cards" id="po-cards"></div>
+      </div>
+
+      <h4 class="sub-h">發文紀錄</h4>
+      <div class="table-scroll"><table id="t-posts"></table></div>
     </div>
 
     <div class="tab-pane" data-panel="wages">

@@ -23,3 +23,18 @@ const SUPABASE_ANON_KEY = 'sb_publishable_Z607-FXhkCuPASC8G-hIsw_65JveKUV';
 
 /** 有沒有設定雲端資料庫 */
 const CLOUD_ON = Boolean(SUPABASE_URL && SUPABASE_ANON_KEY);
+
+/* ------------------------------------------------------------
+   社群自動代發的後端網址（選填）
+   ------------------------------------------------------------
+   留空時，ERP 的「社群發文」走半自動：複製文案 + 開啟發文視窗。
+
+   要做到真的一鍵自動發布，必須有一台伺服器保管各平台的授權金鑰：
+     Facebook / Instagram → Meta Graph API 的 Page Access Token
+     YouTube              → OAuth 2.0 refresh token
+     小紅書                → 目前沒有開放的發文 API
+   這些金鑰不能放在前端，任何人打開原始碼都看得到。
+   等你架好後端（Cloudflare Workers、Vercel Functions 都可以），
+   把網址填進來，按鈕就會自動改走代發。
+   ------------------------------------------------------------ */
+const PUBLISH_ENDPOINT = '';
