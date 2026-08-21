@@ -1561,3 +1561,13 @@ nav.admin-top{
   gap:26px;align-items:start;margin-top:8px;
 }
 @media(max-width:900px){ .ov-grid{grid-template-columns:minmax(0,1fr)} }
+
+/* 權限矩陣 */
+.yes{color:#2E6B3E;font-weight:800}
+.no{color:var(--taupe-deep)}
+.perm-pick{
+  padding:6px 9px;font-family:inherit;font-size:.9rem;
+  border:1px solid var(--line);border-radius:8px;
+  background:var(--field-bg,#fff);color:var(--field-ink,var(--ink));
+}
+.perm-pick:disabled{opacity:.55;cursor:not-allowed}

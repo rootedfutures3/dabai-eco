@@ -36,6 +36,7 @@ Store.onReady((info) => {
   if (want && document.querySelector(`.side-item[data-tab="${want}"]`)) show(want);
 
   showMe();
+  gateMenu();
 
   // 樹體資產篩選
   ['erp-crop', 'erp-status'].forEach(id =>
@@ -111,6 +112,7 @@ function renderAll() {
   renderSocial();
   renderFinance();
   renderOverview();
+  renderUsers();
 }
 
 /* ---------- KPI ---------- */
@@ -458,4 +460,96 @@ function renderOverview() {
       ['樹況回報', `${(db.reports || []).filter(r => inMonth(r.at)).length} 筆`],
       ['社群貼文', `${(db.posts || []).filter(p => inMonth(p.at)).length} 篇`],
     ]);
+}
+
+/* ============================================================
+   帳號與權限
+   ============================================================ */
+
+function renderUsers() {
+  const el = document.getElementById('t-perms');
+  if (!el) return;
+
+  /* 權限矩陣：橫軸是角色，縱軸是能做的事 */
+  const ACTIONS = [
+    ['view.all',      '看所有資料'],
+    ['view.orders',   '看訂單'],
+    ['view.trees',    '看果樹'],
+    ['edit.trees',    '編輯果樹'],
+    ['edit.orders',   '編輯訂單'],
+    ['view.money',    '看金額與財務'],
+    ['edit.money',    '執行撥款'],
+    ['edit.settings', '改佣金比例'],
+    ['edit.social',   '社群發文'],
+    ['field.report',  '現場回報'],
+    ['edit.users',    '管理帳號與權限'],
+    ['db.reset',      '重設資料'],
+  ];
+  const ROLES = ['super', 'admin', 'finance', 'editor', 'coord'];
+
+  const has = (role, action) => {
+    const list = PERMS[role].can;
+    if (list.includes(action)) return true;
+    if (action.startsWith('view.') && list.includes('view.all')) return true;
+    if (action.startsWith('view.') && list.includes('edit.' + action.slice(5))) return true;
+    return false;
+  };
+
+  el.innerHTML = table(
+    ['可以做的事', ...ROLES.map(r => PERMS[r].label)],
+    ACTIONS.map(([a, label]) => [
+      label,
+      ...ROLES.map(r => has(r, a)
+        ? '<span class="yes" title="可以">✓</span>'
+        : '<span class="no" title="不行">—</span>'),
+    ]));
+
+  /* 帳號清單。只有具 edit.users 的人看得到下拉選單，其他人看到純文字。 */
+  const editable = Perm.can('edit.users');
+  const meU = (Perm.me() || {}).u;
+
+  document.getElementById('t-users').innerHTML = table(
+    ['帳號', '姓名', '單位', 'ERP 權限', '前台身分', 'Email'],
+    (Store.read().users || []).map(u => {
+      const cur = u.perm || (u.role === 'admin' ? 'super' : u.role);
+      const picker = editable
+        ? `<select class="perm-pick" data-u="${u.u}"${u.u === meU ? ' disabled title="不能改自己的權限，避免把自己鎖在門外"' : ''}>
+             ${Object.entries(PERMS).map(([k, v]) =>
+               `<option value="${k}"${k === cur ? ' selected' : ''}>${v.label}</option>`).join('')}
+           </select>`
+        : `<span class="pill">${(PERMS[cur] || {}).label || cur}</span>`;
+      return [
+        `<b>${u.u}</b>${u.u === meU ? ' <span class="badge-ok">你</span>' : ''}`,
+        u.name || '—', u.org || '—', picker,
+        { admin:'管理', farmer:'果農', buyer:'收購商' }[u.role] || u.role,
+        `<span class="dim">${u.email || '—'}</span>`,
+      ];
+    }));
+
+  document.querySelectorAll('.perm-pick').forEach(sel =>
+    sel.addEventListener('change', () => {
+      if (!Perm.can('edit.users')) return;
+      Store.setUserPerm(sel.dataset.u, sel.value);
+      renderUsers();
+      gateMenu();
+    }));
+}
+
+/** 把目前角色沒有權限的功能頁從左側選單拿掉。 */
+function gateMenu() {
+  let firstVisible = null;
+  document.querySelectorAll('.side-item[data-tab]').forEach(b => {
+    const ok = Perm.canPage(b.dataset.tab);
+    b.hidden = !ok;
+    if (ok && !firstVisible) firstVisible = b.dataset.tab;
+  });
+
+  Perm.apply();
+
+  /* 如果現在停在一個沒權限的頁面上，就退到第一個看得到的頁 */
+  const now = document.querySelector('.tab-pane.on');
+  if (now && !Perm.canPage(now.dataset.panel) && firstVisible) show(firstVisible);
+
+  const roleEl = document.getElementById('side-role');
+  if (roleEl && Perm.me()) roleEl.textContent = Perm.roleLabel();
 }

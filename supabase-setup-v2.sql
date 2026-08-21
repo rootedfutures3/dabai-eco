@@ -81,3 +81,14 @@ begin
 end $$;
 
 -- 沒有 delete policy = anon 刪不掉任何東西，這是刻意的。
+
+-- ---------- 4. 帳號權限（第二批補充） ----------
+-- users 表加一個 perm 欄位，存 ERP 的權限角色
+-- （super / admin / finance / editor / coord / farmer / buyer）。
+-- 舊資料的 perm 會是 null，前端會把 role='admin' 的舊帳號視為 super，
+-- 所以升級後原本的管理員不會被鎖在門外。
+alter table users add column if not exists perm text;
+
+update users set perm = 'super'  where perm is null and role = 'admin';
+update users set perm = 'farmer' where perm is null and role = 'farmer';
+update users set perm = 'buyer'  where perm is null and role = 'buyer';

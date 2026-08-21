@@ -89,10 +89,20 @@ const I18N = {
       for (let a = el.parentElement; a; a = a.parentElement) if (handled.has(a)) return;
       // 品牌字標不翻譯
       if (el.closest('script,style,code,pre,.lang-menu,.lang-toggle,.logo,.foot-brand b')) return;
-      // div 只有「完全不含區塊子元素」時才當成一段文字，
-      // 否則像 <div class="reveal"><h2>…</h2><p>…</p></div> 會被誤當成單一段落
+      /* 整段替換是用 textContent 寫回去的，會把子元素整個抹掉。
+         所以只要元素裡有「不是純文字」的東西，就不能整段處理：
+
+         · 表單控制項 —— 例如 <div class="fld"><label>對象</label><select id="po-subject">
+           這個 div 的 textContent 剛好是「對象」，字典查得到，
+           整段替換會連 <select> 一起消失，後面的程式就抓不到那個 id 了。
+         · 圖片與向量圖 —— 同理會被抹掉。
+         · 區塊子元素 —— <div class="reveal"><h2>…</h2><p>…</p></div>
+           不是一個句子，不該被當成單一段落。
+
+         這些一律跳過，交給第二輪逐節點翻譯處理。 */
+      if (el.querySelector('input,select,textarea,img,svg,video,iframe,canvas')) return;
       if (el.tagName === 'DIV' &&
-          el.querySelector('div,section,article,ul,ol,li,table,form,p,h1,h2,h3,h4,h5,h6,button')) return;
+          el.querySelector('div,section,article,ul,ol,li,table,form,p,h1,h2,h3,h4,h5,h6,button,label')) return;
 
       if (el.dataset.oHtml === undefined) {
         const txt = this.norm(el.textContent);

@@ -38,10 +38,16 @@ const SEED = {
     { id:2, at:'2026-03-06 18:40', channel:'instagram', topic:'product', topicId:'kuaci', lang:'en', title:'Dabai Kuaci', body:'The seed everyone used to throw away. Roasted, salted, addictive. Zero-waste snacking from the Borneo rainforest.', tags:'#dabai #sarawak #zerowaste #borneo #TANJU', status:'草稿', link:'', scheduled:'' },
   ],
   /* 使用者帳號（示範）—— 密碼一律為 admin，僅供 demo */
+  /* perm 是 ERP 的權限角色（見 assets/perm.js）；role 是前台身分。
+     密碼一律 admin，僅供 demo —— 登入頁上有明確標示不要用真實密碼。 */
   users: [
-    { u:'admin',  pass:'admin', role:'admin',  name:'平台管理員', org:'ROOTED FUTURES', phone:'+60 82-000 000', email:'admin@example.com', area:'Song' },
-    { u:'farmer', pass:'admin', role:'farmer', name:'Ak. Jelani', org:'Rumah Panjai 上游果園', phone:'+60 13-220 1188', email:'jelani@example.com', area:'Sibu' },
-    { u:'buyer',  pass:'admin', role:'buyer',  name:'李采薇', org:'南洋食品工業', phone:'+60 82-334 900', email:'esg@example.com', area:'Kuching' },
+    { u:'admin',   pass:'admin', role:'admin',  perm:'super',   name:'平台管理員', org:'ROOTED FUTURES', phone:'+60 82-000 000', email:'admin@example.com', area:'Song' },
+    { u:'manager', pass:'admin', role:'admin',  perm:'admin',   name:'營運管理員', org:'ROOTED FUTURES', phone:'+60 82-000 001', email:'ops@example.com', area:'Song' },
+    { u:'finance', pass:'admin', role:'admin',  perm:'finance', name:'財務', org:'ROOTED FUTURES', phone:'+60 82-000 002', email:'finance@example.com', area:'Song' },
+    { u:'editor',  pass:'admin', role:'admin',  perm:'editor',  name:'內容編輯', org:'ROOTED FUTURES', phone:'+60 82-000 003', email:'editor@example.com', area:'Song' },
+    { u:'coord',   pass:'admin', role:'admin',  perm:'coord',   name:'Anding', org:'溝通者', phone:'+60 13-880 4412', email:'anding@example.com', area:'Song' },
+    { u:'farmer',  pass:'admin', role:'farmer', perm:'farmer',  name:'Ak. Jelani', org:'Rumah Panjai 上游果園', phone:'+60 13-220 1188', email:'jelani@example.com', area:'Sibu' },
+    { u:'buyer',   pass:'admin', role:'buyer',  perm:'buyer',   name:'李采薇', org:'南洋食品工業', phone:'+60 82-334 900', email:'esg@example.com', area:'Kuching' },
   ],
 
   messages: [
@@ -190,6 +196,17 @@ const Store = {
   },
 
   /* ---- 訊息 ---- */
+  /** 改一個帳號的 ERP 權限角色。 */
+  setUserPerm(u, perm) {
+    const db = Store.read();
+    const user = (db.users || []).find(x => x.u === u);
+    if (!user) return false;
+    user.perm = perm;
+    Store.write(db);
+    patchRow('users', 'u', u, { perm });
+    return true;
+  },
+
   addMessage(m) {
     const db = Store.read();
     db.messages = db.messages || [];
@@ -380,9 +397,9 @@ const MAP = {
     in:  r => ({ id:r.id, treeId:r.tree_id, from:r.from_who, to:r.to_who, at:r.at, text:r.text }),
   },
   users: {
-    out: u => ({ u:u.u, pass:u.pass, role:u.role, name:u.name,
+    out: u => ({ u:u.u, pass:u.pass, role:u.role, perm:u.perm || null, name:u.name,
                  org:u.org, phone:u.phone, email:u.email, area:u.area }),
-    in:  r => ({ u:r.u, pass:r.pass, role:r.role, name:r.name,
+    in:  r => ({ u:r.u, pass:r.pass, role:r.role, perm:r.perm, name:r.name,
                  org:r.org, phone:r.phone, email:r.email, area:r.area }),
   },
   settings: {
