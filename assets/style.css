@@ -1358,3 +1358,206 @@ html[lang="zh-Hant"] .logo-zh{display:inline}
   .rate-box{padding:18px}
   .fin-verdict{padding:18px 20px}
 }
+
+/* 作物階段標籤：Dabai 是主力，榴槤與紅毛丹是驗證後的下一步。
+   注意：.phase 這個名字已經被 sustainability.html 的階段卡片用掉了，
+   所以這裡用 .crop-tag，不要再叫 .phase。 */
+.crop-tag{
+  display:inline-block;vertical-align:middle;margin-left:8px;
+  font-size:.68rem;font-weight:700;letter-spacing:.04em;
+  padding:3px 9px;border-radius:999px;white-space:nowrap;
+}
+.crop-tag.now{background:var(--coffee);color:var(--almond)}
+.crop-tag.next{background:var(--almond-soft);color:var(--ink-soft);border:1px solid var(--line)}
+
+/* ============================================================
+   Tree ID 流程圖
+   ============================================================ */
+.flow{
+  list-style:none;margin:0;padding:0;
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(min(260px,100%),1fr));
+  gap:18px;counter-reset:flow;
+}
+.flow li{
+  position:relative;background:var(--snow);
+  border:1px solid var(--line);border-radius:var(--radius);
+  padding:26px 24px 24px;
+}
+/* 卡片之間的箭頭：最後一張不畫，換行時也會被 media query 關掉 */
+.flow li::after{
+  content:'→';position:absolute;top:50%;right:-16px;transform:translateY(-50%);
+  color:var(--gold);font-size:1.2rem;font-weight:700;z-index:1;
+}
+.flow li:last-child::after{content:none}
+.flow-n{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:34px;height:34px;border-radius:50%;
+  background:var(--coffee);color:var(--almond);
+  font-weight:800;font-size:1rem;margin-bottom:12px;
+}
+.flow li h3{font-size:1.06rem;margin-bottom:8px}
+.flow li p{font-size:.97rem;line-height:1.72;color:var(--ink-soft)}
+
+/* 箭頭只在真的並排時才有意義 */
+@media(max-width:900px){ .flow li::after{content:none} }
+
+/* ============================================================
+   RM 100 拆帳圖
+   ============================================================ */
+.split-demo{
+  display:flex;align-items:center;justify-content:center;gap:22px;flex-wrap:wrap;
+  background:var(--snow);border:1px solid var(--line);border-radius:var(--radius);
+  padding:26px 28px;margin-bottom:28px;
+}
+.split-in{
+  font-size:1.02rem;color:var(--ink-soft);text-align:center;
+  padding:18px 26px;border:2px dashed var(--line);border-radius:var(--radius);
+}
+.split-in b{display:block;font-size:1.7rem;color:var(--ink);margin-top:4px}
+.split-arrow{color:var(--gold);font-size:1.7rem;font-weight:700}
+.split-out{display:flex;gap:14px;flex-wrap:wrap}
+.split-farmer,.split-plat{
+  padding:18px 26px;border-radius:var(--radius);text-align:center;min-width:132px;
+}
+.split-farmer{background:var(--coffee);color:var(--almond)}
+.split-plat{background:var(--almond-soft);color:var(--ink);border:1px solid var(--line)}
+.split-farmer span,.split-plat span{display:block;font-size:.88rem;opacity:.85}
+.split-farmer b,.split-plat b{display:block;font-size:1.7rem;margin-top:4px}
+
+@media(max-width:560px){
+  .split-arrow{transform:rotate(90deg)}
+  .split-demo{padding:22px 18px;gap:16px}
+}
+
+/* ============================================================
+   後台外框：左側功能列 + 右側內容
+   ------------------------------------------------------------
+   桌機：側邊欄 sticky 固定在左邊，內容區獨立捲動。
+   手機：側邊欄變成抽屜，由左上角漢堡開合。
+   ============================================================ */
+
+:root{ --side-w:246px }
+
+body.admin{background:var(--almond-soft)}
+
+.admin-shell{
+  display:grid;grid-template-columns:var(--side-w) 1fr;
+  min-height:100vh;
+}
+
+/* --- 側邊欄 --- */
+.side{
+  position:sticky;top:0;height:100vh;overflow-y:auto;
+  background:var(--black);color:rgba(255,251,255,.72);
+  padding:20px 0 30px;
+  display:flex;flex-direction:column;
+}
+
+.side-brand{
+  display:flex;align-items:center;gap:11px;
+  padding:0 20px 18px;margin-bottom:4px;
+  border-bottom:1px solid rgba(255,251,255,.1);
+}
+/* 標誌一律原色，深底上用淺色圓底襯著 */
+.side-brand img{
+  background:var(--cream);border-radius:50%;
+  padding:3px;box-sizing:content-box;flex:0 0 auto;
+}
+.side-brand span{display:block;line-height:1.25;min-width:0}
+.side-brand b{display:block;color:var(--almond);font-size:1.02rem;letter-spacing:.06em}
+.side-brand i{
+  display:block;font-style:normal;font-size:.64rem;letter-spacing:.11em;
+  color:rgba(255,251,255,.55);white-space:nowrap;
+}
+
+.side-me{display:flex;align-items:center;gap:12px;padding:18px 20px 12px}
+.side-avatar{
+  flex:0 0 auto;width:44px;height:44px;border-radius:50%;
+  background:var(--gold);color:var(--black);
+  display:flex;align-items:center;justify-content:center;
+  font-weight:800;font-size:1.15rem;
+}
+.side-who{min-width:0}
+.side-who b{display:block;color:var(--snow);font-size:.98rem;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.side-who span{display:block;font-size:.82rem;color:rgba(255,251,255,.55)}
+
+.side-logout{
+  margin:0 20px 6px;padding:7px 0;
+  background:none;border:none;cursor:pointer;font-family:inherit;
+  color:rgba(255,251,255,.6);font-size:.9rem;text-align:left;
+}
+.side-logout:hover{color:var(--almond);text-decoration:underline}
+
+.side-label{
+  margin:20px 20px 8px;padding-bottom:8px;
+  font-size:.72rem;letter-spacing:.16em;font-weight:700;
+  color:rgba(255,251,255,.42);
+  border-bottom:1px solid rgba(255,251,255,.1);
+}
+
+.side-menu{display:flex;flex-direction:column}
+.side-item{
+  display:flex;align-items:center;gap:12px;
+  width:100%;padding:11px 20px;
+  background:none;border:none;border-left:3px solid transparent;
+  font-family:inherit;font-size:.96rem;text-align:left;cursor:pointer;
+  color:rgba(255,251,255,.72);transition:.16s;
+}
+.side-item:hover{background:rgba(255,251,255,.07);color:var(--snow)}
+.side-item.on{
+  background:rgba(198,165,68,.16);color:var(--almond);
+  border-left-color:var(--gold);font-weight:700;
+}
+.side-item .si{flex:0 0 20px;font-size:1rem;text-align:center;font-style:normal}
+
+/* --- 右側 --- */
+.admin-main{min-width:0;display:flex;flex-direction:column;min-height:100vh}
+
+/* nav 預設是 position:fixed 的滿版導覽列，後台這一條不是，要蓋掉 */
+nav.admin-top{
+  position:sticky;top:0;left:auto;right:auto;
+  display:flex;align-items:center;gap:16px;
+  padding:12px 26px;z-index:60;
+  background:rgba(0,5,0,.9);backdrop-filter:blur(12px);
+}
+.crumb{
+  flex:1;min-width:0;color:rgba(255,251,255,.55);font-size:1rem;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.crumb span{margin:0 7px;opacity:.5}
+.crumb b{color:var(--almond)}
+
+.side-toggle{
+  display:none;background:none;border:none;cursor:pointer;
+  color:var(--snow);font-size:1.35rem;line-height:1;padding:2px 4px;
+}
+
+.admin-body{flex:1;padding:30px 26px 56px;max-width:1280px;width:100%}
+.admin-foot{margin-top:0}
+
+.side-veil{
+  position:fixed;inset:0;z-index:70;
+  background:rgba(0,5,0,.5);backdrop-filter:blur(2px);
+}
+
+@media(max-width:1000px){
+  .admin-shell{grid-template-columns:1fr}
+  .side{
+    position:fixed;top:0;left:0;z-index:80;width:var(--side-w);
+    transform:translateX(-100%);transition:transform .22s ease;
+    box-shadow:0 0 34px rgba(0,0,0,.4);
+  }
+  .side.open{transform:none}
+  .side-toggle{display:block}
+  .admin-body{padding:24px 18px 48px}
+  nav.admin-top{padding:12px 18px}
+}
+
+/* 總覽的兩欄。表格有 min-width:520px，欄位一定要能縮到 0
+   才不會把整頁撐出橫向捲軸 —— 表格自己在 .table-scroll 裡捲。 */
+.ov-grid{
+  display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);
+  gap:26px;align-items:start;margin-top:8px;
+}
+@media(max-width:900px){ .ov-grid{grid-template-columns:minmax(0,1fr)} }

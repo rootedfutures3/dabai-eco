@@ -5,44 +5,71 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ERP 儀表板（示範）— TANJU</title>
 <meta name="robots" content="noindex">
-<link rel="icon" type="image/png" sizes="32x32" href="assets/img/favicon-32.png?v=721929ae">
-<link rel="stylesheet" href="assets/style.css?v=721929ae">
-<script src="assets/config.js?v=721929ae" defer></script>
-<script src="assets/store.js?v=721929ae" defer></script>
-<script src="assets/site.js?v=721929ae" defer></script>
-<script src="assets/erp.js?v=721929ae" defer></script>
-<script src="assets/finance.js?v=721929ae" defer></script>
-<script src="assets/social.js?v=721929ae" defer></script>
-<script src="assets/lang/ms.js?v=721929ae" defer></script>
-<script src="assets/lang/en.js?v=721929ae" defer></script>
-<script src="assets/lang/iba.js?v=721929ae" defer></script>
-<script src="assets/i18n.js?v=721929ae" defer></script>
+<link rel="icon" type="image/png" sizes="32x32" href="assets/img/favicon-32.png?v=7ae3d350">
+<link rel="stylesheet" href="assets/style.css?v=7ae3d350">
+<script src="assets/config.js?v=7ae3d350" defer></script>
+<script src="assets/store.js?v=7ae3d350" defer></script>
+<script src="assets/site.js?v=7ae3d350" defer></script>
+<script src="assets/erp.js?v=7ae3d350" defer></script>
+<script src="assets/finance.js?v=7ae3d350" defer></script>
+<script src="assets/social.js?v=7ae3d350" defer></script>
+<script src="assets/lang/ms.js?v=7ae3d350" defer></script>
+<script src="assets/lang/en.js?v=7ae3d350" defer></script>
+<script src="assets/lang/iba.js?v=7ae3d350" defer></script>
+<script src="assets/i18n.js?v=7ae3d350" defer></script>
 </head>
-<body class="app">
+<body class="admin">
 
-<nav>
-  <a class="logo" href="index.html"><img src="assets/img/logo.png?v=721929ae" alt="" width="40" height="40"><span class="logo-wm"><b class="logo-name">TANJU</b><i class="logo-sub">ROOTED FUTURES<span class="logo-zh"> · 根築新局</span></i></span></a>
-  <button class="nav-toggle" aria-label="開關選單" aria-expanded="false">☰</button>
-  <div class="nav-links">
-    <a href="index.html">回前台</a>
-    <a href="erp.html" class="active">ERP 儀表板</a>
-    <a href="coordinator.html">溝通者門戶</a>
-  </div>
-  <button class="nav-cta" id="db-reset" style="border:none;cursor:pointer">重設示範資料</button>
-</nav>
+<div class="admin-shell">
 
-<div class="page-hero" style="padding-bottom:56px">
-  <div class="wrap">
-    <span class="eyebrow">Internal · Phase 1</span>
-    <h1>ERP <span class="accent">核心中樞</span></h1>
-    <p>
-      樹體資產、認養訂單與預付款、客戶名單、現場樹況回報與工資紀錄 —— 一頁看完。
-    </p>
-  </div>
-</div>
+  <!-- ============ 左側功能列 ============ -->
+  <aside class="side" id="side">
+    <a class="side-brand" href="index.html">
+      <img src="assets/img/logo.png?v=7ae3d350" alt="" width="38" height="38">
+      <span><b>TANJU</b><i>ROOTED FUTURES</i></span>
+    </a>
 
-<section style="padding-top:44px">
-  <div class="wrap">
+    <div class="side-me">
+      <div class="side-avatar" id="side-avatar">—</div>
+      <div class="side-who">
+        <b id="side-name">未登入</b>
+        <span id="side-role">Guest</span>
+      </div>
+    </div>
+    <button class="side-logout" id="logout" type="button">登出</button>
+
+    <p class="side-label">MENU</p>
+    <div class="side-menu" id="side-menu">
+      <button class="side-item on" data-tab="overview"><span class="si">▦</span>總覽</button>
+      <button class="side-item" data-tab="orders"><span class="si">🧾</span>認養訂單</button>
+      <button class="side-item" data-tab="trees"><span class="si">🌳</span>樹體資產</button>
+      <button class="side-item" data-tab="customers"><span class="si">👥</span>客戶名單</button>
+      <button class="side-item" data-tab="reports"><span class="si">📋</span>樹況回報</button>
+      <button class="side-item" data-tab="commission"><span class="si">💰</span>佣金分潤</button>
+      <button class="side-item" data-tab="finance"><span class="si">📈</span>財務模型</button>
+      <button class="side-item" data-tab="social"><span class="si">📣</span>社群發文</button>
+      <button class="side-item" data-tab="wages"><span class="si">🧑‍🌾</span>收益與工資</button>
+    </div>
+
+    <p class="side-label">其他</p>
+    <div class="side-menu">
+      <a class="side-item" href="coordinator.html"><span class="si">📍</span>溝通者門戶</a>
+      <a class="side-item" href="dashboard.html"><span class="si">🔑</span>使用者後台</a>
+      <a class="side-item" href="index.html"><span class="si">↩</span>回前台</a>
+    </div>
+  </aside>
+
+  <div class="side-veil" id="side-veil" hidden></div>
+
+  <!-- ============ 右側內容 ============ -->
+  <main class="admin-main">
+    <nav class="admin-top">
+      <button class="side-toggle" id="side-toggle" aria-label="開關功能列" aria-expanded="false">☰</button>
+      <div class="crumb">ERP <span aria-hidden="true">/</span> <b id="crumb">總覽</b></div>
+      <button class="nav-cta" id="db-reset" type="button">重設示範資料</button>
+    </nav>
+
+    <div class="admin-body">
 
     <div class="demo-banner">
       ⚠️ <b>示範系統（Demo）</b> ——
@@ -53,22 +80,23 @@
       試試看：到<a href="trees.html" style="color:var(--coffee);font-weight:700;text-decoration:underline">包樹認養頁</a>完成一筆模擬認養，回來這頁就會多一筆訂單。
     </div>
 
-    <!-- KPI -->
-    <div class="kpi-row" id="kpis"></div>
+    <div class="tab-pane on" data-panel="overview">
+      <h3 class="panel-h">營運總覽 <small>Overview</small></h3>
+      <div class="kpi-row" id="kpis"></div>
 
-    <!-- 分頁 -->
-    <div class="tabs" id="tabs">
-      <button class="tab on" data-tab="orders">認養訂單</button>
-      <button class="tab" data-tab="trees">樹體資產</button>
-      <button class="tab" data-tab="customers">客戶名單</button>
-      <button class="tab" data-tab="reports">樹況回報</button>
-      <button class="tab" data-tab="commission">佣金分潤</button>
-      <button class="tab" data-tab="finance">財務模型</button>
-      <button class="tab" data-tab="social">社群發文</button>
-      <button class="tab" data-tab="wages">收益與工資</button>
+      <div class="ov-grid">
+        <div>
+          <h4 class="sub-h">最近動態 <small>Recent Activity</small></h4>
+          <div class="table-scroll"><table id="t-recent"></table></div>
+        </div>
+        <div>
+          <h4 class="sub-h">這個月 <small>This Month</small></h4>
+          <div class="table-scroll"><table id="t-month"></table></div>
+        </div>
+      </div>
     </div>
 
-    <div class="tab-pane on" data-panel="orders">
+    <div class="tab-pane" data-panel="orders">
       <h3 class="panel-h">認養訂單與預付款 <small>Orders &amp; Unearned Revenue</small></h3>
       <div class="table-scroll"><table id="t-orders"></table></div>
     </div>
@@ -225,12 +253,13 @@
       <div class="table-scroll"><table id="t-wages"></table></div>
     </div>
 
-  </div>
-</section>
+    </div>
+  </main>
+</div>
 
-<footer>
+<footer class="admin-foot">
   <div class="foot-grid">
-    <div class="foot-brand"><img src="assets/img/logo.png?v=721929ae" alt="TANJU · ROOTED FUTURES 根築新局" width="56" height="56"><div><b>TANJU</b><br>ROOTED FUTURES<span class="logo-zh"> 根築新局</span><br>Social Enterprise · Song, Sarawak</div></div>
+    <div class="foot-brand"><img src="assets/img/logo.png?v=7ae3d350" alt="TANJU · ROOTED FUTURES 根築新局" width="56" height="56"><div><b>TANJU</b><br>ROOTED FUTURES<span class="logo-zh"> 根築新局</span><br>Social Enterprise · Song, Sarawak</div></div>
     <div class="foot-links">
       <a href="index.html">回前台</a>
       <a href="erp.html">ERP 儀表板</a>

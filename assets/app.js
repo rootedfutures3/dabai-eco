@@ -48,10 +48,11 @@ Store.onReady(() => {
     location.assign('app.html');
   });
 
-  // 手機選單
-  const tog = document.querySelector('.nav-toggle'), links = document.getElementById('app-nav');
+  // 手機：漢堡開合左側功能列
+  const tog = document.getElementById('side-toggle'), links = document.getElementById('side');
   tog?.addEventListener('click', () => {
     const open = links.classList.toggle('open');
+    document.getElementById('side-veil').hidden = !open;
     tog.setAttribute('aria-expanded', String(open));
   });
 
@@ -72,6 +73,12 @@ function signIn(user) {
   document.getElementById('me-role').textContent = ROLE_LABEL[user.role];
   document.getElementById('me-name').textContent = user.name;
   document.getElementById('me-org').textContent = user.org;
+  const av = document.getElementById('side-avatar');
+  if (av) av.textContent = (user.name || user.u).trim().charAt(0).toUpperCase();
+
+  // 遮罩與 Esc 都能關掉手機上的側邊抽屜
+  document.getElementById('side-veil')?.addEventListener('click', closeSide);
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSide(); });
   buildNav();
 }
 
@@ -82,17 +89,61 @@ const NAVS = {
   admin:  [['overview','總覽'], ['all-trees','所有果樹'], ['orders','所有訂單'], ['users','帳號管理']],
 };
 
+/* 選單圖示 —— 純裝飾，不影響翻譯（翻譯抓的是文字節點） */
+const NAV_ICON = {
+  trees:'🌳', adoptions:'🤝', income:'💰', msgs:'✉️',
+  browse:'🔍', mine:'📗', track:'📈',
+  overview:'▦', 'all-trees':'🌳', orders:'🧾', users:'👤',
+};
+
 function buildNav() {
   const nav = document.getElementById('app-nav');
   nav.innerHTML = NAVS[me.role].map(([k, t], i) =>
-    `<a href="#" data-view="${k}"${i === 0 ? ' class="active"' : ''}>${t}</a>`).join('');
+    `<a class="side-item${i === 0 ? ' on' : ''}" href="#" data-view="${k}">
+       <span class="si">${NAV_ICON[k] || '•'}</span>${t}</a>`).join('');
+
   nav.querySelectorAll('a').forEach(a => a.addEventListener('click', e => {
     e.preventDefault();
-    nav.querySelectorAll('a').forEach(x => x.classList.toggle('active', x === a));
-    nav.classList.remove('open');
+    nav.querySelectorAll('a').forEach(x => x.classList.toggle('on', x === a));
+    closeSide();
+    setCrumb(a);
     render(a.dataset.view);
   }));
+
+  /* 「其他」區：管理員多給一個 ERP 入口 */
+  const extra = document.getElementById('app-extra');
+  if (extra) {
+    extra.innerHTML =
+      (me.role === 'admin'
+        ? `<a class="side-item" href="erp.html"><span class="si">📊</span>ERP 儀表板</a>
+           <a class="side-item" href="coordinator.html"><span class="si">📍</span>溝通者門戶</a>`
+        : '')
+      + `<a class="side-item" href="index.html"><span class="si">↩</span>回官網</a>`;
+  }
+
+  const first = nav.querySelector('a');
+  setCrumb(first);
   render(NAVS[me.role][0][0]);
+}
+
+/** 麵包屑只取文字，不含前面的圖示 */
+function setCrumb(a) {
+  const crumb = document.getElementById('crumb');
+  if (!crumb || !a) return;
+  crumb.textContent = [...a.childNodes]
+    .filter(n => n.nodeType === 3).map(n => n.nodeValue).join('').trim();
+  const root = document.getElementById('crumb-root');
+  if (root) root.textContent =
+    { farmer:'果農後台', buyer:'收購商後台', admin:'管理後台' }[me.role] || '後台';
+}
+
+function closeSide() {
+  const side = document.getElementById('side');
+  if (!side || !side.classList.contains('open')) return;
+  side.classList.remove('open');
+  const veil = document.getElementById('side-veil');
+  if (veil) veil.hidden = true;
+  document.getElementById('side-toggle')?.setAttribute('aria-expanded', 'false');
 }
 
 /* ---------- 彈窗 ---------- */

@@ -11,14 +11,31 @@ Store.onReady((info) => {
   showDbStatus(info);
   renderAll();
 
-  // 分頁切換
-  document.getElementById('tabs').addEventListener('click', e => {
-    const btn = e.target.closest('.tab');
+  // 左側功能列
+  document.getElementById('side-menu').addEventListener('click', e => {
+    const btn = e.target.closest('.side-item[data-tab]');
     if (!btn) return;
-    document.querySelectorAll('.tab').forEach(t => t.classList.toggle('on', t === btn));
-    document.querySelectorAll('.tab-pane').forEach(p =>
-      p.classList.toggle('on', p.dataset.panel === btn.dataset.tab));
+    show(btn.dataset.tab);
+    closeSide();          // 手機上點完就把抽屜收起來
   });
+
+  // 手機：漢堡開關側邊欄
+  const side = document.getElementById('side');
+  const veil = document.getElementById('side-veil');
+  document.getElementById('side-toggle').addEventListener('click', () => {
+    const open = !side.classList.contains('open');
+    side.classList.toggle('open', open);
+    veil.hidden = !open;
+    document.getElementById('side-toggle').setAttribute('aria-expanded', String(open));
+  });
+  veil.addEventListener('click', closeSide);
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSide(); });
+
+  // 網址帶 #commission 之類的就直接開那一頁，方便加書籤與分享
+  const want = location.hash.replace('#', '');
+  if (want && document.querySelector(`.side-item[data-tab="${want}"]`)) show(want);
+
+  showMe();
 
   // 樹體資產篩選
   ['erp-crop', 'erp-status'].forEach(id =>
@@ -93,6 +110,7 @@ function renderAll() {
   renderCommission();
   renderSocial();
   renderFinance();
+  renderOverview();
 }
 
 /* ---------- KPI ---------- */
@@ -349,4 +367,95 @@ function previewRates() {
     : `（未儲存）每 RM 100：果農 RM ${fmt(100 - c)}
        （開花前 RM ${fmt(d)}、採收後 RM ${fmt(bal)}），平台 RM ${fmt(c)}。`;
   ex.style.color = bal < 0 ? 'var(--red)' : '';
+}
+
+
+/* ---------- 側邊欄 ---------- */
+
+/** 切到某個功能頁，同時更新左側高亮、麵包屑與網址。 */
+function show(tab) {
+  document.querySelectorAll('.side-item[data-tab]').forEach(b =>
+    b.classList.toggle('on', b.dataset.tab === tab));
+  document.querySelectorAll('.tab-pane').forEach(p =>
+    p.classList.toggle('on', p.dataset.panel === tab));
+
+  /* 麵包屑只要文字，不要選單前面那個圖示 */
+  const btn = document.querySelector(`.side-item[data-tab="${tab}"]`);
+  const crumb = document.getElementById('crumb');
+  if (btn && crumb) {
+    const label = [...btn.childNodes]
+      .filter(n => n.nodeType === 3).map(n => n.nodeValue).join('').trim();
+    crumb.textContent = label || btn.textContent.trim();
+  }
+
+  history.replaceState(null, '', '#' + tab);
+  document.querySelector('.admin-body').scrollTop = 0;
+  window.scrollTo(0, 0);
+}
+
+function closeSide() {
+  const side = document.getElementById('side');
+  if (!side || !side.classList.contains('open')) return;
+  side.classList.remove('open');
+  document.getElementById('side-veil').hidden = true;
+  document.getElementById('side-toggle').setAttribute('aria-expanded', 'false');
+}
+
+/** 側邊欄上方的使用者區塊。沒登入就顯示訪客，並把登出改成登入。 */
+function showMe() {
+  const u = sessionStorage.getItem('rf_app_session');
+  const me = u ? (Store.read().users || []).find(x => x.u === u) : null;
+  const nameEl = document.getElementById('side-name');
+  const roleEl = document.getElementById('side-role');
+  const avEl   = document.getElementById('side-avatar');
+  const outBtn = document.getElementById('logout');
+
+  if (me) {
+    nameEl.textContent = me.name || me.u;
+    roleEl.textContent = { admin:'平台管理員', farmer:'果農', buyer:'收購商' }[me.role] || me.role;
+    avEl.textContent = (me.name || me.u).trim().charAt(0).toUpperCase();
+    outBtn.textContent = '登出';
+    outBtn.onclick = () => { sessionStorage.removeItem('rf_app_session'); location.href = 'app.html'; };
+  } else {
+    nameEl.textContent = '訪客';
+    roleEl.textContent = '未登入';
+    avEl.textContent = '·';
+    outBtn.textContent = '登入';
+    outBtn.onclick = () => { location.href = 'app.html'; };
+  }
+}
+
+/* ---------- 總覽 ---------- */
+
+function renderOverview() {
+  const db = Store.read();
+
+  /* 最近動態：訂單、樹況回報、撥款、貼文混在一起，依時間排 */
+  const feed = [
+    ...(db.orders  || []).map(o => [o.date, '🧾 認養訂單', `${o.no} · ${o.treeId} · ${o.customer}`]),
+    ...(db.reports || []).map(r => [r.at,   '📋 樹況回報', `${r.treeId} · ${r.stage} · ${r.health}`]),
+    ...(db.payouts || []).map(p => [p.date, '💰 撥款',     `${p.ref} · ${p.farmer || p.treeId} · ${money(p.amount)}`]),
+    ...(db.posts   || []).map(p => [p.at,   '📣 社群貼文', `${p.channel} · ${(p.title || '').slice(0, 24)}`]),
+  ].sort((a, b) => String(b[0]).localeCompare(String(a[0]))).slice(0, 12);
+
+  document.getElementById('t-recent').innerHTML = table(
+    ['時間', '類型', '內容'], feed.map(f => [f[0], f[1], f[2]]));
+
+  /* 這個月的幾個數字 */
+  const ym = today().slice(0, 7);
+  const inMonth = a => String(a || '').startsWith(ym);
+  const mo = (db.orders || []).filter(o => inMonth(o.date));
+  const mp = (db.payouts || []).filter(p => inMonth(p.date));
+  const rate = Store.settingNum('commission_rate', 20);
+
+  document.getElementById('t-month').innerHTML = table(
+    ['項目', ''],
+    [
+      ['新增認養訂單', `${mo.length} 筆`],
+      ['本月流水 GMV', money(mo.reduce((s, o) => s + o.amount, 0))],
+      [`平台佣金（${rate}%）`, money(mo.reduce((s, o) => s + Store.split(o).fee, 0))],
+      ['撥給果農', money(mp.reduce((s, p) => s + Number(p.amount), 0))],
+      ['樹況回報', `${(db.reports || []).filter(r => inMonth(r.at)).length} 筆`],
+      ['社群貼文', `${(db.posts || []).filter(p => inMonth(p.at)).length} 篇`],
+    ]);
 }
