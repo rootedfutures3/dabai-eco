@@ -138,9 +138,16 @@ function buildStaffLanding() {
   const label = { super:'超級管理員', admin:'一般管理員', finance:'財務',
                   editor:'編輯', coord:'溝通者' }[perm] || perm;
 
+  /* 溝通者進不了 TANJU Portal —— 他的工作在溝通者平台完成，
+     也不需要看到訂單、客戶與金額。所以入口依角色給。 */
+  const canPortal = ['super', 'admin', 'finance', 'editor'].includes(perm);
+
   const links = [
-    ['erp.html', '📊', 'TANJU Portal', '訂單、果樹、客戶、佣金、社群發文與帳號權限，全部在這裡。'],
-    ['coordinator.html', '📍', '溝通者門戶', '現場派工、樹況回報與採收標籤。'],
+    ...(canPortal
+      ? [['erp.html', '📊', 'TANJU Portal',
+          '訂單、果樹、客戶、佣金、社群發文與帳號權限，全部在這裡。']]
+      : []),
+    ['coordinator.html', '📍', '溝通者平台', '現場派工、樹況回報與採收標籤。'],
     ['index.html', '↩', '回官網', '看訪客看到的前台。'],
   ];
 

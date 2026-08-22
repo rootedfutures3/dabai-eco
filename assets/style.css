@@ -1725,3 +1725,22 @@ nav.admin-top{
 .signed-in h2{font-size:1.5rem;margin-bottom:10px}
 .signed-in p{color:var(--ink-soft);font-size:1rem}
 .signed-in .btn-row{justify-content:center;flex-wrap:wrap}
+
+/* ---------- 已登入時的平台入口 ---------- */
+.signed-sub{margin-top:20px;font-size:.94rem;color:var(--note-ink)}
+.door-row{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(min(200px,100%),1fr));
+  gap:14px;margin-top:16px;text-align:left;
+}
+.door{
+  display:block;padding:18px 20px;border-radius:var(--radius);
+  border:1px solid var(--field-line);background:var(--field-bg);
+  transition:.18s;
+}
+.door b{display:block;font-size:1.04rem;color:var(--field-ink);margin-bottom:5px}
+.door span{display:block;font-size:.86rem;color:var(--note-ink);line-height:1.6}
+.door:hover{border-color:var(--coffee);transform:translateY(-2px)}
+.door.primary{background:var(--coffee);border-color:var(--coffee)}
+.door.primary b{color:var(--almond)}
+.door.primary span{color:rgba(241,218,191,.8)}
+.door.primary:hover{background:var(--black)}

@@ -238,17 +238,36 @@ function showAlreadySignedIn(username) {
   const label = { super:'超級管理員', admin:'一般管理員', finance:'財務', editor:'編輯',
                   coord:'溝通者', farmer:'果農', buyer:'收購商' }[perm] || '';
 
-  // 管理端直接給 TANJU Portal 的入口，果農與收購商給自己的後台
-  const staff = ['super', 'admin', 'finance', 'editor', 'coord'].includes(perm);
+  /* 兩個平台是分開的，權限也不一樣：
+       TANJU Portal —— 管理用，訂單、客戶、金額、帳號權限都在這裡
+       溝通者平台   —— 現場用，派工、樹況回報、採收標籤
+     溝通者進不了 TANJU Portal，所以按角色只給他真正能進的入口。 */
+  const portal = ['super', 'admin', 'finance', 'editor'].includes(perm);
+  const isCoord = perm === 'coord';
+
+  const doors = [];
+  if (portal) {
+    doors.push(['erp.html', 'TANJU Portal', '訂單、果樹、客戶、佣金與帳號權限', true]);
+    doors.push(['coordinator.html', '溝通者平台', '現場派工、樹況回報與採收標籤', false]);
+  } else if (isCoord) {
+    doors.push(['coordinator.html', '溝通者平台', '現場派工、樹況回報與採收標籤', true]);
+  } else {
+    doors.push(['dashboard.html', '進入我的後台', '', true]);
+  }
 
   card.innerHTML = `
     <div class="signed-in">
       <h2 id="form-title">你已經登入了</h2>
       <p id="form-sub">目前的身分是 <b>${name}</b>${label ? `（${label}）` : ''}。</p>
-      <div class="btn-row" style="margin-top:24px">
-        <a class="btn btn-gold" href="${staff ? 'erp.html' : 'dashboard.html'}">
-          ${staff ? '進入 TANJU Portal' : '進入我的後台'}
-        </a>
+      ${doors.length > 1 ? '<p class="signed-sub">選一個要進去的平台：</p>' : ''}
+      <div class="door-row">
+        ${doors.map(([href, title, desc, primary]) => `
+          <a class="door ${primary ? 'primary' : ''}" href="${href}">
+            <b>${title}</b>
+            ${desc ? `<span>${desc}</span>` : ''}
+          </a>`).join('')}
+      </div>
+      <div class="btn-row" style="justify-content:center;margin-top:18px">
         <button class="btn btn-outline" type="button" id="switch-user">換一個帳號</button>
       </div>
       <button class="btn-back" id="go-site">← 回官網</button>

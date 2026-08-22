@@ -15,7 +15,7 @@
      admin   一般管理員 —— 日常營運，不能改權限與佣金比例
      finance 財務       —— 佣金與撥款；看不到帳號管理
      editor  編輯       —— 樹體資料與社群發文；看不到錢
-     coord   溝通者     —— 只有現場回報
+     coord   溝通者     —— 只用溝通者平台（coordinator.html），進不了 TANJU Portal
      farmer  果農 / buyer 收購商 —— 前台使用者，不進 ERP
    ============================================================ */
 
@@ -42,29 +42,36 @@ const ALL_PERMS = [
    開機時由 Perm.load() 併進來。 */
 const PERMS = {
   super: {
+    portal: true,
     label: '超級管理員', en: 'Super Admin',
     can: ['view.all', 'edit.trees', 'edit.orders', 'view.money', 'edit.money',
           'edit.settings', 'edit.social', 'edit.users', 'field.report', 'db.reset'],
   },
   admin: {
+    portal: true,
     label: '一般管理員', en: 'Admin',
     can: ['view.all', 'edit.trees', 'edit.orders', 'view.money',
           'edit.social', 'field.report'],
   },
   finance: {
+    portal: true,
     label: '財務', en: 'Finance',
     can: ['view.money', 'edit.money', 'edit.settings', 'view.orders'],
   },
   editor: {
+    portal: true,
     label: '編輯', en: 'Editor',
     can: ['edit.trees', 'edit.social', 'view.trees'],
   },
+  /* 溝通者不給 portal.access —— 他的工作在溝通者平台完成，
+     不需要也不應該看到訂單、客戶與金額。 */
   coord: {
     label: '溝通者', en: 'Coordinator',
     can: ['field.report', 'view.trees'],
+    home: 'coordinator.html',
   },
-  farmer: { label: '果農',   en: 'Farmer', can: ['view.trees'] },
-  buyer:  { label: '收購商', en: 'Buyer',  can: ['view.trees'] },
+  farmer: { label: '果農',   en: 'Farmer', can: ['view.trees'], home: 'dashboard.html' },
+  buyer:  { label: '收購商', en: 'Buyer',  can: ['view.trees'], home: 'dashboard.html' },
 };
 
 /* 每個 ERP 功能頁需要的權限。列在這裡才會出現在左側選單。 */
@@ -174,6 +181,20 @@ const Perm = {
       if (list.includes(editing)) return true;
     }
     return false;
+  },
+
+  /** 這個角色能不能進 TANJU Portal（管理後台）。 */
+  canPortal() {
+    const r = Perm.role();
+    return !!(r && PERMS[r] && PERMS[r].portal);
+  },
+
+  /** 這個角色登入後該去哪一頁。 */
+  home() {
+    const r = Perm.role();
+    if (!r) return 'app.html';
+    if (PERMS[r] && PERMS[r].portal) return 'erp.html';
+    return (PERMS[r] && PERMS[r].home) || 'dashboard.html';
   },
 
   canPage(tab) {

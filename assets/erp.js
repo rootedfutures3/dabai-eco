@@ -696,6 +696,13 @@ function renderUsers() {
 
 /** 把目前角色沒有權限的功能頁從左側選單拿掉。 */
 function gateMenu() {
+  /* 沒有 portal 權限的人（溝通者、果農、收購商）不該停在這一頁。
+     直接送去他該去的地方，而不是讓他看到一個空的後台。 */
+  if (Perm.me() && !Perm.canPortal()) {
+    location.replace(Perm.home());
+    return;
+  }
+
   let firstVisible = null;
   document.querySelectorAll('.side-item[data-tab]').forEach(b => {
     const ok = Perm.canPage(b.dataset.tab);

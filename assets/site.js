@@ -28,8 +28,15 @@ document.documentElement.classList.add('js');
  */
 function ready(fn) {
   if (typeof Store !== 'undefined' && Store.onReady) return Store.onReady(fn);
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', fn);
-  else fn();
+  if (document.readyState === 'loading') return document.addEventListener('DOMContentLoaded', fn);
+
+  /* 這裡不能直接 fn() ——
+     site.js 是 defer 載入的，執行時 readyState 已經是 interactive，
+     直接呼叫會在「這份檔案還沒跑完」的當下就執行回呼，
+     而回呼裡用到的 const ORCHARDS 是在檔案後面才宣告的，
+     於是踩到暫時性死區：Cannot access 'ORCHARDS' before initialization。
+     排進微任務，等整份檔案評估完再跑。 */
+  queueMicrotask(fn);
 }
 
 ready(() => {
