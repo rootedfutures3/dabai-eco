@@ -2081,4 +2081,18 @@ window.LANG_MS = {
   '你的角色沒有管理權限的權限。': 'Peranan anda tidak boleh mengurus kebenaran.',
   '內建角色不能刪除。': 'Peranan terbina dalam tidak boleh dipadam.',
   '可以：': 'Boleh: ',
+
+
+  /* ---------- 編輯帳號 ---------- */
+  '編輯帳號 Edit User': 'Sunting pengguna',
+  '取消編輯': 'Batal',
+  '留空就不改密碼。': 'Biarkan kosong untuk mengekalkan kata laluan sedia ada.',
+  '未填': 'belum diisi',
+  'Email 格式看起來不對，請再檢查一次。': 'Alamat e-mel itu kelihatan tidak betul — sila semak semula.',
+  '臨時密碼至少 4 個字元。留空就不改密碼。': 'Kata laluan sementara memerlukan sekurang-kurangnya 4 aksara. Biarkan kosong untuk mengekalkan yang sedia ada.',
+  '你的角色沒有管理帳號的權限。': 'Peranan anda tidak boleh mengurus akaun.',
+  '不能改自己的權限，避免把自己鎖在門外。請另一位超級管理員幫忙改。': 'Anda tidak boleh mengubah peranan sendiri — itulah cara orang terkunci di luar. Minta pentadbir utama lain melakukannya.',
+  '臨時密碼至少 4 個字元。': 'Kata laluan sementara memerlukan sekurang-kurangnya 4 aksara.',
+  '請填姓名。': 'Sila masukkan nama.',
+  '帳號請用 3–20 個英文小寫字母、數字或 . _ - ，不要有空白或中文。': 'Nama pengguna mesti 3–20 huruf kecil, digit, . _ atau - — tiada ruang.',
 };

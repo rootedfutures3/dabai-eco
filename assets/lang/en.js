@@ -2080,4 +2080,18 @@ window.LANG_EN = {
   '你的角色沒有管理權限的權限。': 'Your role cannot manage permissions.',
   '內建角色不能刪除。': 'Built-in roles cannot be deleted.',
   '可以：': 'Can: ',
+
+
+  /* ---------- 編輯帳號 ---------- */
+  '編輯帳號 Edit User': 'Edit user',
+  '取消編輯': 'Cancel',
+  '留空就不改密碼。': 'Leave blank to keep the current password.',
+  '未填': 'not set',
+  'Email 格式看起來不對，請再檢查一次。': 'That email address does not look right — please check it.',
+  '臨時密碼至少 4 個字元。留空就不改密碼。': 'The temporary password needs at least 4 characters. Leave it blank to keep the current one.',
+  '你的角色沒有管理帳號的權限。': 'Your role cannot manage accounts.',
+  '不能改自己的權限，避免把自己鎖在門外。請另一位超級管理員幫忙改。': 'You cannot change your own role — that is how people lock themselves out. Ask another super admin to do it.',
+  '臨時密碼至少 4 個字元。': 'The temporary password needs at least 4 characters.',
+  '請填姓名。': 'Please enter a name.',
+  '帳號請用 3–20 個英文小寫字母、數字或 . _ - ，不要有空白或中文。': 'The username must be 3–20 lowercase letters, digits, . _ or - — no spaces.',
 };

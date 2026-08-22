@@ -197,6 +197,30 @@ const Store = {
   },
 
   /* ---- 訊息 ---- */
+  /**
+   * 改一個帳號的資料（Email、電話、姓名等）。
+   * u 是主鍵，不開放修改 —— 改帳號等於換一個人，容易把既有的關聯弄丟。
+   * patch 裡沒帶到的欄位一律不動；pass 留空代表不改密碼。
+   */
+  updateUser(u, patch) {
+    const db = Store.read();
+    const user = (db.users || []).find(x => x.u === u);
+    if (!user) return false;
+
+    const clean = {};
+    for (const [k, v] of Object.entries(patch)) {
+      if (k === 'u') continue;                       // 主鍵不給改
+      if (k === 'pass' && !String(v || '').trim()) continue;   // 留空＝不改密碼
+      clean[k] = v;
+    }
+    if (!Object.keys(clean).length) return true;
+
+    Object.assign(user, clean);
+    Store.write(db);
+    patchRow('users', 'u', u, clean);
+    return true;
+  },
+
   /** 改一個帳號的 ERP 權限角色。 */
   setUserPerm(u, perm) {
     const db = Store.read();

@@ -653,7 +653,7 @@ function renderUsers() {
   const meU = (Perm.me() || {}).u;
 
   document.getElementById('t-users').innerHTML = table(
-    ['帳號', '姓名', '單位', 'ERP 權限', '前台身分', 'Email'],
+    ['帳號', '姓名', '單位', 'ERP 權限', '前台身分', 'Email', ''],
     (Store.read().users || []).map(u => {
       const cur = u.perm || (u.role === 'admin' ? 'super' : u.role);
       const picker = editable
@@ -666,7 +666,10 @@ function renderUsers() {
         `<b>${u.u}</b>${u.u === meU ? ' <span class="badge-ok">你</span>' : ''}`,
         u.name || '—', u.org || '—', picker,
         { admin:'管理', farmer:'果農', buyer:'收購商' }[u.role] || u.role,
-        `<span class="dim">${u.email || '—'}</span>`,
+        u.email
+          ? `<a href="mailto:${u.email}">${u.email}</a>`
+          : '<span class="dim">未填</span>',
+        editable ? `<button class="mini-btn" data-user-edit="${u.u}">編輯</button>` : '',
       ];
     }));
 
@@ -676,6 +679,12 @@ function renderUsers() {
       Store.setUserPerm(sel.dataset.u, sel.value);
       renderUsers();
       gateMenu();
+    }));
+
+  document.querySelectorAll('[data-user-edit]').forEach(b =>
+    b.addEventListener('click', () => {
+      const u = (Store.read().users || []).find(x => x.u === b.dataset.userEdit);
+      if (u) userFormMode(u);
     }));
 }
 
@@ -739,6 +748,8 @@ function initNewUser() {
   };
   syncRole();
 
+  document.getElementById('nu-cancel').addEventListener('click', () => userFormMode(null));
+
   form.addEventListener('submit', e => {
     e.preventDefault();
     const err = document.getElementById('nu-err');
@@ -747,48 +758,116 @@ function initNewUser() {
       err.textContent = msg; err.style.display = 'block'; ok.style.display = 'none';
     };
 
-    if (!Perm.can('edit.users')) return fail('你的角色沒有新增帳號的權限。');
+    if (!Perm.can('edit.users')) return fail('你的角色沒有管理帳號的權限。');
 
     const val = id => document.getElementById(id).value.trim();
-    const u = val('nu-user').toLowerCase();
-
-    if (!/^[a-z0-9._-]{3,20}$/.test(u)) {
-      return fail('帳號請用 3–20 個英文小寫字母、數字或 . _ - ，不要有空白或中文。');
-    }
-    if (Store.userExists(u)) return fail(`帳號「${u}」已經有人用了，換一個。`);
-
+    const editing = form.dataset.editing || '';
+    const u = editing || val('nu-user').toLowerCase();
     const pass = val('nu-pass');
-    if (pass.length < 4) return fail('臨時密碼至少 4 個字元。');
+
+    if (!editing) {
+      if (!/^[a-z0-9._-]{3,20}$/.test(u)) {
+        return fail('帳號請用 3–20 個英文小寫字母、數字或 . _ - ，不要有空白或中文。');
+      }
+      if (Store.userExists(u)) return fail(`帳號「${u}」已經有人用了，換一個。`);
+      if (pass.length < 4) return fail('臨時密碼至少 4 個字元。');
+    } else if (pass && pass.length < 4) {
+      // 編輯時密碼可以留空（代表不改），但真的填了就要夠長
+      return fail('臨時密碼至少 4 個字元。留空就不改密碼。');
+    }
+
     if (!val('nu-name')) return fail('請填姓名。');
 
+    const email = val('nu-email');
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return fail('Email 格式看起來不對，請再檢查一次。');
+    }
+    // 同一個 Email 給兩個帳號用，之後要靠 Email 找人就會分不出來
+    const clash = (Store.read().users || []).find(
+      x => email && x.email && x.email.toLowerCase() === email.toLowerCase() && x.u !== u);
+    if (clash) return fail(`這個 Email 已經是帳號「${clash.u}」在用了。`);
+
     const perm = sel.value;
-    if (perm === 'super' &&
+    const me = Perm.me();
+    if (editing && me && me.u === editing && perm !== (me.perm || 'super')) {
+      return fail('不能改自己的權限，避免把自己鎖在門外。請另一位超級管理員幫忙改。');
+    }
+    if (perm === 'super' && (!editing || PERMS[perm]) &&
         !confirm(`確定要把「${val('nu-name')}」設成超級管理員嗎？\n\n`
                + '超級管理員可以改佣金比例、執行撥款，也能修改其他人的權限。')) return;
 
-    Store.addUser({
-      u, pass, perm,
+    const data = {
+      perm,
       role:  roleSel.value,
       name:  val('nu-name'),
       org:   val('nu-org')   || '',
       phone: val('nu-phone') || '',
-      email: val('nu-email') || '',
-      area:  val('nu-area')  || '',
-    });
+      email: email || '',
+    };
+    data.area = val('nu-area') || '';
+
+    if (editing) {
+      Store.updateUser(editing, { ...data, pass });
+      ok.innerHTML = `✅ 已更新帳號 <b>${editing}</b>。`
+                   + (pass ? '密碼也一併改了，記得通知本人。' : '');
+    } else {
+      Store.addUser({ u, pass, ...data });
+      ok.innerHTML = `✅ 已建立帳號 <b>${u}</b>（${PERMS[perm].label}）。
+                      請把帳號與臨時密碼交給本人，並提醒他這是示範系統。`;
+    }
 
     err.style.display = 'none';
-    ok.innerHTML = `✅ 已建立帳號 <b>${u}</b>（${PERMS[perm].label}）。
-                    請把帳號與臨時密碼交給本人，並提醒他這是示範系統。`;
     ok.style.display = 'block';
 
-    form.reset();
-    sel.value = 'editor';
-    showHint();
-    syncRole();
-
+    userFormMode(null);
     renderUsers();
     renderKpis();
+    showMe();
   });
+}
+
+/**
+ * 切換表單的「新增」與「編輯」兩種狀態。
+ * 傳 null 就回到新增模式並清空。
+ */
+function userFormMode(user) {
+  const form = document.getElementById('new-user-form');
+  if (!form) return;
+  const $ = id => document.getElementById(id);
+
+  if (!user) {
+    delete form.dataset.editing;
+    form.reset();
+    $('nu-user').disabled = false;
+    $('nu-pass').required = true;
+    $('nu-pass-hint').hidden = true;
+    $('nu-cancel').hidden = true;
+    $('nu-heading').innerHTML = '新增帳號 <small>Add a User</small>';
+    $('nu-submit').textContent = '建立帳號';
+    $('nu-perm').value = 'editor';
+  } else {
+    form.dataset.editing = user.u;
+    $('nu-user').value = user.u;
+    $('nu-user').disabled = true;              // 帳號是主鍵，不給改
+    $('nu-pass').value = '';
+    $('nu-pass').required = false;
+    $('nu-pass-hint').hidden = false;
+    $('nu-name').value  = user.name  || '';
+    $('nu-org').value   = user.org   || '';
+    $('nu-email').value = user.email || '';
+    $('nu-phone').value = user.phone || '';
+    $('nu-area').value  = user.area  || '';
+    $('nu-perm').value  = user.perm || (user.role === 'admin' ? 'super' : user.role) || 'editor';
+    $('nu-role').value  = user.role || 'admin';
+    $('nu-cancel').hidden = false;
+    $('nu-heading').innerHTML = '編輯帳號 <small>Edit User</small>';
+    $('nu-submit').textContent = '儲存變更';
+    form.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
+  $('nu-err').style.display = 'none';
+  $('nu-perm').dispatchEvent(new Event('change'));
+  if (typeof I18N !== 'undefined') I18N.refresh(document.getElementById('nu-heading'));
 }
 
 /** 把某個角色能做的事寫成一句話，讓選權限的人知道自己在給什麼。 */

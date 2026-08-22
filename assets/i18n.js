@@ -153,15 +153,18 @@ const I18N = {
       /* 整段替換是用 textContent 寫回去的，會把子元素整個抹掉。
          所以只要元素裡有「不是純文字」的東西，就不能整段處理：
 
-         · 表單控制項 —— 例如 <div class="fld"><label>對象</label><select id="po-subject">
+         · 表單控制項與按鈕 —— 例如 <div class="fld"><label>對象</label><select id="po-subject">
            這個 div 的 textContent 剛好是「對象」，字典查得到，
            整段替換會連 <select> 一起消失，後面的程式就抓不到那個 id 了。
+           表格裡 <td><button data-user-edit="…">編輯</button></td> 也一樣：
+           「編輯」查得到字典，整段替換之後按鈕連同 data 屬性一起不見。
+           按鈕自己仍然會被當成候選元素翻譯，所以文字不會漏翻。
          · 圖片與向量圖 —— 同理會被抹掉。
          · 區塊子元素 —— <div class="reveal"><h2>…</h2><p>…</p></div>
            不是一個句子，不該被當成單一段落。
 
          這些一律跳過，交給第二輪逐節點翻譯處理。 */
-      if (el.querySelector('input,select,textarea,img,svg,video,iframe,canvas')) return;
+      if (el.querySelector('input,select,textarea,img,svg,video,iframe,canvas,button')) return;
 
       /* 整段替換是用 textContent 寫回去的，子元素會連同樣式一起消失。
          大多數情況這樣沒問題（句子裡的 <b> 本來就該被整句取代），
