@@ -1744,3 +1744,44 @@ nav.admin-top{
 .door.primary b{color:var(--almond)}
 .door.primary span{color:rgba(241,218,191,.8)}
 .door.primary:hover{background:var(--black)}
+
+/* ---------- 實景照片 ---------- */
+.photo{margin:0 0 20px}
+.photo img{
+  display:block;width:100%;height:auto;border-radius:var(--radius);
+  box-shadow:0 10px 30px var(--shadow);
+}
+.photo figcaption{
+  font-size:.9rem;color:var(--ink-soft);line-height:1.65;
+  margin-top:12px;
+}
+/* 深底區塊裡的說明文字要跟著變淺，否則會看不見 */
+.dark-section .photo figcaption{color:rgba(255,251,255,.72)}
+.photo-credit{
+  display:block;margin-top:6px;
+  font-size:.8rem;color:var(--taupe-deep);
+}
+.dark-section .photo-credit{color:rgba(255,251,255,.5)}
+
+/* 橫幅照片：限制高度，避免直式照片把版面推得太長 */
+.photo-band{margin:0 0 34px}
+.photo-band img{max-height:420px;object-fit:cover}
+.photo-band figcaption{max-width:70ch}
+
+/* ---------- 信任區塊 ---------- */
+.trust-grid{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(min(290px,100%),1fr));
+  gap:20px;margin-top:30px;
+}
+.trust-card{
+  position:relative;background:var(--snow);
+  border:1px solid var(--line);border-top:3px solid var(--gold);
+  border-radius:var(--radius);padding:26px 26px 24px;
+}
+.trust-n{
+  display:block;font-size:.82rem;font-weight:800;letter-spacing:.14em;
+  color:var(--gold-deep);margin-bottom:10px;
+}
+.trust-card h3{font-size:1.08rem;margin-bottom:10px}
+.trust-card p{font-size:.97rem;line-height:1.78;color:var(--ink-soft)}
+.trust-card a{color:var(--coffee);text-decoration:underline;font-weight:600}
