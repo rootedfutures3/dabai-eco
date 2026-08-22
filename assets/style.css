@@ -1703,3 +1703,44 @@ nav.admin-top{
   padding:2px 9px;margin:2px 2px 2px 0;white-space:nowrap;
 }
 @media(max-width:560px){ .role-editor{padding:18px} }
+
+/* ---------- 後台入口頁 ---------- */
+.hub-grid{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(min(240px,100%),1fr));
+  gap:18px;margin-top:22px;
+}
+.hub-card{
+  display:block;background:var(--snow);border:1px solid var(--line);
+  border-left:4px solid var(--gold);border-radius:var(--radius);
+  padding:22px 24px;transition:.18s;
+}
+.hub-card:hover{border-left-color:var(--coffee);transform:translateY(-2px);
+  box-shadow:0 8px 24px var(--shadow)}
+.hub-ico{display:block;font-size:1.5rem;margin-bottom:10px}
+.hub-card b{display:block;font-size:1.08rem;color:var(--ink);margin-bottom:6px}
+.hub-desc{display:block;font-size:.92rem;color:var(--ink-soft);line-height:1.65}
+
+/* ---------- 已經登入的提示 ---------- */
+.signed-in{text-align:center;padding:12px 0}
+.signed-in h2{font-size:1.5rem;margin-bottom:10px}
+.signed-in p{color:var(--ink-soft);font-size:1rem}
+.signed-in .btn-row{justify-content:center;flex-wrap:wrap}
+
+/* ---------- Google 登入 ---------- */
+.or-line{
+  display:flex;align-items:center;gap:14px;
+  margin:22px 0 16px;color:var(--note-ink);font-size:.88rem;
+}
+.or-line::before,.or-line::after{
+  content:'';flex:1;height:1px;background:var(--field-line);
+}
+.btn-google{
+  display:flex;align-items:center;justify-content:center;gap:11px;
+  width:100%;padding:13px 16px;border-radius:12px;cursor:pointer;
+  background:#fff;color:#3c4043;border:1px solid #dadce0;
+  font-family:inherit;font-size:1rem;font-weight:600;
+  transition:.16s;
+}
+.btn-google:hover{background:#f7f8f8;box-shadow:0 1px 3px rgba(60,64,67,.28)}
+.btn-google:focus-visible{outline:2px solid var(--field-ring);outline-offset:2px}
+.btn-google svg{flex:0 0 auto}

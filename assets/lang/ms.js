@@ -190,7 +190,7 @@ window.LANG_MS = {
   '所有果樹': 'Semua Pokok',
   '所有訂單': 'Semua Pesanan',
   '帳號管理': 'Pengguna',
-  'ERP 儀表板': 'Papan Pemuka ERP',
+  'TANJU Portal': 'Papan Pemuka ERP',
   '溝通者門戶': 'Portal Penghubung',
 
   /* ---------- 常見短語 ---------- */
@@ -356,8 +356,8 @@ window.LANG_MS = {
 
 /* ---------- 管理員總覽 ---------- */
 '更深入的營運報表': 'Laporan operasi lanjut',
-'完整的樹體資產、CRM、工資與樹況紀錄在 ERP 儀表板。': 'Aset pokok, CRM, gaji dan rekod pokok yang lengkap ada di Papan Pemuka ERP.',
-'前往 ERP 儀表板 →': 'Ke Papan Pemuka ERP →',
+'完整的樹體資產、CRM、工資與樹況紀錄在 TANJU Portal。': 'Aset pokok, CRM, gaji dan rekod pokok yang lengkap ada di Papan Pemuka ERP.',
+'前往 TANJU Portal →': 'Ke Papan Pemuka ERP →',
 '果農／收購商／管理': 'Petani / Pembeli / Admin',
 '含未上架': 'Termasuk belum disenaraikan',
 '收購商看得到': 'Pembeli boleh lihat',
@@ -1610,7 +1610,7 @@ window.LANG_MS = {
   '角色能做什麼 Permission Matrix': 'Apa yang boleh dilakukan setiap peranan',
   '帳號 Accounts': 'Akaun',
   '農民／摘果者／溝通者 收益紀錄 Payouts': 'Pendapatan petani / pemetik / penyelaras',
-  'ERP 儀表板（示範）— TANJU': 'Papan pemuka ERP (demo) — TANJU',
+  'TANJU Portal（示範）': 'Papan pemuka ERP (demo) — TANJU',
   '把永續預算花在真的長得出來的地方': 'Belanjakan bajet kelestarian di tempat yang benar-benar menghasilkan',
   '企業綠色包樹、原料契作與大宗採購。我們提供的不只是農產品 —— 是可寫進永續報告書的量化數據、可稽核的產銷履歷，以及經得起追問的社區影響力佐證。': 'Pengangkatan pokok korporat, tanaman kontrak dan belian pukal. Anda bukan sekadar mendapat hasil tani — tetapi data terukur untuk laporan kelestarian, rekod kebolehjejakan yang boleh diaudit, dan bukti impak komuniti yang tahan disoal.',
   '多數 CSR 專案的問題是「錢花了，但說不出成果」。包樹的每一塊錢都綁在具體的 Tree ID 上， 產出的是可查證的數字，不是漂亮的照片。': 'Masalah kebanyakan projek CSR ialah wang dibelanjakan tetapi hasilnya tidak dapat dijelaskan. Setiap ringgit pengangkatan pokok terikat kepada satu ID pokok tertentu, dan hasilnya ialah angka yang boleh disahkan, bukan sekadar gambar cantik.',
@@ -2120,4 +2120,22 @@ window.LANG_MS = {
   '連不上伺服器，請檢查網路連線。': 'Tidak dapat menghubungi pelayan — sila semak sambungan anda.',
   '請填 Email —— 登入時用的是 Email，不是帳號。': 'Sila masukkan e-mel — anda log masuk dengan e-mel, bukan nama pengguna.',
   '密碼至少要 6 個字元。': 'Kata laluan memerlukan sekurang-kurangnya 6 aksara.',
+
+
+  /* ---------- TANJU Portal 入口與 Google 登入 ---------- */
+  '進入 TANJU Portal': 'Buka TANJU Portal',
+  '你已經登入了': 'Anda sudah log masuk',
+  '換一個帳號': 'Guna akaun lain',
+  '進入我的後台': 'Buka papan pemuka saya',
+  '選擇要去哪裡': 'Pilih destinasi',
+  '用 Google 帳號登入': 'Log masuk dengan Google',
+  '密碼由 Google 驗證，不會經過這個網站。': 'Google menyemak kata laluan — ia tidak pernah melalui laman ini.',
+  '或': 'atau',
+  '你的權限是': 'Peranan anda ialah ',
+  '。這一頁不放功能 —— 日常工作都在 TANJU Portal， 挑一個要去的地方就好。': '. Tiada alat pada halaman ini — kerja harian berada dalam TANJU Portal. Pilih sahaja destinasi anda.',
+  '訂單、果樹、客戶、佣金、社群發文與帳號權限，全部在這裡。': 'Pesanan, pokok, pelanggan, komisen, siaran sosial dan peranan pengguna — semuanya di sini.',
+  '現場派工、樹況回報與採收標籤。': 'Tugasan lapangan, laporan pokok dan label tuaian.',
+  '看訪客看到的前台。': 'Lihat laman awam seperti pelawat.',
+  'Google 登入還沒在 Supabase 後台啟用。請到 Authentication → Providers 打開 Google。': 'Log masuk Google belum diaktifkan dalam Supabase. Hidupkan Google di bawah Authentication → Providers.',
+  '你取消了 Google 登入。': 'Anda membatalkan log masuk Google.',
 };

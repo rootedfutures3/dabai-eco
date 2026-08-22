@@ -44,12 +44,6 @@ Store.onReady(() => {
   const user = saved ? Store.read().users.find(x => x.u === saved) : null;
   if (!user) { location.replace('app.html'); return; }
 
-  // 管理員的功能全在系統後台，這一頁對他沒有東西可看
-  const permRole = user.perm || (user.role === 'admin' ? 'super' : user.role);
-  if (!NAVS[user.role] || ['super', 'admin', 'finance', 'editor', 'coord'].includes(permRole)) {
-    location.replace('erp.html');
-    return;
-  }
 
   document.getElementById('logout').addEventListener('click', () => {
     sessionStorage.removeItem(SESSION);
@@ -93,8 +87,8 @@ function signIn(user) {
 
 /* ---------- 導覽 ---------- */
 /* 管理員沒有列在這裡 —— 總覽、所有果樹、所有訂單、帳號管理
-   全部都在系統後台（erp.html）裡了，兩邊各做一份只會分岔。
-   管理員登入後直接被導去系統後台，見下面的 Store.onReady。 */
+   全部都在 TANJU Portal（erp.html）裡了，兩邊各做一份只會分岔。
+   管理端登入後看到的是一個入口頁，自己選要去哪，不再自動跳轉。 */
 const NAVS = {
   farmer: [['trees','我的果樹'], ['adoptions','認養狀況'], ['income','收益'], ['msgs','訊息']],
   buyer:  [['browse','找果樹'], ['mine','我的認養'], ['track','樹況追蹤'], ['msgs','訊息']],
@@ -108,6 +102,11 @@ const NAV_ICON = {
 
 function buildNav() {
   const nav = document.getElementById('app-nav');
+
+  /* 管理端的角色在這一頁沒有專屬功能（都在 TANJU Portal），
+     但也不該把人硬跳走 —— 給一個入口頁，自己決定要去哪。 */
+  if (!NAVS[me.role]) return buildStaffLanding();
+
   nav.innerHTML = NAVS[me.role].map(([k, t], i) =>
     `<a class="side-item${i === 0 ? ' on' : ''}" href="#" data-view="${k}" data-zh="${t}">
        <span class="si">${NAV_ICON[k] || '•'}</span>${t}</a>`).join('');
@@ -120,8 +119,7 @@ function buildNav() {
     render(a.dataset.view);
   }));
 
-  /* 「其他」區。管理員不會走到這一頁（已導向系統後台），
-     所以這裡只剩果農與收購商需要的出口。 */
+  /* 「其他」區：果農與收購商需要的出口。 */
   const extra = document.getElementById('app-extra');
   if (extra) {
     extra.innerHTML =
@@ -131,6 +129,46 @@ function buildNav() {
   const first = nav.querySelector('a');
   setCrumb(first);
   render(NAVS[me.role][0][0]);
+}
+
+/** 管理端的入口頁：列出可以去的地方，不自動跳轉。 */
+function buildStaffLanding() {
+  const nav = document.getElementById('app-nav');
+  const perm = me.perm || (me.role === 'admin' ? 'super' : me.role);
+  const label = { super:'超級管理員', admin:'一般管理員', finance:'財務',
+                  editor:'編輯', coord:'溝通者' }[perm] || perm;
+
+  const links = [
+    ['erp.html', '📊', 'TANJU Portal', '訂單、果樹、客戶、佣金、社群發文與帳號權限，全部在這裡。'],
+    ['coordinator.html', '📍', '溝通者門戶', '現場派工、樹況回報與採收標籤。'],
+    ['index.html', '↩', '回官網', '看訪客看到的前台。'],
+  ];
+
+  nav.innerHTML = links.map(([href, icon, title]) =>
+    `<a class="side-item" href="${href}"><span class="si">${icon}</span>${title}</a>`).join('');
+  const extra = document.getElementById('app-extra');
+  if (extra) extra.innerHTML = '';
+
+  const crumb = document.getElementById('crumb');
+  if (crumb) crumb.textContent = '選擇要去哪裡';
+  const root = document.getElementById('crumb-root');
+  if (root) root.textContent = '後台';
+
+  document.getElementById('view').innerHTML = `
+    <h3 class="panel-h">歡迎回來，${me.name || me.u} <small>${label}</small></h3>
+    <p class="panel-note">
+      你的權限是<b>${label}</b>。這一頁不放功能 —— 日常工作都在 TANJU Portal，
+      挑一個要去的地方就好。
+    </p>
+    <div class="hub-grid">
+      ${links.map(([href, icon, title, desc]) => `
+        <a class="hub-card" href="${href}">
+          <span class="hub-ico" aria-hidden="true">${icon}</span>
+          <b>${title}</b>
+          <span class="hub-desc">${desc}</span>
+        </a>`).join('')}
+    </div>`;
+  if (typeof I18N !== 'undefined') I18N.apply(document.getElementById('view'));
 }
 
 /** 麵包屑只取文字，不含前面的圖示 */
@@ -323,7 +361,7 @@ function vFarmerAdoptions(el) {
 /* ============================================================
    果農：收益
    ------------------------------------------------------------
-   數字全部走 Store.split()，和系統後台的佣金頁用同一套算法 ——
+   數字全部走 Store.split()，和 TANJU Portal 的佣金頁用同一套算法 ——
    比例在後台改了，這裡立刻跟著變，不會兩邊講不一樣的話。
    已撥／待撥則讀真正的撥款紀錄（payouts），不是用比例估的。
    ============================================================ */

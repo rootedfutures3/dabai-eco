@@ -8,13 +8,33 @@
 
 const SESSION = 'rf_app_session';
 
-Store.onReady(() => {
+Store.onReady(async () => {
   const gate = document.getElementById('auth');
   if (!gate) return;
 
-  // 已登入就直接跳過登入頁
-  if (sessionStorage.getItem(SESSION)) {
-    location.replace('dashboard.html');
+  // Google 登入轉回來時，token 掛在網址的 # 後面，先接住它
+  if (typeof Auth !== 'undefined' && Auth.on) {
+    const back = Auth.catchOAuth();
+    if (back && !back.ok) {
+      const err = document.getElementById('login-err');
+      err.textContent = back.error;
+      err.style.display = 'block';
+    } else if (back && back.ok) {
+      const authUser = await Auth.me();
+      const profile = await profileFor(authUser);
+      if (profile) { handoff(profile); return; }
+      const err = document.getElementById('login-err');
+      err.textContent = 'Google 登入成功，但資料庫裡還沒有對應的帳號資料。'
+                      + '請管理員到 Supabase 跑一次 supabase-setup-v3.sql。';
+      err.style.display = 'block';
+    }
+  }
+
+  // 已經登入的話，不要無聲跳走 —— 直接跳轉會讓人按了「登入平台」
+  // 卻莫名其妙被丟進後台。改成問一下要繼續還是換帳號。
+  const already = sessionStorage.getItem(SESSION);
+  if (already) {
+    showAlreadySignedIn(already);
     return;
   }
 
@@ -187,6 +207,7 @@ function applyAuthMode() {
   $('r-email').required = on;
   $('r-pass-hint').hidden = !on;
   $('quick-demo').hidden = on;
+  $('oauth-block').hidden = !on;
 
   if (on) {
     $('demo-cred').innerHTML =
@@ -201,6 +222,12 @@ function applyAuthMode() {
         + '忘記密碼請聯絡管理員重設。';
     }
   }
+  const g = $('google-signin');
+  if (g && !g.dataset.bound) {
+    g.dataset.bound = '1';
+    g.addEventListener('click', () => Auth.signInWithGoogle());
+  }
+
   if (typeof I18N !== 'undefined') I18N.refresh(document.querySelector('.auth-card'));
 }
 
@@ -222,4 +249,43 @@ async function profileFor(authUser) {
     console.warn('[讀取側寫失敗]', e.message);
     return null;
   }
+}
+
+
+/** 已經登入時顯示的畫面：讓人自己決定要進去還是換帳號。 */
+function showAlreadySignedIn(username) {
+  const user = (Store.read().users || []).find(x => x.u === username);
+  const card = document.querySelector('.auth-card');
+  if (!card) { location.replace('dashboard.html'); return; }
+
+  const name = (user && user.name) || username;
+  const perm = user && (user.perm || (user.role === 'admin' ? 'super' : user.role));
+  const label = { super:'超級管理員', admin:'一般管理員', finance:'財務', editor:'編輯',
+                  coord:'溝通者', farmer:'果農', buyer:'收購商' }[perm] || '';
+
+  // 管理端直接給 TANJU Portal 的入口，果農與收購商給自己的後台
+  const staff = ['super', 'admin', 'finance', 'editor', 'coord'].includes(perm);
+
+  card.innerHTML = `
+    <div class="signed-in">
+      <h2 id="form-title">你已經登入了</h2>
+      <p id="form-sub">目前的身分是 <b>${name}</b>${label ? `（${label}）` : ''}。</p>
+      <div class="btn-row" style="margin-top:24px">
+        <a class="btn btn-gold" href="${staff ? 'erp.html' : 'dashboard.html'}">
+          ${staff ? '進入 TANJU Portal' : '進入我的後台'}
+        </a>
+        <button class="btn btn-outline" type="button" id="switch-user">換一個帳號</button>
+      </div>
+      <button class="btn-back" id="go-site">← 回官網</button>
+    </div>`;
+
+  document.getElementById('switch-user').addEventListener('click', async () => {
+    sessionStorage.removeItem(SESSION);
+    if (typeof Auth !== 'undefined' && Auth.on) await Auth.signOut();
+    location.reload();
+  });
+  document.getElementById('go-site').addEventListener('click', () => {
+    location.href = 'index.html';
+  });
+  if (typeof I18N !== 'undefined') I18N.apply(card);
 }

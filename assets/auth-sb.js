@@ -125,6 +125,50 @@ const Auth = {
     }
   },
 
+  /**
+   * 用 Google 登入。
+   *
+   * 走的是 OAuth 轉址：把人送到 Supabase 的 authorize 端點，
+   * Supabase 再轉去 Google，使用者在 Google 自己的頁面上輸入密碼 ——
+   * 密碼從頭到尾不會經過我們的網站，這正是 OAuth 的重點。
+   * 回來時 token 掛在網址的 # 後面，由 catchOAuth() 接住。
+   *
+   * 要能用，必須先在 Supabase 後台把 Google provider 打開，
+   * 並在 Google Cloud Console 建立 OAuth 用戶端。詳細步驟見 README。
+   */
+  signInWithGoogle(redirectTo) {
+    const back = redirectTo || (location.origin + location.pathname);
+    location.href = `${Auth.url}/auth/v1/authorize`
+      + `?provider=google&redirect_to=${encodeURIComponent(back)}`;
+  },
+
+  /**
+   * 接住 OAuth 轉回來時掛在網址 # 後面的 token。
+   * 成功就存起來並把網址清乾淨（不要讓 token 留在網址列或瀏覽紀錄裡）。
+   */
+  catchOAuth() {
+    const hash = location.hash || '';
+    if (!hash.includes('access_token=') && !hash.includes('error=')) return null;
+
+    const q = new URLSearchParams(hash.slice(1));
+    // 先把網址清掉，避免 token 被記進瀏覽紀錄或被分享出去
+    history.replaceState(null, '', location.pathname + location.search);
+
+    if (q.get('error')) {
+      return { ok: false, error: Auth.explain({ msg: q.get('error_description') || q.get('error') }) };
+    }
+    const token = q.get('access_token');
+    if (!token) return null;
+
+    Auth.save({
+      access_token: token,
+      refresh_token: q.get('refresh_token'),
+      expires_in: Number(q.get('expires_in') || 3600),
+      token_type: q.get('token_type') || 'bearer',
+    });
+    return { ok: true };
+  },
+
   async signOut() {
     const t = await Auth.token();
     if (t) {
@@ -161,6 +205,9 @@ const Auth = {
     if (/Signups not allowed|signup is disabled/i.test(msg))
       return '目前沒有開放自行註冊，請聯絡管理員替你開帳號。';
     if (/rate limit|too many/i.test(msg)) return '嘗試次數太多，請等幾分鐘再試。';
+    if (/provider is not enabled|Unsupported provider/i.test(msg))
+      return 'Google 登入還沒在 Supabase 後台啟用。請到 Authentication → Providers 打開 Google。';
+    if (/access_denied|cancell?ed/i.test(msg)) return '你取消了 Google 登入。';
     return msg || '登入失敗，請再試一次。';
   },
 };

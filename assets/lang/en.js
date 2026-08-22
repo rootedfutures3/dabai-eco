@@ -190,7 +190,7 @@ window.LANG_EN = {
   '所有果樹': 'All Trees',
   '所有訂單': 'All Orders',
   '帳號管理': 'Users',
-  'ERP 儀表板': 'ERP Dashboard',
+  'TANJU Portal': 'ERP Dashboard',
   '溝通者門戶': 'Coordinator Portal',
 
   /* ---------- Common phrases ---------- */
@@ -356,8 +356,8 @@ window.LANG_EN = {
 
 /* ---------- Admin overview ---------- */
 '更深入的營運報表': 'Deeper operational reports',
-'完整的樹體資產、CRM、工資與樹況紀錄在 ERP 儀表板。': 'Full tree assets, CRM, payouts and field records live in the ERP dashboard.',
-'前往 ERP 儀表板 →': 'Go to ERP dashboard →',
+'完整的樹體資產、CRM、工資與樹況紀錄在 TANJU Portal。': 'Full tree assets, CRM, payouts and field records live in the ERP dashboard.',
+'前往 TANJU Portal →': 'Go to ERP dashboard →',
 '果農／收購商／管理': 'Farmers / Buyers / Admin',
 '含未上架': 'Including unlisted',
 '收購商看得到': 'Visible to buyers',
@@ -1609,7 +1609,7 @@ window.LANG_EN = {
   '角色能做什麼 Permission Matrix': 'What each role can do',
   '帳號 Accounts': 'Accounts',
   '農民／摘果者／溝通者 收益紀錄 Payouts': 'Grower / picker / coordinator earnings',
-  'ERP 儀表板（示範）— TANJU': 'ERP dashboard (demo) — TANJU',
+  'TANJU Portal（示範）': 'ERP dashboard (demo) — TANJU',
   '把永續預算花在真的長得出來的地方': 'Spend the sustainability budget where something actually grows',
   '企業綠色包樹、原料契作與大宗採購。我們提供的不只是農產品 —— 是可寫進永續報告書的量化數據、可稽核的產銷履歷，以及經得起追問的社區影響力佐證。': 'Corporate tree adoption, contract growing and bulk purchasing. What you get is not only produce — it is quantified data you can put in a sustainability report, an auditable traceability record, and community-impact evidence that stands up to questioning.',
   '多數 CSR 專案的問題是「錢花了，但說不出成果」。包樹的每一塊錢都綁在具體的 Tree ID 上， 產出的是可查證的數字，不是漂亮的照片。': 'The trouble with most CSR projects is that the money gets spent but the result cannot be described. Every ringgit of a tree adoption is tied to a specific Tree ID, and what comes out is a verifiable number rather than a nice photograph.',
@@ -2119,4 +2119,22 @@ window.LANG_EN = {
   '連不上伺服器，請檢查網路連線。': 'Cannot reach the server — please check your connection.',
   '請填 Email —— 登入時用的是 Email，不是帳號。': 'Please enter an email — you sign in with the email, not the username.',
   '密碼至少要 6 個字元。': 'The password needs at least 6 characters.',
+
+
+  /* ---------- TANJU Portal 入口與 Google 登入 ---------- */
+  '進入 TANJU Portal': 'Open TANJU Portal',
+  '你已經登入了': 'You are already signed in',
+  '換一個帳號': 'Use a different account',
+  '進入我的後台': 'Open my dashboard',
+  '選擇要去哪裡': 'Choose where to go',
+  '用 Google 帳號登入': 'Sign in with Google',
+  '密碼由 Google 驗證，不會經過這個網站。': 'Google checks the password — it never passes through this site.',
+  '或': 'or',
+  '你的權限是': 'Your role is ',
+  '。這一頁不放功能 —— 日常工作都在 TANJU Portal， 挑一個要去的地方就好。': '. There are no tools on this page — the day-to-day work lives in TANJU Portal. Just pick where you want to go.',
+  '訂單、果樹、客戶、佣金、社群發文與帳號權限，全部在這裡。': 'Orders, trees, customers, commission, social posts and user roles — all here.',
+  '現場派工、樹況回報與採收標籤。': 'Field assignments, tree reports and harvest labels.',
+  '看訪客看到的前台。': 'See the public site as visitors do.',
+  'Google 登入還沒在 Supabase 後台啟用。請到 Authentication → Providers 打開 Google。': 'Google sign-in is not enabled yet in Supabase. Turn on Google under Authentication → Providers.',
+  '你取消了 Google 登入。': 'You cancelled the Google sign-in.',
 };
