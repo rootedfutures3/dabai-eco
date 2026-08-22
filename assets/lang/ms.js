@@ -2122,20 +2122,16 @@ window.LANG_MS = {
   '密碼至少要 6 個字元。': 'Kata laluan memerlukan sekurang-kurangnya 6 aksara.',
 
 
-  /* ---------- TANJU Portal 入口與 Google 登入 ---------- */
+  /* ---------- TANJU Portal 入口 ---------- */
   '進入 TANJU Portal': 'Buka TANJU Portal',
   '你已經登入了': 'Anda sudah log masuk',
   '換一個帳號': 'Guna akaun lain',
   '進入我的後台': 'Buka papan pemuka saya',
   '選擇要去哪裡': 'Pilih destinasi',
-  '用 Google 帳號登入': 'Log masuk dengan Google',
-  '密碼由 Google 驗證，不會經過這個網站。': 'Google menyemak kata laluan — ia tidak pernah melalui laman ini.',
   '或': 'atau',
   '你的權限是': 'Peranan anda ialah ',
   '。這一頁不放功能 —— 日常工作都在 TANJU Portal， 挑一個要去的地方就好。': '. Tiada alat pada halaman ini — kerja harian berada dalam TANJU Portal. Pilih sahaja destinasi anda.',
   '訂單、果樹、客戶、佣金、社群發文與帳號權限，全部在這裡。': 'Pesanan, pokok, pelanggan, komisen, siaran sosial dan peranan pengguna — semuanya di sini.',
   '現場派工、樹況回報與採收標籤。': 'Tugasan lapangan, laporan pokok dan label tuaian.',
   '看訪客看到的前台。': 'Lihat laman awam seperti pelawat.',
-  'Google 登入還沒在 Supabase 後台啟用。請到 Authentication → Providers 打開 Google。': 'Log masuk Google belum diaktifkan dalam Supabase. Hidupkan Google di bawah Authentication → Providers.',
-  '你取消了 Google 登入。': 'Anda membatalkan log masuk Google.',
 };

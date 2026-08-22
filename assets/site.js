@@ -15,7 +15,24 @@ const FORM_ENDPOINT = 'https://formspree.io/f/xdaqvvro';
 // 進場動畫（漸進增強：JS 不可用時內容照常顯示）
 document.documentElement.classList.add('js');
 
-Store.onReady(() => {
+/**
+ * 開頁時執行。
+ *
+ * 這裡刻意「不」直接用 Store.onReady —— 有一半的公開頁面（平台介紹、
+ * 聯絡我們、認識三寶、果園列表、產品線、永續承諾）根本不需要資料庫，
+ * 所以沒有載入 store.js。直接呼叫 Store.onReady 會拋 ReferenceError，
+ * 整個 site.js 就停在那裡：進場動畫不會觸發，而 .js .reveal 的
+ * opacity 是 0 —— 結果訪客看到的是一片空白。
+ *
+ * 有 Store 就等它把雲端資料載好再跑（樹卡需要），沒有就等 DOM 就緒。
+ */
+function ready(fn) {
+  if (typeof Store !== 'undefined' && Store.onReady) return Store.onReady(fn);
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', fn);
+  else fn();
+}
+
+ready(() => {
   const io = new IntersectionObserver(entries => {
     entries.forEach(e => {
       if (e.isIntersecting) { e.target.classList.add('on'); io.unobserve(e.target); }

@@ -8,27 +8,9 @@
 
 const SESSION = 'rf_app_session';
 
-Store.onReady(async () => {
+Store.onReady(() => {
   const gate = document.getElementById('auth');
   if (!gate) return;
-
-  // Google 登入轉回來時，token 掛在網址的 # 後面，先接住它
-  if (typeof Auth !== 'undefined' && Auth.on) {
-    const back = Auth.catchOAuth();
-    if (back && !back.ok) {
-      const err = document.getElementById('login-err');
-      err.textContent = back.error;
-      err.style.display = 'block';
-    } else if (back && back.ok) {
-      const authUser = await Auth.me();
-      const profile = await profileFor(authUser);
-      if (profile) { handoff(profile); return; }
-      const err = document.getElementById('login-err');
-      err.textContent = 'Google 登入成功，但資料庫裡還沒有對應的帳號資料。'
-                      + '請管理員到 Supabase 跑一次 supabase-setup-v3.sql。';
-      err.style.display = 'block';
-    }
-  }
 
   // 已經登入的話，不要無聲跳走 —— 直接跳轉會讓人按了「登入平台」
   // 卻莫名其妙被丟進後台。改成問一下要繼續還是換帳號。
@@ -207,7 +189,6 @@ function applyAuthMode() {
   $('r-email').required = on;
   $('r-pass-hint').hidden = !on;
   $('quick-demo').hidden = on;
-  $('oauth-block').hidden = !on;
 
   if (on) {
     $('demo-cred').innerHTML =
@@ -222,12 +203,6 @@ function applyAuthMode() {
         + '忘記密碼請聯絡管理員重設。';
     }
   }
-  const g = $('google-signin');
-  if (g && !g.dataset.bound) {
-    g.dataset.bound = '1';
-    g.addEventListener('click', () => Auth.signInWithGoogle());
-  }
-
   if (typeof I18N !== 'undefined') I18N.refresh(document.querySelector('.auth-card'));
 }
 

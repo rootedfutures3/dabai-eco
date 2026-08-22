@@ -2121,20 +2121,16 @@ window.LANG_EN = {
   '密碼至少要 6 個字元。': 'The password needs at least 6 characters.',
 
 
-  /* ---------- TANJU Portal 入口與 Google 登入 ---------- */
+  /* ---------- TANJU Portal 入口 ---------- */
   '進入 TANJU Portal': 'Open TANJU Portal',
   '你已經登入了': 'You are already signed in',
   '換一個帳號': 'Use a different account',
   '進入我的後台': 'Open my dashboard',
   '選擇要去哪裡': 'Choose where to go',
-  '用 Google 帳號登入': 'Sign in with Google',
-  '密碼由 Google 驗證，不會經過這個網站。': 'Google checks the password — it never passes through this site.',
   '或': 'or',
   '你的權限是': 'Your role is ',
   '。這一頁不放功能 —— 日常工作都在 TANJU Portal， 挑一個要去的地方就好。': '. There are no tools on this page — the day-to-day work lives in TANJU Portal. Just pick where you want to go.',
   '訂單、果樹、客戶、佣金、社群發文與帳號權限，全部在這裡。': 'Orders, trees, customers, commission, social posts and user roles — all here.',
   '現場派工、樹況回報與採收標籤。': 'Field assignments, tree reports and harvest labels.',
   '看訪客看到的前台。': 'See the public site as visitors do.',
-  'Google 登入還沒在 Supabase 後台啟用。請到 Authentication → Providers 打開 Google。': 'Google sign-in is not enabled yet in Supabase. Turn on Google under Authentication → Providers.',
-  '你取消了 Google 登入。': 'You cancelled the Google sign-in.',
 };
