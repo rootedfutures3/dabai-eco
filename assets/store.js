@@ -357,16 +357,31 @@ const SB = {
   url: typeof SUPABASE_URL !== 'undefined' ? SUPABASE_URL : '',
   key: typeof SUPABASE_ANON_KEY !== 'undefined' ? SUPABASE_ANON_KEY : '',
 
-  head(extra) {
+  /**
+   * 請求標頭。有登入就帶使用者自己的 JWT，沒有就退回 anon key。
+   *
+   * 這一行是整個權限的關鍵：帶著 JWT，資料庫才知道你是誰，
+   * RLS 政策裡的 auth.uid() 才有值。只帶 anon key 的話，
+   * 資料庫只會把你當成匿名訪客。
+   */
+  head(extra, token) {
+    const bearer = token || SB.key;
     return Object.assign({
       apikey: SB.key,
-      Authorization: 'Bearer ' + SB.key,
+      Authorization: 'Bearer ' + bearer,
       'Content-Type': 'application/json',
     }, extra || {});
   },
 
+  /** 目前該用哪個 token。沒開 Auth 或沒登入時回傳 null（走 anon key）。 */
+  async bearer() {
+    if (typeof Auth === 'undefined' || !Auth.on) return null;
+    return Auth.token();
+  },
+
   async get(tableName) {
-    const r = await fetch(`${SB.url}/rest/v1/${tableName}?select=*`, { headers: SB.head() });
+    const r = await fetch(`${SB.url}/rest/v1/${tableName}?select=*`,
+      { headers: SB.head(null, await SB.bearer()) });
     if (!r.ok) throw new Error(`讀取 ${tableName} 失敗（${r.status}）`);
     return r.json();
   },
@@ -374,7 +389,7 @@ const SB = {
   async insert(tableName, rows) {
     const r = await fetch(`${SB.url}/rest/v1/${tableName}`, {
       method: 'POST',
-      headers: SB.head({ Prefer: 'resolution=merge-duplicates,return=minimal' }),
+      headers: SB.head({ Prefer: 'resolution=merge-duplicates,return=minimal' }, await SB.bearer()),
       body: JSON.stringify(rows),
     });
     if (!r.ok) throw new Error(`寫入 ${tableName} 失敗（${r.status}）：${await r.text()}`);
@@ -383,7 +398,7 @@ const SB = {
   async patch(tableName, pk, pkVal, patch) {
     const r = await fetch(`${SB.url}/rest/v1/${tableName}?${pk}=eq.${encodeURIComponent(pkVal)}`, {
       method: 'PATCH',
-      headers: SB.head({ Prefer: 'return=minimal' }),
+      headers: SB.head({ Prefer: 'return=minimal' }, await SB.bearer()),
       body: JSON.stringify(patch),
     });
     if (!r.ok) throw new Error(`更新 ${tableName} 失敗（${r.status}）`);

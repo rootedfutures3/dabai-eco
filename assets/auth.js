@@ -19,6 +19,7 @@ Store.onReady(() => {
   }
 
   buildDrift();
+  applyAuthMode();
 
   /* ---- 登入／註冊切換 ---- */
   document.querySelectorAll('[data-goto]').forEach(b =>
@@ -42,43 +43,86 @@ Store.onReady(() => {
     }));
 
   /* ---- 登入 ---- */
-  document.getElementById('login-form').addEventListener('submit', e => {
+  document.getElementById('login-form').addEventListener('submit', async e => {
     e.preventDefault();
     const err = document.getElementById('login-err');
+    const btn = e.target.querySelector('button[type="submit"]');
+    const fail = msg => {
+      err.textContent = msg;
+      err.style.display = 'block';
+      const card = document.querySelector('.auth-card');
+      card.classList.remove('shake');
+      void card.offsetWidth;                 // 重觸發動畫
+      card.classList.add('shake');
+    };
+
+    if (Auth.on) {
+      btn.disabled = true;
+      const r = await Auth.signIn(
+        document.getElementById('g-email').value,
+        document.getElementById('g-pass').value);
+      btn.disabled = false;
+      if (!r.ok) return fail(r.error);
+
+      // 登入成功後把 users 表的側寫抓回來，才知道這個人的角色
+      const profile = await profileFor(r.user);
+      if (!profile) {
+        return fail('登入成功，但資料庫裡找不到對應的帳號資料。'
+                  + '請管理員到 Supabase 跑一次 supabase-setup-v3.sql，'
+                  + '或確認 users 表裡有這個 Email。');
+      }
+      err.style.display = 'none';
+      return handoff(profile);
+    }
+
     const user = Store.findUser(
       document.getElementById('g-user').value,
       document.getElementById('g-pass').value);
-
-    if (!user) {
-      err.textContent = '帳號或密碼不正確。預設帳號 admin、密碼 admin。';
-      err.style.display = 'block';
-      document.querySelector('.auth-card').classList.remove('shake');
-      void document.querySelector('.auth-card').offsetWidth;   // 重觸發動畫
-      document.querySelector('.auth-card').classList.add('shake');
-      return;
-    }
+    if (!user) return fail('帳號或密碼不正確。預設帳號 admin、密碼 admin。');
     err.style.display = 'none';
     handoff(user);
   });
 
   /* ---- 註冊 ---- */
-  document.getElementById('reg-form').addEventListener('submit', e => {
+  document.getElementById('reg-form').addEventListener('submit', async e => {
     e.preventDefault();
     const f = e.target, err = document.getElementById('reg-err');
     const u = f.u.value.trim();
+    const fail = msg => { err.textContent = msg; err.style.display = 'block'; };
 
-    if (!/^[A-Za-z0-9_]{3,20}$/.test(u)) {
-      err.textContent = '帳號請用 3–20 個英數字或底線。';
-      err.style.display = 'block'; return;
+    if (!/^[A-Za-z0-9_]{3,20}$/.test(u)) return fail('帳號請用 3–20 個英數字或底線。');
+
+    if (Auth.on) {
+      const email = document.getElementById('r-email').value.trim();
+      if (!email) return fail('請填 Email —— 登入時用的是 Email，不是帳號。');
+      if (f.pass.value.length < 6) return fail('密碼至少要 6 個字元。');
+
+      const btn = f.querySelector('button[type="submit"]');
+      btn.disabled = true;
+      const r = await Auth.signUp(email, f.pass.value, {
+        u, name: f.name.value.trim(), org: f.org.value.trim(),
+        phone: f.phone.value.trim(), area: f.area.value.trim(), role: f.role.value,
+      });
+      btn.disabled = false;
+      if (!r.ok) return fail(r.error);
+
+      if (r.needsConfirm) {
+        err.style.display = 'none';
+        return fail('帳號建好了，但這個 Supabase 專案開著 Email 驗證 —— '
+                  + '請到信箱點確認連結之後再回來登入。');
+      }
+      // 側寫由資料庫的 trigger 建立，這裡等它一下再讀回來
+      await new Promise(res => setTimeout(res, 600));
+      const profile = await profileFor(r.user);
+      err.style.display = 'none';
+      return handoff(profile || { u, role: f.role.value, name: f.name.value.trim() }, true);
     }
-    if (Store.userExists(u)) {
-      err.textContent = '這個帳號已經有人用了，換一個試試。';
-      err.style.display = 'block'; return;
-    }
+
+    if (Store.userExists(u)) return fail('這個帳號已經有人用了，換一個試試。');
     err.style.display = 'none';
 
     const user = {
-      u, pass: f.pass.value, role: f.role.value,
+      u, pass: f.pass.value, role: f.role.value, perm: f.role.value,
       name: f.name.value.trim(), org: f.org.value.trim(),
       phone: f.phone.value.trim(), email: '', area: f.area.value.trim(),
     };
@@ -119,4 +163,63 @@ function buildDrift() {
     `<span class="drift-i" style="left:${x}%;top:${y}%;transform:scale(${s});animation-delay:${d}s">
        ${CROP_ICON[crops[i % 3]]}
      </span>`).join('');
+}
+
+
+/* ============================================================
+   Auth 模式的畫面調整
+   ============================================================ */
+
+/**
+ * 依 config.js 的 AUTH_MODE 調整登入頁：
+ * Auth 模式用 Email 登入、沒有「快速身分」那些捷徑，
+ * 示範模式維持原本的帳號密碼。
+ */
+function applyAuthMode() {
+  const on = typeof Auth !== 'undefined' && Auth.on;
+  const $ = id => document.getElementById(id);
+
+  $('fld-email').hidden = !on;
+  $('fld-user').hidden  = on;
+  $('g-email').required = on;
+  $('g-user').required  = !on;
+  $('fld-reg-email').hidden = !on;
+  $('r-email').required = on;
+  $('r-pass-hint').hidden = !on;
+  $('quick-demo').hidden = on;
+
+  if (on) {
+    $('demo-cred').innerHTML =
+      '🔐 <b>已啟用 Supabase Auth</b> —— 用你的 Email 與密碼登入。'
+      + '密碼由伺服器加鹽雜湊保管，權限由資料庫強制執行。';
+    $('g-user').value = '';
+    $('g-pass').value = '';
+    const banner = document.querySelector('.sim-note');
+    if (banner) {
+      banner.innerHTML =
+        '🔐 <b>正式登入模式</b> —— 這是真正的帳號系統，密碼不會以明文儲存。'
+        + '忘記密碼請聯絡管理員重設。';
+    }
+  }
+  if (typeof I18N !== 'undefined') I18N.refresh(document.querySelector('.auth-card'));
+}
+
+/** 用 auth 使用者去 users 表撈側寫（角色、權限都在那裡） */
+async function profileFor(authUser) {
+  if (!authUser) return null;
+  try {
+    const token = await Auth.token();
+    const r = await fetch(
+      `${Auth.url}/rest/v1/users?select=*&or=(uid.eq.${authUser.id},email.eq.${encodeURIComponent(authUser.email)})&limit=1`,
+      { headers: { apikey: Auth.key, Authorization: 'Bearer ' + token } });
+    if (!r.ok) return null;
+    const rows = await r.json();
+    if (!rows.length) return null;
+    const p = rows[0];
+    return { u: p.u, role: p.role, perm: p.perm, name: p.name,
+             org: p.org, phone: p.phone, email: p.email, area: p.area };
+  } catch (e) {
+    console.warn('[讀取側寫失敗]', e.message);
+    return null;
+  }
 }

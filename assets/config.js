@@ -38,3 +38,23 @@ const CLOUD_ON = Boolean(SUPABASE_URL && SUPABASE_ANON_KEY);
    把網址填進來，按鈕就會自動改走代發。
    ------------------------------------------------------------ */
 const PUBLISH_ENDPOINT = '';
+
+/* ------------------------------------------------------------
+   登入模式
+   ------------------------------------------------------------
+   'supabase' —— 真正的登入。密碼由 Supabase 加鹽雜湊保管，
+                 登入後帶 JWT 讀寫資料庫，權限由 RLS 政策強制執行。
+                 用這個模式之前要先：
+                   1. 到 Supabase → SQL Editor 跑 supabase-setup-v3.sql
+                   2. Authentication → Providers → 確認 Email 是開的
+                   3. Authentication → 決定要不要關掉 Confirm email
+                      （沒設定寄信服務的話建議關掉，否則新帳號收不到信）
+                   4. Authentication → Users → Add user 建立第一個管理員，
+                      Email 要和 users 表裡那筆管理員的 Email 一致
+
+   'demo'     —— 示範模式。帳號密碼是明文，存在瀏覽器裡，
+                 權限只是前端把按鈕藏起來。適合展示流程，不能拿來營運。
+
+   改這一行就會切換，登入頁上會清楚標示目前是哪一種。
+   ------------------------------------------------------------ */
+const AUTH_MODE = 'demo';

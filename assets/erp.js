@@ -95,6 +95,8 @@ function showDbStatus(info) {
   // 這段是連上雲端之後才換掉的內容，i18n 先前快取的原文已經過期，
   // 要它重新抓一次，否則切語言會跳回上面那段示範系統的舊文字。
   if (typeof I18N !== 'undefined') I18N.refresh(box);
+
+  showAuthMode();
 }
 
 const money = n => 'RM ' + Number(n).toLocaleString('en-MY');
@@ -423,7 +425,11 @@ function showMe() {
     roleEl.textContent = { admin:'平台管理員', farmer:'果農', buyer:'收購商' }[me.role] || me.role;
     avEl.textContent = (me.name || me.u).trim().charAt(0).toUpperCase();
     outBtn.textContent = '登出';
-    outBtn.onclick = () => { sessionStorage.removeItem('rf_app_session'); location.href = 'app.html'; };
+    outBtn.onclick = () => {
+      sessionStorage.removeItem('rf_app_session');
+      if (typeof Auth !== 'undefined' && Auth.on) Auth.signOut();
+      location.href = 'app.html';
+    };
   } else {
     nameEl.textContent = '訪客';
     roleEl.textContent = '未登入';
@@ -994,3 +1000,34 @@ function drawRoles() {
 
 const describeAction = a =>
   (ALL_PERMS.find(([k]) => k === a) || [a, a])[1];
+
+
+/**
+ * 在帳號頁標明現在是哪一種登入模式。
+ * 兩種模式的安全性差很多，畫面上不講清楚，很容易誤以為已經安全了。
+ */
+function showAuthMode() {
+  const box = document.querySelector('[data-panel="users"] .demo-banner');
+  if (!box) return;
+  const on = typeof Auth !== 'undefined' && Auth.on;
+
+  box.innerHTML = on
+    ? `🔐 <b>已啟用 Supabase Auth</b> ——
+       密碼由伺服器加鹽雜湊保管，前端拿不到；登入後帶著 JWT 讀寫資料庫，
+       <b>權限由資料庫的 RLS 政策強制執行</b>，不是只有前端把按鈕藏起來。
+       <br><br>
+       這裡改角色會直接影響那個人在資料庫層能讀寫什麼。
+       替別人開帳號需要 service_role 金鑰，那一把不能放在前端 ——
+       所以請對方自己到登入頁註冊，註冊完你再在這裡指派角色。`
+    : `⚠️ <b>目前是示範模式（前端權限控制）</b> ——
+       它決定每個角色看得到哪些功能、按不按得到哪些按鈕，足以支撐日常分工，
+       但<b>擋不住懂技術的人</b>：任何人打開瀏覽器主控台都能改，
+       密碼也是明文存放的。
+       <br><br>
+       要換成真正的登入：到 Supabase 跑一次 <code>supabase-setup-v3.sql</code>，
+       建立第一個管理員帳號，再把 <code>assets/config.js</code> 裡的
+       <code>AUTH_MODE</code> 改成 <code>'supabase'</code>。`;
+
+  box.style.borderLeftColor = on ? 'var(--gold)' : 'var(--red)';
+  if (typeof I18N !== 'undefined') I18N.refresh(box);
+}

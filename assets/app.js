@@ -53,6 +53,7 @@ Store.onReady(() => {
 
   document.getElementById('logout').addEventListener('click', () => {
     sessionStorage.removeItem(SESSION);
+    if (typeof Auth !== 'undefined' && Auth.on) Auth.signOut();
     location.assign('app.html');
   });
 
