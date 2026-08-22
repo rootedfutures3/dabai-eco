@@ -11,9 +11,10 @@ const SESSION = 'rf_app_session';
 let me = null;
 
 /* ---------- 樹木資產：首次由 site.js 的 TREES 種子化 ---------- */
-const OWNER_OF = { 'Ak. Jelani 一家': 'farmer' };   // 示範果農帳號持有的樹
+/* 果農帳號持有哪些樹 —— 對應表放在 store.js 的 FARMER_ACCOUNT，
+   這裡沿用同一份，兩邊各寫一份遲早會對不上。 */
 function seedTrees() {
-  return TREES.map(t => ({ ...t, owner: OWNER_OF[t.farmer] || 'system', listed: true }));
+  return TREES.map(t => ({ ...t, owner: ownerOf(t), listed: true }));
 }
 const allTrees = () => Store.trees(seedTrees);
 

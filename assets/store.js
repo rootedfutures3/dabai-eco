@@ -486,6 +486,19 @@ Store.boot = async function () {
       db.trees = seed;
     } else if (rows.trees.length) {
       db.trees = rows.trees.map(MAP.trees.in);
+
+      /* 自我修復：雲端上有些樹的 owner 還停在早期的 'system'，
+         果農登入後就看不到自己的樹，整個果農後台像壞掉。
+         這裡依果農姓名補回正確的帳號，並把修正推回雲端。 */
+      const fixed = db.trees.filter(t => {
+        const should = ownerOf(t);
+        if (should !== 'system' && t.owner !== should) { t.owner = should; return true; }
+        return false;
+      });
+      if (fixed.length) {
+        console.info('[修正樹的擁有者]', fixed.map(t => t.id).join(', '));
+        fixed.forEach(t => patchRow('trees', 'id', t.id, { owner: t.owner }));
+      }
     }
     stats.trees = (db.trees || []).length;
 

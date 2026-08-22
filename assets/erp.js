@@ -9,6 +9,7 @@
 Store.onReady((info) => {
   if (!document.getElementById('kpis')) return;
   showDbStatus(info);
+  Perm.load();          // 自訂角色要先讀進來，renderAll 才畫得出角色欄位
   renderAll();
 
   // 左側功能列
@@ -116,6 +117,7 @@ function renderAll() {
   renderOverview();
   renderUsers();
   initNewUser();
+  initRoleEditor();
 }
 
 /* ---------- KPI ---------- */
@@ -624,22 +626,10 @@ function renderUsers() {
   const el = document.getElementById('t-perms');
   if (!el) return;
 
-  /* 權限矩陣：橫軸是角色，縱軸是能做的事 */
-  const ACTIONS = [
-    ['view.all',      '看所有資料'],
-    ['view.orders',   '看訂單'],
-    ['view.trees',    '看果樹'],
-    ['edit.trees',    '編輯果樹'],
-    ['edit.orders',   '編輯訂單'],
-    ['view.money',    '看金額與財務'],
-    ['edit.money',    '執行撥款'],
-    ['edit.settings', '改佣金比例'],
-    ['edit.social',   '社群發文'],
-    ['field.report',  '現場回報'],
-    ['edit.users',    '管理帳號與權限'],
-    ['db.reset',      '重設資料'],
-  ];
-  const ROLES = ['super', 'admin', 'finance', 'editor', 'coord'];
+  /* 權限矩陣：橫軸是角色，縱軸是能做的事。
+     果農與收購商是前台身分，不進這張表；自訂角色會自動接在後面。 */
+  const ACTIONS = ALL_PERMS;
+  const ROLES = Object.keys(PERMS).filter(k => !['farmer', 'buyer'].includes(k));
 
   const has = (role, action) => {
     const list = PERMS[role].can;
@@ -650,7 +640,7 @@ function renderUsers() {
   };
 
   el.innerHTML = table(
-    ['可以做的事', ...ROLES.map(r => PERMS[r].label)],
+    ['可以做的事', ...ROLES.map(r => PERMS[r].label + (PERMS[r].custom ? ' ✎' : ''))],
     ACTIONS.map(([a, label]) => [
       label,
       ...ROLES.map(r => has(r, a)
@@ -669,7 +659,7 @@ function renderUsers() {
       const picker = editable
         ? `<select class="perm-pick" data-u="${u.u}"${u.u === meU ? ' disabled title="不能改自己的權限，避免把自己鎖在門外"' : ''}>
              ${Object.entries(PERMS).map(([k, v]) =>
-               `<option value="${k}"${k === cur ? ' selected' : ''}>${v.label}</option>`).join('')}
+               `<option value="${k}"${k === cur ? ' selected' : ''}>${v.label}${v.custom ? ' ✎' : ''}</option>`).join('')}
            </select>`
         : `<span class="pill">${(PERMS[cur] || {}).label || cur}</span>`;
       return [
@@ -726,14 +716,17 @@ function initNewUser() {
 
   // 權限下拉：直接由 PERMS 產生，之後加角色不必再改這裡
   const sel = document.getElementById('nu-perm');
-  sel.innerHTML = Object.entries(PERMS)
-    .map(([k, v]) => `<option value="${k}">${v.label}</option>`).join('');
-  sel.value = 'editor';                       // 預設給最小的權限，不預設超管
+  fillPermOptions(sel, 'editor');             // 預設給最小的權限，不預設超管
 
   const hint = document.getElementById('nu-perm-hint');
   const showHint = () => {
     const p = PERMS[sel.value];
-    hint.textContent = p ? '可以：' + describePerm(sel.value) : '';
+    // 每一項各自一個 <span>，i18n 才翻得到 ——
+    // 串成一整句再塞進去的話，那句合成字串不會在字典裡。
+    hint.innerHTML = p
+      ? '<span>可以：</span>' + p.can.map(a => `<span>${describeAction(a)}</span>`).join(' · ')
+      : '';
+    if (typeof I18N !== 'undefined') I18N.refresh(hint);
   };
   sel.addEventListener('change', () => { showHint(); syncRole(); });
   showHint();
@@ -799,13 +792,126 @@ function initNewUser() {
 }
 
 /** 把某個角色能做的事寫成一句話，讓選權限的人知道自己在給什麼。 */
-function describePerm(role) {
-  const NAMES = {
-    'view.all':'看所有資料', 'view.orders':'看訂單', 'view.trees':'看果樹',
-    'edit.trees':'編輯果樹', 'edit.orders':'編輯訂單',
-    'view.money':'看金額與財務', 'edit.money':'執行撥款',
-    'edit.settings':'改佣金比例', 'edit.social':'社群發文',
-    'field.report':'現場回報', 'edit.users':'管理帳號與權限', 'db.reset':'重設資料',
-  };
-  return (PERMS[role]?.can || []).map(a => NAMES[a] || a).join('、');
+/** 權限下拉的選項。自訂角色也要出現，所以每次重繪都重建一次。 */
+function fillPermOptions(sel, keep) {
+  const want = keep || sel.value;
+  sel.innerHTML = Object.entries(PERMS)
+    .map(([k, v]) => `<option value="${k}">${v.label}${v.custom ? ' ✎' : ''}</option>`).join('');
+  sel.value = PERMS[want] ? want : 'editor';
 }
+
+function describePerm(role) {
+  return (PERMS[role]?.can || []).map(describeAction).join('、');
+}
+
+/* ============================================================
+   自訂角色
+   ------------------------------------------------------------
+   內建角色不給改也不給刪 —— 讓人把超級管理員的權限拿掉之後，
+   就沒有人能改回來了，系統等於被鎖死。
+   自訂角色存在 settings 表的 custom_roles（一個 JSON 字串），
+   角色數量不會多到需要獨立資料表。
+   ============================================================ */
+
+function initRoleEditor() {
+  const form = document.getElementById('role-form');
+  if (!form) return;
+
+  // 權限勾選清單
+  const box = document.getElementById('rl-perms');
+  if (!box.dataset.built) {
+    box.dataset.built = '1';
+    box.innerHTML = ALL_PERMS.map(([key, label]) => `
+      <label class="perm-pick-row">
+        <input type="checkbox" value="${key}">
+        <span><b>${label}</b><i>${key}</i></span>
+      </label>`).join('');
+  }
+
+  if (!form.dataset.bound) {
+    form.dataset.bound = '1';
+
+    form.addEventListener('submit', e => {
+      e.preventDefault();
+      const err = document.getElementById('rl-err');
+      const ok  = document.getElementById('rl-ok');
+      const can = [...box.querySelectorAll('input:checked')].map(i => i.value);
+
+      const msg = Perm.saveRole(
+        document.getElementById('rl-key').value,
+        document.getElementById('rl-label').value,
+        can);
+
+      if (msg) {
+        err.textContent = msg; err.style.display = 'block'; ok.style.display = 'none';
+        return;
+      }
+      err.style.display = 'none';
+      ok.textContent = `✅ 已儲存角色「${document.getElementById('rl-label').value}」。`
+                     + '現在可以在上面的帳號清單把人指派成這個角色了。';
+      ok.style.display = 'block';
+      form.reset();
+      drawRoles();
+      renderUsers();
+      gateMenu();
+      fillPermOptions(document.getElementById('nu-perm'));
+    });
+
+    document.getElementById('rl-reset').addEventListener('click', () => {
+      form.reset();
+      document.getElementById('rl-err').style.display = 'none';
+      document.getElementById('rl-ok').style.display = 'none';
+    });
+
+    // 編輯／刪除既有的自訂角色
+    document.getElementById('t-roles').addEventListener('click', e => {
+      const edit = e.target.closest('[data-role-edit]');
+      const del  = e.target.closest('[data-role-del]');
+
+      if (edit) {
+        const key = edit.dataset.roleEdit;
+        const r = PERMS[key];
+        document.getElementById('rl-key').value = key;
+        document.getElementById('rl-label').value = r.label;
+        box.querySelectorAll('input').forEach(i => { i.checked = r.can.includes(i.value); });
+        document.getElementById('rl-err').style.display = 'none';
+        document.getElementById('rl-ok').style.display = 'none';
+        form.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+
+      if (del) {
+        const key = del.dataset.roleDel;
+        if (!confirm(`確定要刪除角色「${PERMS[key].label}」嗎？`)) return;
+        const msg = Perm.deleteRole(key);
+        if (msg) { alert(msg); return; }
+        drawRoles();
+        renderUsers();
+        gateMenu();
+        fillPermOptions(document.getElementById('nu-perm'));
+      }
+    });
+  }
+
+  drawRoles();
+}
+
+function drawRoles() {
+  const el = document.getElementById('t-roles');
+  if (!el) return;
+  const users = Store.read().users || [];
+  const rows = Perm.customRoles().map(([key, r]) => [
+    `<b>${r.label}</b>`,
+    `<span class="pill">${key}</span>`,
+    r.can.map(a => `<span class="perm-chip">${describeAction(a)}</span>`).join(' '),
+    `${users.filter(u => u.perm === key).length} 人`,
+    `<button class="mini-btn" data-role-edit="${key}">編輯</button>
+     <button class="mini-btn" data-role-del="${key}">刪除</button>`,
+  ]);
+  el.innerHTML = rows.length
+    ? table(['角色名稱', '代號', '可以做的事', '使用中', ''], rows)
+    : '<tbody><tr><td style="text-align:center;padding:28px">'
+      + '還沒有自訂角色。用上面的表單開一個。</td></tr></tbody>';
+}
+
+const describeAction = a =>
+  (ALL_PERMS.find(([k]) => k === a) || [a, a])[1];

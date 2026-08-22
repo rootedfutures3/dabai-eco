@@ -1663,3 +1663,43 @@ nav.admin-top{
   font-size:.88rem;color:var(--taupe-deep);line-height:1.65;
   margin-top:14px;padding-top:14px;border-top:1px solid var(--line);
 }
+
+/* ---------- 自訂角色 ---------- */
+.role-editor{
+  background:var(--snow);border:1px solid var(--line);
+  border-radius:var(--radius);padding:24px 26px;
+}
+.perm-picks{border:0;padding:0;margin:6px 0 0;min-width:0}
+.perm-picks legend{
+  font-size:.9rem;font-weight:600;color:var(--accent);
+  padding:0;margin-bottom:10px;
+}
+.perm-picks > div{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(min(220px,100%),1fr));
+  gap:8px;
+}
+.perm-pick-row{
+  display:flex;align-items:flex-start;gap:10px;
+  padding:10px 12px;margin:0;font-weight:400;
+  border:1px solid var(--line);border-radius:10px;
+  background:var(--field-bg,#fff);cursor:pointer;
+}
+.perm-pick-row:hover{border-color:var(--coffee)}
+.perm-pick-row input{width:auto;margin:2px 0 0;flex:0 0 auto;padding:0}
+.perm-pick-row span{display:block;line-height:1.35;min-width:0}
+.perm-pick-row b{display:block;font-size:.94rem;color:var(--ink)}
+.perm-pick-row i{
+  display:block;font-style:normal;font-size:.76rem;
+  color:var(--taupe-deep);font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+.perm-pick-row:has(input:checked){
+  border-color:var(--gold);background:rgba(198,165,68,.1);
+}
+
+.perm-chip{
+  display:inline-block;font-size:.78rem;
+  background:var(--almond-soft);color:var(--ink-soft);
+  border:1px solid var(--line);border-radius:999px;
+  padding:2px 9px;margin:2px 2px 2px 0;white-space:nowrap;
+}
+@media(max-width:560px){ .role-editor{padding:18px} }

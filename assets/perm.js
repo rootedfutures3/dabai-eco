@@ -21,6 +21,25 @@
 
 /* 每一項權限代表「可以做什麼」，不是「可以看哪一頁」——
    頁面由權限推導出來，這樣加新頁時不必到處改。 */
+/* 系統裡總共有哪些權限。角色編輯器的勾選清單、權限矩陣都讀這一份，
+   之後要加新權限只要動這裡。 */
+const ALL_PERMS = [
+  ['view.all',      '看所有資料'],
+  ['view.orders',   '看訂單'],
+  ['view.trees',    '看果樹'],
+  ['edit.trees',    '編輯果樹'],
+  ['edit.orders',   '編輯訂單'],
+  ['view.money',    '看金額與財務'],
+  ['edit.money',    '執行撥款'],
+  ['edit.settings', '改佣金比例'],
+  ['edit.social',   '社群發文'],
+  ['field.report',  '現場回報'],
+  ['edit.users',    '管理帳號與權限'],
+  ['db.reset',      '重設資料'],
+];
+
+/* 內建角色。使用者自訂的角色存在資料庫（settings 的 custom_roles），
+   開機時由 Perm.load() 併進來。 */
 const PERMS = {
   super: {
     label: '超級管理員', en: 'Super Admin',
@@ -62,6 +81,65 @@ const PAGE_PERM = {
 };
 
 const Perm = {
+  /** 內建角色不能改也不能刪，避免有人把超級管理員的權限拿掉後鎖死系統。 */
+  BUILTIN: ['super', 'admin', 'finance', 'editor', 'coord', 'farmer', 'buyer'],
+
+  /**
+   * 把資料庫裡的自訂角色併進 PERMS。
+   * 存成一個 JSON 字串放在 settings 表，不另外開一張表 ——
+   * 角色不會多到需要獨立資料表，而且這樣一次讀寫就好。
+   */
+  load() {
+    let raw;
+    try { raw = JSON.parse(Store.setting('custom_roles', '{}')); }
+    catch (e) { console.warn('[自訂角色解析失敗，忽略]', e.message); return; }
+    if (!raw || typeof raw !== 'object') return;
+    for (const [key, def] of Object.entries(raw)) {
+      if (Perm.BUILTIN.includes(key)) continue;          // 不讓自訂角色蓋掉內建的
+      if (!def || !Array.isArray(def.can)) continue;
+      PERMS[key] = { label: def.label || key, en: def.en || key, can: def.can, custom: true };
+    }
+  },
+
+  customRoles() {
+    return Object.entries(PERMS).filter(([, v]) => v.custom);
+  },
+
+  /** 新增或修改一個自訂角色。回傳錯誤訊息字串，成功回傳 null。 */
+  saveRole(key, label, can) {
+    if (!Perm.can('edit.users')) return '你的角色沒有管理權限的權限。';
+    key = String(key || '').trim().toLowerCase();
+    if (!/^[a-z0-9_-]{2,20}$/.test(key)) return '角色代號請用 2–20 個英文小寫字母、數字或 _ - 。';
+    if (Perm.BUILTIN.includes(key)) return `「${key}」是內建角色，不能覆蓋。請換一個代號。`;
+    if (!String(label || '').trim()) return '請填角色名稱。';
+    if (!can.length) return '至少要勾一項權限。';
+
+    PERMS[key] = { label: String(label).trim(), en: key, can, custom: true };
+    Perm.persist();
+    return null;
+  },
+
+  deleteRole(key) {
+    if (!Perm.can('edit.users')) return '你的角色沒有管理權限的權限。';
+    if (Perm.BUILTIN.includes(key)) return '內建角色不能刪除。';
+    const inUse = (Store.read().users || []).filter(u => u.perm === key);
+    if (inUse.length) {
+      return `還有 ${inUse.length} 個帳號在用這個角色（${inUse.map(u => u.u).join('、')}），`
+           + '請先把他們改成別的角色。';
+    }
+    delete PERMS[key];
+    Perm.persist();
+    return null;
+  },
+
+  persist() {
+    const out = {};
+    for (const [k, v] of Object.entries(PERMS)) {
+      if (v.custom) out[k] = { label: v.label, en: v.en, can: v.can };
+    }
+    Store.saveSetting('custom_roles', JSON.stringify(out));
+  },
+
   /** 目前登入的人。沒登入回傳 null。 */
   me() {
     const u = sessionStorage.getItem('rf_app_session');
