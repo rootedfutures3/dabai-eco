@@ -1959,7 +1959,7 @@ window.LANG_MS = {
   'Meradong 家族果園': 'Dusun keluarga Meradong',
   'Kanowit 坡地果園': 'Dusun lereng Kanowit',
   'Sibu 近郊示範園': 'Dusun demo berhampiran Sibu',
-  '—— 資料存在 Supabase，所有裝置共用同一份。 目前有 {n} 棵樹、{n} 筆訂單、{n} 個帳號。': '— data disimpan dalam Supabase dan setiap peranti berkongsi salinan yang sama. Kini {n} pokok, {n} pesanan dan {n} akaun.',
+  '—— 資料存在 Supabase，所有裝置共用同一份。 目前有 {n} 棵樹、{n} 筆訂單、{n} 個帳號。': ' — data disimpan dalam Supabase dan setiap peranti berkongsi salinan yang sama. Kini {n} pokok, {n} pesanan dan {n} akaun.',
   'FPX 網路銀行': 'Perbankan dalam talian FPX',
   '企業匯款': 'Pindahan korporat',
   '信用卡': 'Kad kredit',

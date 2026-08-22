@@ -1958,7 +1958,7 @@ window.LANG_EN = {
   'Meradong 家族果園': 'Meradong family orchard',
   'Kanowit 坡地果園': 'Kanowit hillside orchard',
   'Sibu 近郊示範園': 'Demo orchard near Sibu',
-  '—— 資料存在 Supabase，所有裝置共用同一份。 目前有 {n} 棵樹、{n} 筆訂單、{n} 個帳號。': '— data lives in Supabase and every device shares the same copy. Currently {n} trees, {n} orders and {n} accounts.',
+  '—— 資料存在 Supabase，所有裝置共用同一份。 目前有 {n} 棵樹、{n} 筆訂單、{n} 個帳號。': ' — data lives in Supabase and every device shares the same copy. Currently {n} trees, {n} orders and {n} accounts.',
   'FPX 網路銀行': 'FPX online banking',
   '企業匯款': 'Corporate transfer',
   '信用卡': 'Credit card',
