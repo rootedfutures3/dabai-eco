@@ -13,7 +13,7 @@
    角色設計：
      super   超級管理員 —— 全部權限，含帳號與權限管理
      admin   一般管理員 —— 日常營運，不能改權限與佣金比例
-     finance 財務       —— 佣金、撥款、財務模型；看不到帳號管理
+     finance 財務       —— 佣金與撥款；看不到帳號管理
      editor  編輯       —— 樹體資料與社群發文；看不到錢
      coord   溝通者     —— 只有現場回報
      farmer  果農 / buyer 收購商 —— 前台使用者，不進 ERP
@@ -56,7 +56,6 @@ const PAGE_PERM = {
   customers:  'view.all',
   reports:    'view.trees',
   commission: 'view.money',
-  finance:    'view.money',
   social:     'edit.social',
   wages:      'view.money',
   users:      'edit.users',

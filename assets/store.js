@@ -59,8 +59,9 @@ const SEED = {
     { no:'RF-2026-0001', date:'2026-01-14', treeId:'DB-002', crop:'dabai',    customer:'陳品妤', email:'ping@example.com', phone:'+60 12-330 8821', amount:400,  paid:200, channel:'FPX 網路銀行', status:'已付訂金' },
     { no:'RF-2026-0002', date:'2026-01-19', treeId:'DR-002', crop:'durian',   customer:'Ong Wei Sheng', email:'ws.ong@example.com', phone:'+60 16-772 1140', amount:1180, paid:1180, channel:'信用卡', status:'已付全額' },
     { no:'RF-2026-0003', date:'2026-02-02', treeId:'RB-003', crop:'rambutan', customer:'林嘉恩', email:'jiaen@example.com', phone:'+60 11-2098 4471', amount:230,  paid:115,  channel:'DuitNow QR', status:'已付訂金' },
-    { no:'RF-2026-0004', date:'2026-02-11', treeId:'DB-008', crop:'dabai',    customer:'綠境食品有限公司', email:'purchase@example.com', phone:'+60 82-334 900', amount:450, paid:450, channel:'企業匯款', status:'已付全額' },
+    { no:'RF-2026-0004', date:'2026-02-11', treeId:'DB-008', crop:'dabai',    customer:'南洋食品工業', email:'esg@example.com', phone:'+60 82-334 900', amount:450, paid:450, channel:'企業匯款', status:'已付全額', buyer:'buyer' },
     { no:'RF-2026-0005', date:'2026-02-23', treeId:'DR-010', crop:'durian',   customer:'Nurul Aisyah', email:'aisyah@example.com', phone:'+60 13-448 7712', amount:960, paid:480, channel:'FPX 網路銀行', status:'已付訂金' },
+    { no:'RF-2026-0007', date:'2026-03-08', treeId:'DB-002', crop:'dabai',    customer:'南洋食品工業', email:'esg@example.com', phone:'+60 82-334 900', amount:400, paid:200, channel:'企業匯款', status:'已付訂金', buyer:'buyer' },
     { no:'RF-2026-0006', date:'2026-03-05', treeId:'DB-014', crop:'dabai',    customer:'黃俊傑', email:'jj.wong@example.com', phone:'+60 17-556 2093', amount:410, paid:410, channel:'信用卡', status:'已付全額' },
   ],
 
@@ -429,6 +430,18 @@ const MAP = {
   },
 };
 
+/**
+ * 這棵樹屬於哪個帳號。
+ * 果農登入後看到的是 owner === 自己帳號 的樹，所以示範資料要對得起來 ——
+ * 不然果農後台會是空的，看起來像壞掉。
+ */
+const FARMER_ACCOUNT = {
+  'Ak. Jelani 一家': 'farmer',
+};
+function ownerOf(tree) {
+  return FARMER_ACCOUNT[tree.farmer] || 'system';
+}
+
 /** 寫入雲端（失敗只記錄，不阻斷畫面 —— 資料仍在本機快取） */
 function push(tableName, row) {
   if (!SB.on) return;
@@ -468,7 +481,7 @@ Store.boot = async function () {
     if (!rows.trees.length && typeof TREES !== 'undefined') {
       const seed = (db.trees && db.trees.length)
         ? db.trees
-        : TREES.map(t => ({ ...t, owner: 'system', listed: true }));
+        : TREES.map(t => ({ ...t, owner: ownerOf(t), listed: true }));
       await SB.insert('trees', seed.map(MAP.trees.out));
       db.trees = seed;
     } else if (rows.trees.length) {

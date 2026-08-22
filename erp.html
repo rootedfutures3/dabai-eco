@@ -3,21 +3,20 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ERP 儀表板（示範）— TANJU</title>
+<title>系統後台（示範）— TANJU</title>
 <meta name="robots" content="noindex">
-<link rel="icon" type="image/png" sizes="32x32" href="assets/img/favicon-32.png?v=82791286">
-<link rel="stylesheet" href="assets/style.css?v=82791286">
-<script src="assets/config.js?v=82791286" defer></script>
-<script src="assets/perm.js?v=82791286" defer></script>
-<script src="assets/store.js?v=82791286" defer></script>
-<script src="assets/site.js?v=82791286" defer></script>
-<script src="assets/erp.js?v=82791286" defer></script>
-<script src="assets/finance.js?v=82791286" defer></script>
-<script src="assets/social.js?v=82791286" defer></script>
-<script src="assets/lang/ms.js?v=82791286" defer></script>
-<script src="assets/lang/en.js?v=82791286" defer></script>
-<script src="assets/lang/iba.js?v=82791286" defer></script>
-<script src="assets/i18n.js?v=82791286" defer></script>
+<link rel="icon" type="image/png" sizes="32x32" href="assets/img/favicon-32.png?v=336fe740">
+<link rel="stylesheet" href="assets/style.css?v=336fe740">
+<script src="assets/config.js?v=336fe740" defer></script>
+<script src="assets/perm.js?v=336fe740" defer></script>
+<script src="assets/store.js?v=336fe740" defer></script>
+<script src="assets/site.js?v=336fe740" defer></script>
+<script src="assets/erp.js?v=336fe740" defer></script>
+<script src="assets/social.js?v=336fe740" defer></script>
+<script src="assets/lang/ms.js?v=336fe740" defer></script>
+<script src="assets/lang/en.js?v=336fe740" defer></script>
+<script src="assets/lang/iba.js?v=336fe740" defer></script>
+<script src="assets/i18n.js?v=336fe740" defer></script>
 </head>
 <body class="admin">
 
@@ -26,7 +25,7 @@
   <!-- ============ 左側功能列 ============ -->
   <aside class="side" id="side">
     <a class="side-brand" href="index.html">
-      <img src="assets/img/logo.png?v=82791286" alt="" width="38" height="38">
+      <img src="assets/img/logo.png?v=336fe740" alt="" width="38" height="38">
       <span><b>TANJU</b><i>ROOTED FUTURES</i></span>
     </a>
 
@@ -41,16 +40,15 @@
 
     <p class="side-label">MENU</p>
     <div class="side-menu" id="side-menu">
-      <button class="side-item on" data-tab="overview"><span class="si">▦</span>總覽</button>
-      <button class="side-item" data-tab="orders"><span class="si">🧾</span>認養訂單</button>
-      <button class="side-item" data-tab="trees"><span class="si">🌳</span>樹體資產</button>
-      <button class="side-item" data-tab="customers"><span class="si">👥</span>客戶名單</button>
-      <button class="side-item" data-tab="reports"><span class="si">📋</span>樹況回報</button>
-      <button class="side-item" data-tab="commission"><span class="si">💰</span>佣金分潤</button>
-      <button class="side-item" data-tab="finance"><span class="si">📈</span>財務模型</button>
-      <button class="side-item" data-tab="social"><span class="si">📣</span>社群發文</button>
-      <button class="side-item" data-tab="wages"><span class="si">🧑‍🌾</span>收益與工資</button>
-      <button class="side-item" data-tab="users"><span class="si">👤</span>帳號與權限</button>
+      <button class="side-item on" data-tab="overview" data-zh="總覽"><span class="si">▦</span>總覽</button>
+      <button class="side-item" data-tab="orders" data-zh="認養訂單"><span class="si">🧾</span>認養訂單</button>
+      <button class="side-item" data-tab="trees" data-zh="樹體資產"><span class="si">🌳</span>樹體資產</button>
+      <button class="side-item" data-tab="customers" data-zh="客戶名單"><span class="si">👥</span>客戶名單</button>
+      <button class="side-item" data-tab="reports" data-zh="樹況回報"><span class="si">📋</span>樹況回報</button>
+      <button class="side-item" data-tab="commission" data-zh="佣金分潤"><span class="si">💰</span>佣金分潤</button>
+      <button class="side-item" data-tab="social" data-zh="社群發文"><span class="si">📣</span>社群發文</button>
+      <button class="side-item" data-tab="wages" data-zh="收益與工資"><span class="si">🧑‍🌾</span>收益與工資</button>
+      <button class="side-item" data-tab="users" data-zh="帳號與權限"><span class="si">👤</span>帳號與權限</button>
     </div>
 
     <p class="side-label">其他</p>
@@ -67,7 +65,7 @@
   <main class="admin-main">
     <nav class="admin-top">
       <button class="side-toggle" id="side-toggle" aria-label="開關功能列" aria-expanded="false">☰</button>
-      <div class="crumb">ERP <span aria-hidden="true">/</span> <b id="crumb">總覽</b></div>
+      <div class="crumb"><span>系統後台</span> <span aria-hidden="true">/</span> <b id="crumb">總覽</b></div>
       <button class="nav-cta" id="db-reset" type="button" data-perm="db.reset">重設示範資料</button>
     </nav>
 
@@ -196,29 +194,6 @@
     </div>
 
 
-    <div class="tab-pane" data-panel="finance">
-      <h3 class="panel-h">財務模型 <small>Financial Plan · Year 1–2 Projection</small></h3>
-      <p class="panel-note">
-        收入與支出逐項列出，第 1～2 年預測。所有假設值都可以改，改完立刻重算，
-        算好的表可以直接放進簡報的財務頁。
-        <b>刻意保守</b> —— 試點階段的數字灌水只會在 Q&amp;A 被拆穿。
-      </p>
-
-      <h4 class="sub-h">假設值 <small>Assumptions</small></h4>
-      <div class="fin-inputs" id="fin-inputs"></div>
-
-      <h4 class="sub-h">收入明細 <small>Revenue</small></h4>
-      <div class="table-scroll"><table id="t-streams"></table></div>
-
-      <h4 class="sub-h">支出明細 <small>Costs</small></h4>
-      <div class="table-scroll"><table id="t-costs"></table></div>
-
-      <h4 class="sub-h">損益預測 <small>P&amp;L Projection</small></h4>
-      <div class="table-scroll"><table id="t-pnl"></table></div>
-
-      <div class="fin-verdict" id="fin-verdict"></div>
-    </div>
-
     <div class="tab-pane" data-panel="social">
       <h3 class="panel-h">社群一鍵發文 <small>Facebook · Instagram · YouTube · 小紅書</small></h3>
 
@@ -292,6 +267,84 @@
 
       <h4 class="sub-h">帳號 <small>Accounts</small></h4>
       <div class="table-scroll"><table id="t-users"></table></div>
+
+      <!-- 只有具 edit.users 權限（超級管理員）看得到；
+           沒權限的人連這個區塊都不會出現在畫面上 -->
+      <div data-perm="edit.users">
+        <h4 class="sub-h">新增帳號 <small>Add a User</small></h4>
+
+        <div class="new-user">
+          <p class="panel-note" style="margin-top:0">
+            只有<b>超級管理員</b>能新增帳號。密碼在這個示範系統裡是<b>明文存放</b>的，
+            所以<b>不要使用任何真實密碼</b> —— 給同事一組臨時密碼，正式營運換成
+            真正的登入機制之後再改。
+          </p>
+
+          <form id="new-user-form" autocomplete="off">
+            <div class="form-row">
+              <div>
+                <label for="nu-user">帳號 *</label>
+                <input id="nu-user" name="u" type="text" required
+                       placeholder="英文小寫，例如 amelia" autocapitalize="none" spellcheck="false">
+              </div>
+              <div>
+                <label for="nu-pass">臨時密碼 *</label>
+                <input id="nu-pass" name="pass" type="text" required
+                       placeholder="不要用真實密碼" spellcheck="false">
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div>
+                <label for="nu-name">姓名 *</label>
+                <input id="nu-name" name="name" type="text" required placeholder="這個人的名字">
+              </div>
+              <div>
+                <label for="nu-org">單位</label>
+                <input id="nu-org" name="org" type="text" placeholder="ROOTED FUTURES">
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div>
+                <label for="nu-perm">ERP 權限 *</label>
+                <select id="nu-perm" name="perm" required></select>
+                <p class="fld-hint" id="nu-perm-hint"></p>
+              </div>
+              <div>
+                <label for="nu-role">前台身分 *</label>
+                <select id="nu-role" name="role" required>
+                  <option value="admin">管理</option>
+                  <option value="farmer">果農</option>
+                  <option value="buyer">收購商</option>
+                </select>
+                <p class="fld-hint">決定他登入後看到的是果農後台還是收購商後台。</p>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div>
+                <label for="nu-email">Email</label>
+                <input id="nu-email" name="email" type="email" placeholder="name@example.com">
+              </div>
+              <div>
+                <label for="nu-phone">電話</label>
+                <input id="nu-phone" name="phone" type="tel" placeholder="+60 12-345 6789">
+              </div>
+            </div>
+
+            <div>
+              <label for="nu-area">地區</label>
+              <input id="nu-area" name="area" type="text" placeholder="Song、Sibu、Kuching…">
+            </div>
+
+            <div class="form-error" id="nu-err" role="alert"></div>
+            <div class="form-success" id="nu-ok"></div>
+
+            <button class="btn btn-gold" type="submit" style="border:none;cursor:pointer">建立帳號</button>
+          </form>
+        </div>
+      </div>
     </div>
 
     <div class="tab-pane" data-panel="wages">
@@ -305,10 +358,10 @@
 
 <footer class="admin-foot">
   <div class="foot-grid">
-    <div class="foot-brand"><img src="assets/img/logo.png?v=82791286" alt="TANJU · ROOTED FUTURES 根築新局" width="56" height="56"><div><b>TANJU</b><br>ROOTED FUTURES<span class="logo-zh"> 根築新局</span><br>Social Enterprise · Song, Sarawak</div></div>
+    <div class="foot-brand"><img src="assets/img/logo.png?v=336fe740" alt="TANJU · ROOTED FUTURES 根築新局" width="56" height="56"><div><b>TANJU</b><br>ROOTED FUTURES<span class="logo-zh"> 根築新局</span><br>Social Enterprise · Song, Sarawak</div></div>
     <div class="foot-links">
       <a href="index.html">回前台</a>
-      <a href="erp.html">ERP 儀表板</a>
+      <a href="erp.html">系統後台</a>
       <a href="coordinator.html">溝通者門戶</a>
     </div>
   </div>

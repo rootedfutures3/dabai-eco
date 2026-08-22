@@ -43,6 +43,13 @@ Store.onReady(() => {
   const user = saved ? Store.read().users.find(x => x.u === saved) : null;
   if (!user) { location.replace('app.html'); return; }
 
+  // 管理員的功能全在系統後台，這一頁對他沒有東西可看
+  const permRole = user.perm || (user.role === 'admin' ? 'super' : user.role);
+  if (!NAVS[user.role] || ['super', 'admin', 'finance', 'editor', 'coord'].includes(permRole)) {
+    location.replace('erp.html');
+    return;
+  }
+
   document.getElementById('logout').addEventListener('click', () => {
     sessionStorage.removeItem(SESSION);
     location.assign('app.html');
@@ -83,23 +90,24 @@ function signIn(user) {
 }
 
 /* ---------- 導覽 ---------- */
+/* 管理員沒有列在這裡 —— 總覽、所有果樹、所有訂單、帳號管理
+   全部都在系統後台（erp.html）裡了，兩邊各做一份只會分岔。
+   管理員登入後直接被導去系統後台，見下面的 Store.onReady。 */
 const NAVS = {
   farmer: [['trees','我的果樹'], ['adoptions','認養狀況'], ['income','收益'], ['msgs','訊息']],
   buyer:  [['browse','找果樹'], ['mine','我的認養'], ['track','樹況追蹤'], ['msgs','訊息']],
-  admin:  [['overview','總覽'], ['all-trees','所有果樹'], ['orders','所有訂單'], ['users','帳號管理']],
 };
 
 /* 選單圖示 —— 純裝飾，不影響翻譯（翻譯抓的是文字節點） */
 const NAV_ICON = {
   trees:'🌳', adoptions:'🤝', income:'💰', msgs:'✉️',
   browse:'🔍', mine:'📗', track:'📈',
-  overview:'▦', 'all-trees':'🌳', orders:'🧾', users:'👤',
 };
 
 function buildNav() {
   const nav = document.getElementById('app-nav');
   nav.innerHTML = NAVS[me.role].map(([k, t], i) =>
-    `<a class="side-item${i === 0 ? ' on' : ''}" href="#" data-view="${k}">
+    `<a class="side-item${i === 0 ? ' on' : ''}" href="#" data-view="${k}" data-zh="${t}">
        <span class="si">${NAV_ICON[k] || '•'}</span>${t}</a>`).join('');
 
   nav.querySelectorAll('a').forEach(a => a.addEventListener('click', e => {
@@ -110,15 +118,12 @@ function buildNav() {
     render(a.dataset.view);
   }));
 
-  /* 「其他」區：管理員多給一個 ERP 入口 */
+  /* 「其他」區。管理員不會走到這一頁（已導向系統後台），
+     所以這裡只剩果農與收購商需要的出口。 */
   const extra = document.getElementById('app-extra');
   if (extra) {
     extra.innerHTML =
-      (me.role === 'admin'
-        ? `<a class="side-item" href="erp.html"><span class="si">📊</span>ERP 儀表板</a>
-           <a class="side-item" href="coordinator.html"><span class="si">📍</span>溝通者門戶</a>`
-        : '')
-      + `<a class="side-item" href="index.html"><span class="si">↩</span>回官網</a>`;
+      `<a class="side-item" href="index.html"><span class="si">↩</span>回官網</a>`;
   }
 
   const first = nav.querySelector('a');
@@ -130,11 +135,17 @@ function buildNav() {
 function setCrumb(a) {
   const crumb = document.getElementById('crumb');
   if (!crumb || !a) return;
-  crumb.textContent = [...a.childNodes]
-    .filter(n => n.nodeType === 3).map(n => n.nodeValue).join('').trim();
+  // 用中文原文，不要抓畫面上已經翻好的字 ——
+  // 否則切過語言之後，麵包屑會卡在切換當下的那個語言。
+  crumb.textContent = a.dataset.zh
+    || [...a.childNodes].filter(n => n.nodeType === 3).map(n => n.nodeValue).join('').trim();
   const root = document.getElementById('crumb-root');
   if (root) root.textContent =
     { farmer:'果農後台', buyer:'收購商後台', admin:'管理後台' }[me.role] || '後台';
+
+  // 這兩段是 i18n 跑完之後才寫進去的，要它重新翻一次，
+  // 否則選單已經是英文、麵包屑還留著中文。
+  if (typeof I18N !== 'undefined') I18N.refresh(document.getElementById('crumb-wrap'));
 }
 
 function closeSide() {
@@ -166,7 +177,6 @@ function render(view) {
     trees: vFarmerTrees, adoptions: vFarmerAdoptions, income: vFarmerIncome,
     browse: vBrowse, mine: vMine, track: vTrack,
     msgs: vMessages,
-    overview: vOverview, 'all-trees': vAllTrees, orders: vOrders, users: vUsers,
   }[view] || (() => { el.innerHTML = ''; }))(el);
 }
 
@@ -308,31 +318,81 @@ function vFarmerAdoptions(el) {
 }
 
 /* ---------- 果農：收益 ---------- */
+/* ============================================================
+   果農：收益
+   ------------------------------------------------------------
+   數字全部走 Store.split()，和系統後台的佣金頁用同一套算法 ——
+   比例在後台改了，這裡立刻跟著變，不會兩邊講不一樣的話。
+   已撥／待撥則讀真正的撥款紀錄（payouts），不是用比例估的。
+   ============================================================ */
 function vFarmerIncome(el) {
-  const mine = allTrees().filter(t => t.owner === me.u).map(t => t.id);
-  const orders = Store.read().orders.filter(o => mine.includes(o.treeId));
-  const gross = orders.reduce((s, o) => s + o.paid, 0);
-  const share = Math.round(gross * 0.55);
+  const mineIds = allTrees().filter(t => t.owner === me.u).map(t => t.id);
+  const orders  = Store.read().orders.filter(o => mineIds.includes(o.treeId));
+  const rate    = Store.settingNum('commission_rate', 20);
+  const depPct  = Store.settingNum('deposit_share', 55);
+
+  const sum = orders.reduce((a, o) => {
+    const sp = Store.split(o);
+    a.contract += sp.amount; a.mine += sp.farmer;
+    a.paidOut  += sp.paidOut; a.pending += sp.pending;
+    a.fee      += sp.fee;
+    return a;
+  }, { contract:0, mine:0, paidOut:0, pending:0, fee:0 });
+
   el.innerHTML = `
     ${kpis([
-      ['認養金收入', money(gross), '平台已收'],
-      ['我的分潤 55%', money(share), '開花前撥付'],
-      ['顧問與資材 18%', money(Math.round(gross * 0.18)), '平台代管'],
+      ['認養合約總額', money(sum.contract), `${orders.length} 筆訂單`],
+      [`我的收益 ${100 - rate}%`, money(sum.mine), '扣除平台佣金後'],
+      ['已入帳', money(sum.paidOut), '已經撥給我的'],
+      ['尚待撥款', money(sum.pending), sum.pending > 0 ? '採收後結清' : '已結清'],
     ])}
+
     <div class="card" style="margin-bottom:22px">
-      <h3 style="font-size:1.12rem;margin-bottom:14px">認養金怎麼分</h3>
-      ${[['果農收益（我）',55],['農務顧問與資材',18],['採收、包裝與物流',15],['平台營運',7],['社區永續基金',5]]
-        .map(([k, v]) => `<div class="split-row"><span>${k}</span><b>${v}%　${money(Math.round(gross * v / 100))}</b></div>
-          <div class="split-bar"><i style="width:${v}%"></i></div>`).join('')}
+      <h3 style="font-size:1.12rem;margin-bottom:6px">認養金怎麼分</h3>
+      <p class="dim" style="font-size:.92rem;margin-bottom:16px">
+        每 RM 100 的認養金，我拿 RM ${100 - rate}，平台留 RM ${rate}。
+        我那份大部分在<b>開花前</b>就先撥，不必等收成。
+      </p>
+      <div class="split-row"><span>我的收益</span><b>${100 - rate}%　${money(sum.mine)}</b></div>
+      <div class="split-bar"><i style="width:${100 - rate}%"></i></div>
+      <div class="split-row sub"><span>— 開花前先撥</span><b>${depPct}%　${money(sum.contract * depPct / 100)}</b></div>
+      <div class="split-row sub"><span>— 採收後結清</span><b>${100 - rate - depPct}%　${money(sum.contract * (100 - rate - depPct) / 100)}</b></div>
+      <div class="split-row"><span>平台佣金</span><b>${rate}%　${money(sum.fee)}</b></div>
+      <div class="split-bar"><i style="width:${rate}%"></i></div>
+      <p class="split-note">
+        平台的 ${rate}% 用來支付農務顧問、系統營運與社區永續基金。
+        採收與物流的運費另計，向收購方收取，不從我的 ${100 - rate}% 裡扣。
+      </p>
     </div>
-    <h3 class="panel-h">撥款明細 <small>依訂單</small></h3>
-    ${table(['訂單', 'Tree ID', '已收款', '我的 55%', '狀態'],
-      orders.map(o => [`<b>${o.no}</b>`, `<span class="pill">${o.treeId}</span>`,
-        money(o.paid), `<b>${money(Math.round(o.paid * 0.55))}</b>`,
-        `<span class="badge-${o.status === '已付全額' ? 'ok' : 'wait'}">${o.status}</span>`]))}`;
+
+    <h3 class="panel-h">逐筆明細 <small>依訂單</small></h3>
+    ${table(['訂單', 'Tree ID', '合約總額', `我的 ${100 - rate}%`, '已入帳', '待撥'],
+      orders.map(o => {
+        const sp = Store.split(o);
+        return [
+          `<b>${o.no}</b>`,
+          `<span class="pill">${o.treeId}</span>`,
+          money(sp.amount),
+          `<b>${money(sp.farmer)}</b>`,
+          money(sp.paidOut),
+          sp.pending <= 0.005
+            ? '<span class="badge-ok">已結清</span>'
+            : `<span class="badge-wait">${money(sp.pending)}</span>`,
+        ];
+      }))}
+
+    <h3 class="panel-h" style="margin-top:28px">入帳紀錄 <small>實際撥款</small></h3>
+    ${(() => {
+      const pays = (Store.read().payouts || []).filter(p => mineIds.includes(p.treeId));
+      return table(['日期', '撥款編號', 'Tree ID', '性質', '金額', '方式'],
+        [...pays].reverse().map(p => [
+          p.date, `<b>${p.ref}</b>`, `<span class="pill">${p.treeId}</span>`,
+          { deposit:'開花前訂金', balance:'採收後尾款', adjust:'調整' }[p.kind] || p.kind,
+          `<b>${money(p.amount)}</b>`, p.method || '—',
+        ]));
+    })()}`;
 }
 
-/* ---------- 收購商：找果樹 ---------- */
 function vBrowse(el) {
   const open = allTrees().filter(t => t.listed && t.status === 'available');
   el.innerHTML = `
@@ -449,7 +509,27 @@ function vMine(el) {
     ${os.length ? `<div class="tree-grid">${os.map(o => {
       const t = trees.find(x => x.id === o.treeId); if (!t) return '';
       return treeCard(t, `<button class="btn-claim" data-msg="${t.id}" style="flex:1 1 120px;width:auto">聯絡果農</button>`);
-    }).join('')}</div>` : '<div class="no-result">你還沒有認養任何果樹。到「找果樹」挑一棵。</div>'}`;
+    }).join('')}</div>` : '<div class="no-result">你還沒有認養任何果樹。到「找果樹」挑一棵。</div>'}
+
+    ${os.length ? `
+    <h3 class="panel-h" style="margin-top:30px">你的錢去了哪裡 <small>Where Your Money Went</small></h3>
+    <p class="dim" style="font-size:.95rem;margin-bottom:16px;max-width:70ch">
+      這是我們和一般農產電商最大的差別 —— 你付的每一筆都攤開給你看，
+      而且果農那份大部分在<b>開花前</b>就已經撥出去了。
+    </p>
+    ${table(['訂單', 'Tree ID', '果園', '我付的', `果農實拿 ${100 - Store.settingNum('commission_rate', 20)}%`, '其中開花前已撥'],
+      os.map(o => {
+        const sp = Store.split(o);
+        const t  = trees.find(x => x.id === o.treeId) || {};
+        return [
+          `<b>${o.no}</b>`,
+          `<span class="pill">${o.treeId}</span>`,
+          t.orchard || '—',
+          money(sp.amount),
+          `<b>${money(sp.farmer)}</b>`,
+          `<span class="badge-ok">${money(sp.paidOut)}</span>`,
+        ];
+      }))}` : ''}`;
   el.querySelectorAll('[data-msg]').forEach(b =>
     b.addEventListener('click', () => { render('msgs'); }));
 }
@@ -504,52 +584,3 @@ function vMessages(el) {
 }
 
 /* ---------- 管理員 ---------- */
-function vOverview(el) {
-  const db = Store.read(), trees = allTrees();
-  const paid = db.orders.reduce((s, o) => s + o.paid, 0);
-  el.innerHTML = `
-    ${kpis([
-      ['帳號數', db.users.length + ' 個', '果農／收購商／管理'],
-      ['果樹資產', trees.length + ' 棵', `上架 ${trees.filter(t => t.listed).length} 棵`],
-      ['認養訂單', db.orders.length + ' 筆', ''],
-      ['已收款項', money(paid), ''],
-      ['樹況回報', db.reports.length + ' 筆', ''],
-      ['B2B 名單', db.leads.length + ' 家', ''],
-    ])}
-    <div class="card">
-      <h3 style="font-size:1.12rem;margin-bottom:10px">更深入的營運報表</h3>
-      <p class="lead" style="font-size:.98rem;margin-bottom:16px">
-        完整的樹體資產、CRM、工資與樹況紀錄在 ERP 儀表板。</p>
-      <a class="btn btn-outline" href="erp.html">前往 ERP 儀表板 →</a>
-    </div>`;
-}
-
-function vAllTrees(el) {
-  const db = Store.read();
-  el.innerHTML = `<h3 class="panel-h">所有果樹 <small>Tree Assets</small></h3>
-    ${table(['Tree ID','作物','品種','樹齡','產量','認養金','果園','持有者','上架','狀態'],
-      allTrees().map(t => [`<b>${t.id}</b>`, CROP_NAME[t.crop], esc(t.variety), t.age+' 年',
-        t.kg+' kg', money(t.price), esc(t.orchard), `<span class="pill">${esc(t.owner)}</span>`,
-        t.listed ? '✅' : '—',
-        `<span class="badge-${t.status === 'adopted' ? 'ok' : 'wait'}">${T_STATUS[t.status].t}</span>`]))}`;
-}
-
-function vOrders(el) {
-  const db = Store.read();
-  el.innerHTML = `<h3 class="panel-h">所有訂單 <small>Orders</small></h3>
-    ${table(['訂單','日期','Tree ID','認養人','合約','已付','待收','狀態'],
-      [...db.orders].reverse().map(o => [`<b>${o.no}</b>`, o.date,
-        `<span class="pill">${o.treeId}</span>`, esc(o.customer),
-        money(o.amount), `<b>${money(o.paid)}</b>`, money(o.amount - o.paid),
-        `<span class="badge-${o.status === '已付全額' ? 'ok' : 'wait'}">${o.status}</span>`]))}`;
-}
-
-function vUsers(el) {
-  const db = Store.read();
-  el.innerHTML = `<h3 class="panel-h">帳號管理 <small>Users</small></h3>
-    <div class="demo-banner">⚠️ 示範系統：密碼以明文存在本機 localStorage，僅供 demo。正式營運必須改為後端加密驗證。</div>
-    ${table(['帳號','身分','姓名','果園／公司','電話','地區'],
-      db.users.map(u => [`<b>${esc(u.u)}</b>`,
-        `<span class="badge-${u.role === 'admin' ? 'ok' : 'wait'}">${ROLE_LABEL[u.role]}</span>`,
-        esc(u.name), esc(u.org), `<span class="dim">${esc(u.phone)}</span>`, esc(u.area)]))}`;
-}

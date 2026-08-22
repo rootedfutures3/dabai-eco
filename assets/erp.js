@@ -53,7 +53,6 @@ Store.onReady((info) => {
     Store.saveSetting('deposit_share', d);
     renderCommission();
     renderKpis();
-    if (typeof renderFinance === 'function') renderFinance();
   });
 
   // 即時預覽（還沒按儲存就先看得到分帳結果）
@@ -114,9 +113,9 @@ function renderAll() {
   renderWages();
   renderCommission();
   renderSocial();
-  renderFinance();
   renderOverview();
   renderUsers();
+  initNewUser();
 }
 
 /* ---------- KPI ---------- */
@@ -389,9 +388,10 @@ function show(tab) {
   const btn = document.querySelector(`.side-item[data-tab="${tab}"]`);
   const crumb = document.getElementById('crumb');
   if (btn && crumb) {
-    const label = [...btn.childNodes]
-      .filter(n => n.nodeType === 3).map(n => n.nodeValue).join('').trim();
-    crumb.textContent = label || btn.textContent.trim();
+    // 同樣用中文原文，交給 i18n 翻，不要抓畫面上已經翻好的字
+    crumb.textContent = btn.dataset.zh
+      || [...btn.childNodes].filter(n => n.nodeType === 3).map(n => n.nodeValue).join('').trim();
+    if (typeof I18N !== 'undefined') I18N.refresh(crumb);
   }
 
   history.replaceState(null, '', '#' + tab);
@@ -706,4 +706,106 @@ function gateMenu() {
 
   const roleEl = document.getElementById('side-role');
   if (roleEl && Perm.me()) roleEl.textContent = Perm.roleLabel();
+}
+
+/* ============================================================
+   新增帳號
+   ------------------------------------------------------------
+   只有具 edit.users 權限（超級管理員）能用。表單本身在 HTML 上
+   標了 data-perm="edit.users"，沒權限的人畫面上看不到；
+   這裡再擋一次，避免有人直接呼叫這個函式。
+
+   ⚠️ 密碼是明文存的，和整個 demo 一致。畫面上有明說不要用真實密碼。
+   正式營運要改成後端雜湊（Supabase Auth 就有現成的）。
+   ============================================================ */
+
+function initNewUser() {
+  const form = document.getElementById('new-user-form');
+  if (!form || form.dataset.bound) return;
+  form.dataset.bound = '1';
+
+  // 權限下拉：直接由 PERMS 產生，之後加角色不必再改這裡
+  const sel = document.getElementById('nu-perm');
+  sel.innerHTML = Object.entries(PERMS)
+    .map(([k, v]) => `<option value="${k}">${v.label}</option>`).join('');
+  sel.value = 'editor';                       // 預設給最小的權限，不預設超管
+
+  const hint = document.getElementById('nu-perm-hint');
+  const showHint = () => {
+    const p = PERMS[sel.value];
+    hint.textContent = p ? '可以：' + describePerm(sel.value) : '';
+  };
+  sel.addEventListener('change', () => { showHint(); syncRole(); });
+  showHint();
+
+  /* 前台身分跟著 ERP 權限走，但仍可手動改 —— 例如果農也可能兼溝通者 */
+  const roleSel = document.getElementById('nu-role');
+  const syncRole = () => {
+    const map = { farmer: 'farmer', buyer: 'buyer' };
+    roleSel.value = map[sel.value] || 'admin';
+  };
+  syncRole();
+
+  form.addEventListener('submit', e => {
+    e.preventDefault();
+    const err = document.getElementById('nu-err');
+    const ok  = document.getElementById('nu-ok');
+    const fail = msg => {
+      err.textContent = msg; err.style.display = 'block'; ok.style.display = 'none';
+    };
+
+    if (!Perm.can('edit.users')) return fail('你的角色沒有新增帳號的權限。');
+
+    const val = id => document.getElementById(id).value.trim();
+    const u = val('nu-user').toLowerCase();
+
+    if (!/^[a-z0-9._-]{3,20}$/.test(u)) {
+      return fail('帳號請用 3–20 個英文小寫字母、數字或 . _ - ，不要有空白或中文。');
+    }
+    if (Store.userExists(u)) return fail(`帳號「${u}」已經有人用了，換一個。`);
+
+    const pass = val('nu-pass');
+    if (pass.length < 4) return fail('臨時密碼至少 4 個字元。');
+    if (!val('nu-name')) return fail('請填姓名。');
+
+    const perm = sel.value;
+    if (perm === 'super' &&
+        !confirm(`確定要把「${val('nu-name')}」設成超級管理員嗎？\n\n`
+               + '超級管理員可以改佣金比例、執行撥款，也能修改其他人的權限。')) return;
+
+    Store.addUser({
+      u, pass, perm,
+      role:  roleSel.value,
+      name:  val('nu-name'),
+      org:   val('nu-org')   || '',
+      phone: val('nu-phone') || '',
+      email: val('nu-email') || '',
+      area:  val('nu-area')  || '',
+    });
+
+    err.style.display = 'none';
+    ok.innerHTML = `✅ 已建立帳號 <b>${u}</b>（${PERMS[perm].label}）。
+                    請把帳號與臨時密碼交給本人，並提醒他這是示範系統。`;
+    ok.style.display = 'block';
+
+    form.reset();
+    sel.value = 'editor';
+    showHint();
+    syncRole();
+
+    renderUsers();
+    renderKpis();
+  });
+}
+
+/** 把某個角色能做的事寫成一句話，讓選權限的人知道自己在給什麼。 */
+function describePerm(role) {
+  const NAMES = {
+    'view.all':'看所有資料', 'view.orders':'看訂單', 'view.trees':'看果樹',
+    'edit.trees':'編輯果樹', 'edit.orders':'編輯訂單',
+    'view.money':'看金額與財務', 'edit.money':'執行撥款',
+    'edit.settings':'改佣金比例', 'edit.social':'社群發文',
+    'field.report':'現場回報', 'edit.users':'管理帳號與權限', 'db.reset':'重設資料',
+  };
+  return (PERMS[role]?.can || []).map(a => NAMES[a] || a).join('、');
 }

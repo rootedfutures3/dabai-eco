@@ -1640,3 +1640,26 @@ nav.admin-top{
   .bk-v{font-size:1.45rem}
   .chart-card{padding:14px 14px 10px}
 }
+
+/* ---------- 新增帳號 ---------- */
+.new-user{
+  background:var(--snow);border:1px solid var(--line);
+  border-radius:var(--radius);padding:24px 26px;max-width:860px;
+}
+.new-user .form-success{padding:18px 22px;font-size:1rem}
+.fld-hint{
+  font-size:.83rem;color:var(--taupe-deep);line-height:1.55;
+  margin:6px 0 0;
+}
+@media(max-width:560px){ .new-user{padding:18px} }
+
+/* 認養金拆帳：果農那 80% 底下再拆訂金與尾款 */
+.split-row.sub{
+  font-size:.92rem;color:var(--ink-soft);
+  padding-left:14px;margin-top:-4px;
+}
+.split-row.sub b{font-weight:600}
+.split-note{
+  font-size:.88rem;color:var(--taupe-deep);line-height:1.65;
+  margin-top:14px;padding-top:14px;border-top:1px solid var(--line);
+}
