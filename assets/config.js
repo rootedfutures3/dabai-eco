@@ -71,3 +71,30 @@ const AUTH_MODE = 'demo';
    publish-worker.js 的最後面有寫怎麼改。
    ------------------------------------------------------------ */
 const PUBLISH_KEY = '';
+
+/* ------------------------------------------------------------
+   已經開好的社群帳號
+   ------------------------------------------------------------
+   這裡只放「公開就看得到」的東西：粉專編號、IG 帳號名稱、網址。
+   這些不是機密 —— 任何人看你的粉專網址都看得到同樣的數字。
+
+   真正的金鑰（Page Access Token 之類）不在這裡，也不該在這裡，
+   它們設定在 Cloudflare Worker 的 secret 裡。
+   ------------------------------------------------------------ */
+const SOCIAL_ACCOUNTS = {
+  facebook: {
+    pageId: '61594043096404',
+    url: 'https://www.facebook.com/profile.php?id=61594043096404',
+  },
+  instagram: {
+    handle: 'rootedfutures3',
+    url: 'https://www.instagram.com/rootedfutures3/',
+    /* IG Business Account ID 不用手動填 —— 後端會用粉專的 token
+       自動去查（見 publish-worker.js 的 resolveIgUserId）。 */
+  },
+  youtube: {
+    channelId: 'UCzD_4IugardyBMMXo3MaqwQ',
+    url: 'https://www.youtube.com/channel/UCzD_4IugardyBMMXo3MaqwQ',
+  },
+  rednote:  { url: '' },
+};

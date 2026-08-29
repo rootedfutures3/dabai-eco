@@ -2289,4 +2289,24 @@ window.LANG_MS = {
   '尚未接後端': 'Belum ada pelayan',
   '只能半自動': 'Separa automatik sahaja',
   '官方文件 →': 'Dokumentasi rasmi →',
+
+
+  /* ---------- 排程表與無 API 的替代路徑 ---------- */
+  '排程表 Content Calendar': 'Kalendar kandungan',
+  'API 審核期間可以先把一週的貼文排好，匯出成 CSV， 再到 Meta Business Suite 的「規劃工具」一次上傳。 不需要 API、不需要審核，粉專和 IG 可以同時排。': 'Sementara API dalam semakan, anda boleh merancang siaran seminggu di sini, eksport sebagai CSV, dan muat naik sekali gus melalui Perancang Meta Business Suite. Tiada API dan tiada semakan diperlukan, dan ia menjadualkan Halaman serta Instagram serentak.',
+  '從哪天開始': 'Bermula dari',
+  '排幾天': 'Berapa hari',
+  '7 天': '7 hari',
+  '14 天': '14 hari',
+  '30 天': '30 hari',
+  '產生排程': 'Bina kalendar',
+  '匯出 CSV': 'Eksport CSV',
+  '下載配圖': 'Muat turun imej',
+  '配圖已下載': 'Imej dimuat turun',
+  '已交給手機的分享面板，選 App 就送出': 'Diserahkan kepada helaian kongsi telefon anda — pilih apl untuk menyiarkan',
+  '已送出分享': 'Dikongsi',
+  '審核中 · 先用半自動': 'Dalam semakan · separa automatik buat masa ini',
+  '已開好：': 'Akaun sedia: ',
+  '帳號尚未建立': 'Akaun belum dicipta',
+  '文案開頭': 'Permulaan kapsyen',
 };

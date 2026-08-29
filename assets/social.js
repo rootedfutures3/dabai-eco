@@ -238,6 +238,17 @@ async function publish(channel, text, post) {
     return { mode: 'auto', link: data.link || '' };
   }
 
+  /* 手機上先試原生分享 —— 圖片和文案一起交給 IG / FB 的 App，
+     比「複製再貼上」少一半步驟，也不會漏掉圖。 */
+  if (canShareFiles()) {
+    try {
+      await copy(text);                 // 先複製，分享面板沒帶到文字時還有得貼
+      return await shareNative(text);
+    } catch (e) {
+      /* 使用者按取消也會走到這裡，不當成錯誤，退回原本的方式 */
+    }
+  }
+
   await copy(text);
   window.open(CHANNELS[channel].composer(SITE), '_blank', 'noopener');
   return { mode: 'manual', link: '' };
@@ -247,6 +258,63 @@ async function publish(channel, text, post) {
 function postImage(post) {
   const base = SITE + 'assets/img/photo/';
   return base + 'dabai-square.jpg';
+}
+
+/* ============================================================
+   沒有 API 時的最快路徑
+   ------------------------------------------------------------
+   Meta 的 App Review 要跑幾天到兩週。在那之前，最接近「一鍵」的
+   合法做法是手機的原生分享 —— 把圖片和文案交給系統的分享面板，
+   使用者選 Instagram / Facebook，App 會自己帶入內容。
+   兩下就發完，而且完全不碰帳號密碼、不違反任何條款。
+
+   刻意不做的事：用無頭瀏覽器模擬登入去點「發布」。
+   那違反 Meta 的服務條款（帳號會被停權），而且要把密碼存起來。
+   為了省兩下點擊冒這種險並不值得。
+   ============================================================ */
+
+/** 這台裝置能不能用原生分享面板送出圖片 */
+function canShareFiles() {
+  return typeof navigator !== 'undefined'
+      && navigator.canShare
+      && navigator.share;
+}
+
+/**
+ * 交給系統的分享面板。
+ * 帶得動圖片就一起帶（IG 需要圖），帶不動就只送文字。
+ */
+async function shareNative(text) {
+  const payload = { text };
+
+  try {
+    const url = postImage({});
+    const res = await fetch(url);
+    if (res.ok) {
+      const blob = await res.blob();
+      const file = new File([blob], 'tanju-dabai.jpg', { type: blob.type || 'image/jpeg' });
+      if (navigator.canShare({ files: [file] })) payload.files = [file];
+    }
+  } catch (e) {
+    /* 拿不到圖就只分享文字 —— 總比整個失敗好 */
+  }
+
+  await navigator.share(payload);
+  return { mode: 'share' };
+}
+
+/** 把圖片存成檔案，配合已複製的文案，桌機上用這個 */
+async function downloadImage() {
+  const url = postImage({});
+  const res = await fetch(url);
+  const blob = await res.blob();
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'tanju-dabai.jpg';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 4000);
 }
 
 async function copy(text) {
@@ -277,6 +345,7 @@ function renderSocial() {
   fillSubjects();
   renderPostLog();
   renderConnections();
+  initCalendar();
 
   const topic = document.getElementById('po-topic');
   if (!topic.dataset.bound) {
@@ -333,6 +402,7 @@ function generate() {
         <p class="post-hint">${ch.hint}</p>
         <div class="post-acts">
           <button class="mini-btn" data-act="copy">複製文案</button>
+          <button class="mini-btn" data-act="image">下載配圖</button>
           <button class="mini-btn primary" data-act="publish">一鍵發布</button>
           <span class="post-msg"></span>
         </div>
@@ -367,6 +437,12 @@ async function onCardClick(e) {
     return;
   }
 
+  if (btn.dataset.act === 'image') {
+    try { await downloadImage(); say('配圖已下載'); }
+    catch (e) { say('下載失敗：' + e.message, true); }
+    return;
+  }
+
   if (d.text.length > CHANNELS[key].limit
       && !confirm(`文案超過 ${CHANNELS[key].name} 的 ${CHANNELS[key].limit} 字上限，還是要繼續嗎？`)) return;
 
@@ -380,10 +456,13 @@ async function onCardClick(e) {
   btn.disabled = true;
   try {
     const r = await publish(key, d.text, post);
-    post.status = r.mode === 'auto' ? '已發布' : '已複製 · 待貼上';
+    post.status = { auto:'已發布', share:'已送出分享' }[r.mode] || '已複製 · 待貼上';
     post.link = r.link;
     Store.addPost(post);
-    say(r.mode === 'auto' ? '已透過後端發布' : '文案已複製，發文視窗已開啟');
+    say({
+      auto:  '已透過後端發布',
+      share: '已交給手機的分享面板，選 App 就送出',
+    }[r.mode] || '文案已複製，發文視窗已開啟');
     renderPostLog();
   } catch (err) {
     say('發布失敗：' + err.message, true);
@@ -436,7 +515,7 @@ const CONN_STEPS = {
     needs: [
       '在 Meta for Developers 建立一個 App',
       '把粉專加進 App，取得長效的 Page Access Token',
-      '申請 pages_manage_posts 權限並通過 App Review',
+      '申請 pages_manage_posts 權限並通過 App Review（幾天到兩週）',
     ],
     envs: ['FB_PAGE_ID', 'FB_PAGE_TOKEN'],
     doc: 'https://developers.facebook.com/docs/pages-api/posts',
@@ -448,6 +527,7 @@ const CONN_STEPS = {
       '用同一個 Meta App 取得 IG Business Account ID',
       '申請 instagram_content_publish 權限',
       '注意：IG 發圖文一定要有圖片網址，純文字發不了',
+      'IG Business Account ID 不用手動找，後端會用粉專 token 自動查',
     ],
     envs: ['IG_USER_ID', 'FB_PAGE_TOKEN'],
     doc: 'https://developers.facebook.com/docs/instagram-api/guides/content-publishing',
@@ -480,14 +560,14 @@ function renderConnections() {
   if (!box) return;
 
   const ep = (typeof PUBLISH_ENDPOINT !== 'undefined' && PUBLISH_ENDPOINT) || '';
+  const acc = (typeof SOCIAL_ACCOUNTS !== 'undefined' && SOCIAL_ACCOUNTS) || {};
   const note = document.getElementById('conn-note');
 
   box.innerHTML = Object.entries(CONN_STEPS).map(([key, c]) => {
     const ch = CHANNELS[key];
-    /* 有後端就「可能」自動；沒後端一定是半自動。
-       這裡不假裝知道後端有沒有設好那把金鑰 —— 那要問後端才知道。 */
+    const a = acc[key] || {};
     const state = c.manualOnly ? 'manual' : (ep ? 'ready' : 'pending');
-    const label = { ready:'後端已設定', pending:'尚未接後端', manual:'只能半自動' }[state];
+    const label = { ready:'後端已設定', pending:'審核中 · 先用半自動', manual:'只能半自動' }[state];
 
     return `
       <div class="conn ${state}">
@@ -495,6 +575,12 @@ function renderConnections() {
           <b>${ch.icon} ${c.name}</b>
           <span class="conn-badge ${state}">${label}</span>
         </div>
+        ${a.url
+          ? `<p class="conn-acct">已開好：
+               <a href="${a.url}" target="_blank" rel="noopener">
+                 ${a.handle ? '@' + a.handle : (a.pageId || a.channelId || '看帳號')}
+               </a></p>`
+          : '<p class="conn-acct dim">帳號尚未建立</p>'}
         <ol class="conn-steps">
           ${c.needs.map(n => `<li>${n}</li>`).join('')}
         </ol>
@@ -508,10 +594,113 @@ function renderConnections() {
   note.innerHTML = ep
     ? `目前的發布後端：<code>${ep}</code>。
        按「一鍵發布」會把文案送到那裡，由後端拿著金鑰去呼叫各平台的 API。`
-    : `<b>還沒有接後端，所以現在是半自動</b>：按「一鍵發布」會複製文案並開啟該平台的發文視窗。
+    : `<b>API 還在審核，這段期間有兩條路：</b>
        <br><br>
-       要變成真的自動發文，把 <code>tools/publish-worker.js</code> 部署到
-       Cloudflare Workers（免費方案就夠），把金鑰設成環境變數，
-       再把網址填進 <code>assets/config.js</code> 的 <code>PUBLISH_ENDPOINT</code>。
-       金鑰全程留在伺服器，不會進到這個網站的原始碼。`;
+       <b>① 手機上按「一鍵發布」</b> —— 會把配圖和文案一起交給手機的分享面板，
+       選 Instagram 或 Facebook，App 會自己帶入內容，兩下就發完。
+       這是沒有 API 時最快的合法做法。
+       <br><br>
+       <b>② 用 Meta Business Suite 排程</b> —— Meta 官方的免費工具，
+       不需要 API、不需要審核，可以一次排好一週的貼文，
+       同時發到粉專和 IG。下面的「排程表」可以匯出成 CSV 帶過去。
+       <br><br>
+       <span class="dim">關於「用程式自動登入去發文」：那違反 Meta 的服務條款，
+       帳號會被停權，而且要把密碼存起來。我們不做那個。</span>`;
+}
+
+/* ============================================================
+   排程表
+   ------------------------------------------------------------
+   API 還在審核時最實際的做法：一次把一週的內容排好，
+   匯出 CSV 帶到 Meta Business Suite 的規劃工具上傳。
+   那是 Meta 自己的免費工具，不需要 API 也不需要審核。
+
+   內容從平台的真實資料輪流取材 —— 樹、產品、平台介紹交替，
+   免得連續七天都在講同一件事。
+   ============================================================ */
+
+let CAL_ROWS = [];
+
+function initCalendar() {
+  const gen = document.getElementById('cal-gen');
+  if (!gen || gen.dataset.bound) return;
+  gen.dataset.bound = '1';
+
+  const d = new Date();
+  document.getElementById('cal-start').value =
+    `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+
+  gen.addEventListener('click', buildCalendar);
+  document.getElementById('cal-csv').addEventListener('click', exportCalendarCsv);
+  buildCalendar();
+}
+
+function buildCalendar() {
+  const start = document.getElementById('cal-start').value;
+  const days  = Number(document.getElementById('cal-days').value || 7);
+  if (!start) return;
+
+  const trees = Store.treeList().filter(t => t.crop === 'dabai');
+  const orders = (Store.read().orders || []);
+
+  /* 題材輪流，不要連續幾天都在講同一種事 */
+  const plan = [];
+  for (let i = 0; i < days; i++) {
+    const kind = ['tree', 'product', 'free', 'tree', 'order', 'product', 'free'][i % 7];
+    let id = 'free';
+    if (kind === 'tree')    id = trees.length ? trees[i % trees.length].id : 'free';
+    if (kind === 'product') id = PRODUCTS[i % PRODUCTS.length].id;
+    if (kind === 'order')   id = orders.length ? orders[i % orders.length].no : 'free';
+    plan.push({ kind: (kind === 'order' && !orders.length) ? 'free' : kind, id });
+  }
+
+  const base = new Date(start + 'T09:00:00');
+  CAL_ROWS = plan.map((p, i) => {
+    const day = new Date(base.getTime() + i * 86400000);
+    const date = `${day.getFullYear()}-${String(day.getMonth() + 1).padStart(2, '0')}-${String(day.getDate()).padStart(2, '0')}`;
+    /* 早上九點與晚上八點交替 —— 砂拉越的兩個上網高峰 */
+    const time = i % 2 ? '20:00' : '09:00';
+    const m = material(p.kind, p.id, 'zh');
+    const text = m ? compose('facebook', m, 'zh', 'warm') : '';
+    return {
+      date, time,
+      topic: { tree:'果樹', product:'產品', order:'認養捷報', free:'平台介紹' }[p.kind],
+      subject: p.id,
+      title: text.split('\n')[0],
+      text,
+    };
+  });
+
+  const el = document.getElementById('t-calendar');
+  el.innerHTML = table(
+    ['日期', '時間', '題材', '對象', '文案開頭'],
+    CAL_ROWS.map(r => [
+      `<b>${r.date}</b>`, r.time,
+      `<span class="pill">${r.topic}</span>`,
+      esc(r.subject),
+      `<span class="dim">${esc(r.title.slice(0, 34))}…</span>`,
+    ]));
+}
+
+/**
+ * 匯出 CSV。欄位順序照 Meta Business Suite 大量上傳的格式，
+ * 並且加 BOM —— 沒有 BOM 的話，Excel 開中文會變亂碼。
+ */
+function exportCalendarCsv() {
+  if (!CAL_ROWS.length) return;
+  const esc = v => `"${String(v).replace(/"/g, '""')}"`;
+  const head = ['Date', 'Time', 'Topic', 'Subject', 'Caption', 'Image URL'];
+  const lines = [head.join(',')].concat(
+    CAL_ROWS.map(r => [
+      r.date, r.time, r.topic, r.subject, r.text, postImage({}),
+    ].map(esc).join(',')));
+
+  const blob = new Blob(['﻿' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `tanju-排程-${CAL_ROWS[0].date}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 4000);
 }

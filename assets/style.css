@@ -2626,3 +2626,20 @@ footer{color:var(--ink-soft)}
   border-radius:6px;padding:2px 7px;font-size:.82rem;color:var(--coffee);
 }
 .conn-doc{font-size:.88rem;color:var(--coffee);text-decoration:underline;font-weight:600}
+.conn-acct{font-size:.9rem;color:var(--ink-soft);margin-bottom:10px}
+.conn-acct a{color:var(--coffee);text-decoration:underline;font-weight:600;word-break:break-all}
+.conn-acct.dim{color:var(--taupe-deep)}
+
+/* ---------- 排程表 ---------- */
+.cal-bar{
+  display:flex;gap:14px;align-items:flex-end;flex-wrap:wrap;
+  background:var(--snow);border:1px solid var(--line);
+  border-radius:var(--radius);padding:18px 20px;margin-bottom:18px;
+}
+.cal-bar .fld{flex:0 1 180px}
+.cal-bar label{display:block;font-size:.87rem;color:var(--ink-soft);margin-bottom:6px}
+.cal-bar input,.cal-bar select{
+  width:100%;padding:11px 13px;border:1px solid var(--line);border-radius:10px;
+  background:var(--field-bg,#fff);color:var(--field-ink,var(--ink));font-family:inherit;
+}
+@media(max-width:560px){ .cal-bar .fld{flex:1 1 100%} .cal-bar .btn{width:100%} }

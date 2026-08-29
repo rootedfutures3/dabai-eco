@@ -2288,4 +2288,24 @@ window.LANG_EN = {
   '尚未接後端': 'No backend yet',
   '只能半自動': 'Semi-automatic only',
   '官方文件 →': 'Official docs →',
+
+
+  /* ---------- 排程表與無 API 的替代路徑 ---------- */
+  '排程表 Content Calendar': 'Content calendar',
+  'API 審核期間可以先把一週的貼文排好，匯出成 CSV， 再到 Meta Business Suite 的「規劃工具」一次上傳。 不需要 API、不需要審核，粉專和 IG 可以同時排。': 'While the API is under review you can plan a week of posts here, export them as CSV, and upload them in one go through Meta Business Suite\'s Planner. No API and no review needed, and it schedules the Page and Instagram together.',
+  '從哪天開始': 'Starting from',
+  '排幾天': 'How many days',
+  '7 天': '7 days',
+  '14 天': '14 days',
+  '30 天': '30 days',
+  '產生排程': 'Build calendar',
+  '匯出 CSV': 'Export CSV',
+  '下載配圖': 'Download image',
+  '配圖已下載': 'Image downloaded',
+  '已交給手機的分享面板，選 App 就送出': 'Handed to your phone\'s share sheet — pick an app to post',
+  '已送出分享': 'Shared',
+  '審核中 · 先用半自動': 'Under review · semi-automatic for now',
+  '已開好：': 'Account ready: ',
+  '帳號尚未建立': 'Account not created yet',
+  '文案開頭': 'Caption opening',
 };
