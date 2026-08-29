@@ -220,16 +220,33 @@ async function publish(channel, text, post) {
     const r = await fetch(ep, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ channel, text, topic: post.topic, topicId: post.topicId }),
+      body: JSON.stringify({
+        channel, text,
+        /* IG 規定貼文一定要有圖，純文字發不了。
+           先用網站上那張 Dabai 照片當預設，之後有產品照再換。 */
+        imageUrl: postImage(post),
+        topic: post.topic, topicId: post.topicId,
+        key: (typeof PUBLISH_KEY !== 'undefined' && PUBLISH_KEY) || '',
+      }),
     });
-    if (!r.ok) throw new Error(`代發失敗（${r.status}）`);
     const data = await r.json().catch(() => ({}));
+    if (!r.ok) {
+      /* 把後端的原話帶出來 —— 「代發失敗（502）」對使用者沒有幫助，
+         「Meta API：權限不足」才知道下一步要做什麼。 */
+      throw new Error(data.error || `代發失敗（${r.status}）`);
+    }
     return { mode: 'auto', link: data.link || '' };
   }
 
   await copy(text);
   window.open(CHANNELS[channel].composer(SITE), '_blank', 'noopener');
   return { mode: 'manual', link: '' };
+}
+
+/** 這篇貼文要配哪張圖。之後有產品照，改這裡就好。 */
+function postImage(post) {
+  const base = SITE + 'assets/img/photo/';
+  return base + 'dabai-square.jpg';
 }
 
 async function copy(text) {
@@ -259,6 +276,7 @@ function renderSocial() {
 
   fillSubjects();
   renderPostLog();
+  renderConnections();
 
   const topic = document.getElementById('po-topic');
   if (!topic.dataset.bound) {
@@ -396,4 +414,104 @@ function stamp() {
 
 function esc(s) {
   return String(s).replace(/[&<>"]/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;' }[c]));
+}
+
+/* ============================================================
+   帳號綁定
+   ------------------------------------------------------------
+   這一區告訴你：每個平台現在能不能真的自動發文、還差什麼。
+
+   ⚠️ 這裡「不」收任何金鑰。
+      Facebook 的 Page Access Token、YouTube 的 refresh token —— 這些
+      東西一旦寫進前端，任何人打開原始碼就拿得到，等於把你的粉專
+      交給陌生人。它們必須放在伺服器的環境變數裡。
+
+      所以這一區只做兩件事：顯示狀態、告訴你下一步該做什麼。
+      真正的金鑰在你部署的後端（見 tools/publish-worker.js）。
+   ============================================================ */
+
+const CONN_STEPS = {
+  facebook: {
+    name: 'Facebook 粉絲專頁',
+    needs: [
+      '在 Meta for Developers 建立一個 App',
+      '把粉專加進 App，取得長效的 Page Access Token',
+      '申請 pages_manage_posts 權限並通過 App Review',
+    ],
+    envs: ['FB_PAGE_ID', 'FB_PAGE_TOKEN'],
+    doc: 'https://developers.facebook.com/docs/pages-api/posts',
+  },
+  instagram: {
+    name: 'Instagram 商業帳號',
+    needs: [
+      'IG 帳號要轉成「商業帳號」並連到那個粉專',
+      '用同一個 Meta App 取得 IG Business Account ID',
+      '申請 instagram_content_publish 權限',
+      '注意：IG 發圖文一定要有圖片網址，純文字發不了',
+    ],
+    envs: ['IG_USER_ID', 'FB_PAGE_TOKEN'],
+    doc: 'https://developers.facebook.com/docs/instagram-api/guides/content-publishing',
+  },
+  youtube: {
+    name: 'YouTube 社群貼文',
+    needs: [
+      '在 Google Cloud Console 建立 OAuth 用戶端',
+      '用你的頻道授權一次，換到 refresh token',
+      '社群貼文 API 目前只開放部分頻道，影片上傳則是公開的',
+    ],
+    envs: ['YT_CLIENT_ID', 'YT_CLIENT_SECRET', 'YT_REFRESH_TOKEN'],
+    doc: 'https://developers.google.com/youtube/v3/docs',
+  },
+  rednote: {
+    name: '小紅書',
+    needs: [
+      '目前沒有公開的發文 API',
+      '只能用「複製文案 + 開啟發文視窗」的半自動方式',
+      '若之後開放，補上 XHS_TOKEN 即可',
+    ],
+    envs: [],
+    doc: '',
+    manualOnly: true,
+  },
+};
+
+function renderConnections() {
+  const box = document.getElementById('conn-grid');
+  if (!box) return;
+
+  const ep = (typeof PUBLISH_ENDPOINT !== 'undefined' && PUBLISH_ENDPOINT) || '';
+  const note = document.getElementById('conn-note');
+
+  box.innerHTML = Object.entries(CONN_STEPS).map(([key, c]) => {
+    const ch = CHANNELS[key];
+    /* 有後端就「可能」自動；沒後端一定是半自動。
+       這裡不假裝知道後端有沒有設好那把金鑰 —— 那要問後端才知道。 */
+    const state = c.manualOnly ? 'manual' : (ep ? 'ready' : 'pending');
+    const label = { ready:'後端已設定', pending:'尚未接後端', manual:'只能半自動' }[state];
+
+    return `
+      <div class="conn ${state}">
+        <div class="conn-top">
+          <b>${ch.icon} ${c.name}</b>
+          <span class="conn-badge ${state}">${label}</span>
+        </div>
+        <ol class="conn-steps">
+          ${c.needs.map(n => `<li>${n}</li>`).join('')}
+        </ol>
+        ${c.envs.length
+          ? `<p class="conn-env">後端環境變數：${c.envs.map(e => `<code>${e}</code>`).join('　')}</p>`
+          : ''}
+        ${c.doc ? `<a class="conn-doc" href="${c.doc}" target="_blank" rel="noopener">官方文件 →</a>` : ''}
+      </div>`;
+  }).join('');
+
+  note.innerHTML = ep
+    ? `目前的發布後端：<code>${ep}</code>。
+       按「一鍵發布」會把文案送到那裡，由後端拿著金鑰去呼叫各平台的 API。`
+    : `<b>還沒有接後端，所以現在是半自動</b>：按「一鍵發布」會複製文案並開啟該平台的發文視窗。
+       <br><br>
+       要變成真的自動發文，把 <code>tools/publish-worker.js</code> 部署到
+       Cloudflare Workers（免費方案就夠），把金鑰設成環境變數，
+       再把網址填進 <code>assets/config.js</code> 的 <code>PUBLISH_ENDPOINT</code>。
+       金鑰全程留在伺服器，不會進到這個網站的原始碼。`;
 }
