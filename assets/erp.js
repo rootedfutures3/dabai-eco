@@ -420,11 +420,17 @@ function showMe() {
   const avEl   = document.getElementById('side-avatar');
   const outBtn = document.getElementById('logout');
 
+  /* 只換按鈕裡的文字標籤 —— 直接寫 textContent 會把圖示那個 span 一起吃掉 */
+  const setLabel = t => {
+    const el = outBtn.querySelector('.signout-label');
+    if (el) el.textContent = t; else outBtn.textContent = t;
+  };
+
   if (me) {
     nameEl.textContent = me.name || me.u;
     roleEl.textContent = { admin:'平台管理員', farmer:'果農', buyer:'收購商' }[me.role] || me.role;
     avEl.textContent = (me.name || me.u).trim().charAt(0).toUpperCase();
-    outBtn.textContent = '登出';
+    setLabel('登出');
     outBtn.onclick = () => {
       sessionStorage.removeItem('rf_app_session');
       if (typeof Auth !== 'undefined' && Auth.on) Auth.signOut();
@@ -434,7 +440,7 @@ function showMe() {
     nameEl.textContent = '訪客';
     roleEl.textContent = '未登入';
     avEl.textContent = '·';
-    outBtn.textContent = '登入';
+    setLabel('登入');
     outBtn.onclick = () => { location.href = 'app.html'; };
   }
 }

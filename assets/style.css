@@ -2328,3 +2328,69 @@ nav.admin-top .nav-cta{background:var(--gold);color:var(--black)}
 /* 頁尾文字加深 */
 footer{color:var(--ink-soft)}
 .foot-links a{color:var(--ink-soft)}
+
+/* ---------- 溝通者平台的登入前畫面 ---------- */
+.coord-gate{max-width:520px;text-align:left}
+.coord-gate img{margin:0 auto 14px;display:block}
+.coord-gate h1,.coord-gate .sub{text-align:center}
+.gate-lead{
+  font-size:1rem;line-height:1.8;color:var(--ink-soft);
+  margin:18px 0 22px;text-align:center;
+}
+.gate-jobs{list-style:none;display:grid;gap:14px;margin:0 0 20px}
+.gate-jobs li{
+  display:flex;gap:14px;align-items:flex-start;
+  background:var(--almond-soft);border:1px solid var(--line);
+  border-radius:14px;padding:15px 17px;
+}
+.gj-ico{
+  flex:0 0 auto;width:34px;height:34px;border-radius:10px;
+  background:var(--snow);border:1px solid var(--line);
+  display:flex;align-items:center;justify-content:center;font-size:1.05rem;
+}
+.gate-jobs b{display:block;font-size:.99rem;color:var(--ink);margin-bottom:3px}
+.gate-jobs span:not(.gj-ico){display:block;font-size:.9rem;color:var(--ink-soft);line-height:1.65}
+.gate-note{
+  font-size:.94rem;line-height:1.7;color:var(--ink-soft);
+  background:rgba(198,165,68,.12);border-left:3px solid var(--gold);
+  border-radius:10px;padding:14px 16px;margin-bottom:18px;
+}
+.gate-note b{color:var(--coffee)}
+.gate-actions{justify-content:center;margin-bottom:18px}
+.gate-offline{
+  font-size:.87rem;line-height:1.7;color:var(--taupe-deep);
+  text-align:center;padding-top:16px;border-top:1px solid var(--line);
+}
+
+/* ---------- 登出按鈕 ---------- */
+/* 原本是一行灰色小字，太容易被當成說明文字而看不見。
+   改成有邊框的按鈕，明確是可以按的東西。 */
+.btn-signout{
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  padding:9px 18px;border-radius:99px;cursor:pointer;
+  background:var(--snow);border:1px solid var(--line);
+  color:var(--ink);font-family:inherit;font-size:.92rem;font-weight:600;
+  white-space:nowrap;transition:.16s;
+  box-shadow:0 1px 2px rgba(54,36,23,.06);
+}
+.btn-signout:hover{
+  border-color:var(--red);color:var(--red);
+  box-shadow:0 2px 8px rgba(148,44,44,.14);
+}
+.btn-signout:focus-visible{outline:2px solid var(--coffee);outline-offset:2px}
+.btn-signout span{font-size:1rem;line-height:1}
+
+/* 側邊欄裡的那顆，寬度撐滿比較好按 */
+.btn-signout.side{
+  width:calc(100% - 40px);margin:4px 20px 6px;
+  background:rgba(54,36,23,.05);
+}
+.btn-signout.side:hover{background:rgba(148,44,44,.08)}
+
+/* 側邊欄是 column flex 且高度固定 100vh；內容一超過就會把子元素壓扁
+   （登出按鈕的 padding 明明有，高度卻只剩 20px）。
+   只針對會被壓到的那顆按鈕鎖住高度，不要動整排子元素 ——
+   .side > * 一次全設會讓按鈕反而被撐成整個視窗高。 */
+/* flex-basis:auto 在這裡會被解成「可用高度」，按鈕整個被撐成一整欄。
+   改用 content，讓它照內容決定高度。 */
+.btn-signout.side{flex:0 0 content;height:fit-content}
