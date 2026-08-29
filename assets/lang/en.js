@@ -2255,4 +2255,8 @@ window.LANG_EN = {
   '我的果樹、樹況回報與採收標籤': 'My trees, tree reports and harvest labels',
   '訂單、果樹、客戶、佣金與帳號權限': 'Orders, trees, customers, commission and user roles',
   '選一個要進去的平台：': 'Choose a platform to open:',
+  '這是現場用的平台。樹況不會自己上傳 —— 溝通者下田回報，果農也在這裡看自己的樹、記下發生的事。 送出的每一筆都直接寫進資料庫，後台立刻看得到。': 'This is the platform for the field. A tree\'s condition will not upload itself — coordinators report from the orchard, and growers use it to check their own trees and record what happens. Everything submitted goes straight into the database, where the back office sees it immediately.',
+  '今日派工單 · 我的果樹': 'Today\'s work orders · My trees',
+  '溝通者看顧問排好的行程；果農看自己名下那幾棵樹的狀況。': 'Coordinators see the route the advisor set; growers see the condition of the trees in their own name.',
+  '要先用平台帳號登入。溝通者、果農，以及需要看現場狀況的管理端角色都進得來。': 'You need to sign in with a platform account first. Coordinators, growers, and the management roles that need to see what is happening in the field can all get in.',
 };

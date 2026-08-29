@@ -2256,4 +2256,8 @@ window.LANG_MS = {
   '我的果樹、樹況回報與採收標籤': 'Pokok saya, laporan pokok dan label tuaian',
   '訂單、果樹、客戶、佣金與帳號權限': 'Pesanan, pokok, pelanggan, komisen dan peranan pengguna',
   '選一個要進去的平台：': 'Pilih platform untuk dibuka:',
+  '這是現場用的平台。樹況不會自己上傳 —— 溝通者下田回報，果農也在這裡看自己的樹、記下發生的事。 送出的每一筆都直接寫進資料庫，後台立刻看得到。': 'Ini platform untuk lapangan. Keadaan pokok tidak akan dimuat naik dengan sendirinya — penyelaras melapor dari dusun, dan petani menggunakannya untuk menyemak pokok mereka sendiri serta mencatat apa yang berlaku. Semua yang dihantar terus masuk ke pangkalan data, dan pejabat belakang melihatnya serta-merta.',
+  '今日派工單 · 我的果樹': 'Arahan kerja hari ini · Pokok saya',
+  '溝通者看顧問排好的行程；果農看自己名下那幾棵樹的狀況。': 'Penyelaras melihat laluan yang ditetapkan penasihat; petani melihat keadaan pokok atas nama mereka sendiri.',
+  '要先用平台帳號登入。溝通者、果農，以及需要看現場狀況的管理端角色都進得來。': 'Anda perlu log masuk dengan akaun platform dahulu. Penyelaras, petani, dan peranan pengurusan yang perlu melihat keadaan di lapangan semuanya boleh masuk.',
 };
