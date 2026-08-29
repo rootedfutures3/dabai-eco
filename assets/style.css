@@ -2519,3 +2519,27 @@ footer{color:var(--ink-soft)}
 
 /* 裝飾箭頭 */
 .arrows{color:var(--coffee)}
+
+/* --- 登入頁的品牌側也改成淺色 --- */
+.auth-brand{
+  background:
+    radial-gradient(760px 520px at 74% 12%, rgba(198,165,68,.26), transparent 62%),
+    radial-gradient(620px 460px at 12% 88%, rgba(148,44,44,.10), transparent 64%),
+    linear-gradient(155deg, #FFFDF8 0%, var(--cream-dim) 58%, #EFE4CE 100%);
+  color:var(--ink);
+  border-right:1px solid var(--line);
+}
+.auth-back{color:var(--ink-soft)}
+.auth-back:hover{color:var(--coffee)}
+/* 標誌在淺底不需要襯圈，陰影也要收斂 */
+.auth-brand-in img{
+  background:none;box-shadow:none;padding:0;border-radius:0;
+  filter:drop-shadow(0 16px 34px rgba(54,36,23,.22));
+}
+.auth-brand-in h1{color:var(--ink)}
+.auth-brand-in p{color:var(--ink-soft)}
+.auth-points b{color:var(--coffee)}
+.auth-points span{color:var(--ink-soft)}
+/* 背景的光暈與飄浮粒子在淺底上要淡下來，否則像髒點 */
+.orbs i{opacity:.10}
+.drift i{opacity:.12}

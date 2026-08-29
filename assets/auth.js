@@ -189,12 +189,9 @@ function applyAuthMode() {
     cred.innerHTML =
       '🔐 <b>已啟用 Supabase Auth</b> —— 用你的 Email 與密碼登入。'
       + '密碼由伺服器加鹽雜湊保管，權限由資料庫強制執行。';
-    const banner = document.querySelector('.sim-note');
-    if (banner) {
-      banner.innerHTML =
-        '🔐 <b>正式登入模式</b> —— 這是真正的帳號系統，密碼不會以明文儲存。'
-        + '忘記密碼請聯絡管理員重設。';
-    }
+    /* 正式模式下密碼有雜湊保護，那句「明文儲存」的提醒就不該再出現 */
+    const hint = $('pass-hint');
+    if (hint.style) hint.textContent = '密碼由伺服器加鹽雜湊保管。忘記密碼請聯絡管理員重設。';
   }
   if (typeof I18N !== 'undefined') I18N.refresh(document.querySelector('.auth-card'));
 }

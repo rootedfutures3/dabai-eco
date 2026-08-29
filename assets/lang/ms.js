@@ -2260,4 +2260,8 @@ window.LANG_MS = {
   '今日派工單 · 我的果樹': 'Arahan kerja hari ini · Pokok saya',
   '溝通者看顧問排好的行程；果農看自己名下那幾棵樹的狀況。': 'Penyelaras melihat laluan yang ditetapkan penasihat; petani melihat keadaan pokok atas nama mereka sendiri.',
   '要先用平台帳號登入。溝通者、果農，以及需要看現場狀況的管理端角色都進得來。': 'Anda perlu log masuk dengan akaun platform dahulu. Penyelaras, petani, dan peranan pengurusan yang perlu melihat keadaan di lapangan semuanya boleh masuk.',
+  '你的密碼': 'Kata laluan anda',
+  '你的帳號': 'Nama pengguna anda',
+  '示範階段的密碼是明文儲存的，請不要用你其他網站的真實密碼。': 'Dalam fasa demo ini kata laluan disimpan sebagai teks biasa — sila jangan guna semula kata laluan sebenar dari laman lain.',
+  '密碼由伺服器加鹽雜湊保管。忘記密碼請聯絡管理員重設。': 'Kata laluan digaram dan dicincang di pelayan. Jika anda terlupa, minta pentadbir menetapkannya semula.',
 };

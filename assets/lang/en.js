@@ -2259,4 +2259,8 @@ window.LANG_EN = {
   '今日派工單 · 我的果樹': 'Today\'s work orders · My trees',
   '溝通者看顧問排好的行程；果農看自己名下那幾棵樹的狀況。': 'Coordinators see the route the advisor set; growers see the condition of the trees in their own name.',
   '要先用平台帳號登入。溝通者、果農，以及需要看現場狀況的管理端角色都進得來。': 'You need to sign in with a platform account first. Coordinators, growers, and the management roles that need to see what is happening in the field can all get in.',
+  '你的密碼': 'Your password',
+  '你的帳號': 'Your username',
+  '示範階段的密碼是明文儲存的，請不要用你其他網站的真實密碼。': 'In this demo phase passwords are stored in plain text — please do not reuse a real password from another site.',
+  '密碼由伺服器加鹽雜湊保管。忘記密碼請聯絡管理員重設。': 'Passwords are salted and hashed on the server. If you forget yours, ask an administrator to reset it.',
 };
