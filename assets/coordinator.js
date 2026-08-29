@@ -13,8 +13,30 @@
 const SESSION_KEY = 'rf_app_session';   // 和整個平台共用同一個登入
 const QUEUE_KEY = 'rf_report_queue';
 
-/* 誰能進溝通者平台。管理端也放行 —— 他們需要看得到現場在做什麼。 */
-const COORD_ROLES = ['coord', 'super', 'admin', 'editor'];
+/* 誰能進溝通者平台。
+   TANJU Portal 是獨立的管理後台，只有管理端進得去；
+   溝通者與果農都在這個平台工作 —— 現場的人用手機，
+   不會也不需要去碰後台。兩邊靠同一個資料庫連動：
+   這裡送出的回報，後台的「樹況回報」立刻看得到。 */
+const COORD_ROLES = ['coord', 'farmer', 'super', 'admin', 'editor'];
+
+/* 果農只看得到自己的樹，溝通者與管理端看得到全部。 */
+let ME = null;
+
+/** 這個使用者在這個平台上「看得到」的樹。 */
+function myTrees() {
+  const all = Store.treeList().filter(t => t.crop === 'dabai');
+  if (!ME || ME.perm !== 'farmer') return all;
+  const name = (ME.name || '').trim();
+  const org  = (ME.org  || '').trim();
+  return all.filter(t =>
+    t.owner === ME.u ||
+    (name && String(t.farmer  || '').includes(name)) ||
+    (org  && String(t.orchard || '').includes(org)));
+}
+
+/** 果農看到的是「我的果園」，溝通者看到的是「今日派工」。 */
+function isFarmer() { return ME && ME.perm === 'farmer'; }
 
 Store.onReady(() => {
   if (!document.getElementById('signin')) return;
@@ -42,6 +64,11 @@ Store.onReady(() => {
   const perm  = user && (user.perm || (user.role === 'admin' ? 'super' : user.role));
 
   if (user && COORD_ROLES.includes(perm)) {
+    ME = { ...user, perm };
+    const roleEl = document.getElementById('who-role');
+    if (roleEl) {
+      roleEl.textContent = { farmer:'果農', coord:'現場溝通者' }[perm] || '管理端';
+    }
     enter(user.name || user.u);
   } else {
     const err  = document.getElementById('login-err');
@@ -86,7 +113,9 @@ Store.onReady(() => {
     const report = {
       at: stamp(),
       treeId: f.treeId.value,
-      by: '溝通者 · ' + document.getElementById('who-label').textContent,
+      /* 果農自己回報時要標明是果農，後台才分得出來源 */
+      by: (isFarmer() ? '果農 · ' : '溝通者 · ')
+          + document.getElementById('who-label').textContent,
       stage: f.stage.value,
       health: f.health.value,
       note: f.note.value.trim(),
@@ -95,7 +124,9 @@ Store.onReady(() => {
 
     if (navigator.onLine) {
       Store.addReport(report);
-      note(`✅ 已儲存並同步：${report.treeId}`);
+      /* 讓人知道兩邊是連動的 —— 這裡送出去，後台立刻看得到，
+         而不是存在某個誰也看不到的地方。 */
+      note(`✅ ${report.treeId} 已儲存並同步 —— TANJU Portal 的「樹況回報」現在就看得到這一筆。`);
     } else {
       queuePush(report);
       note(`📥 目前離線，已存入本機佇列（${queueRead().length} 筆待同步）。回到有訊號的地方會自動送出。`);
@@ -137,7 +168,7 @@ function flushQueue() {
 }
 
 function fillTreeSelects() {
-  const opts = Store.treeList().filter(t => t.crop === 'dabai').map(t =>
+  const opts = myTrees().map(t =>
     `<option value="${t.id}">${t.id} · ${CROP_NAME[t.crop]}（${t.orchard}）</option>`).join('');
   document.getElementById('r-tree').innerHTML = opts;
   document.getElementById('l-tree').innerHTML = opts;
@@ -145,12 +176,43 @@ function fillTreeSelects() {
 
 /* ---------- 派工單 ---------- */
 function renderJobs() {
+  const box = document.getElementById('jobs');
+  const title = document.getElementById('jobs-title');
+
+  /* 果農沒有派工單 —— 他要看的是自己的樹現在什麼狀況。 */
+  if (isFarmer()) {
+    if (title) title.textContent = '我的果樹';
+    const mine = myTrees();
+    const reports = Store.read().reports || [];
+    box.innerHTML = mine.length ? mine.map(t => {
+      const last = reports.filter(r => r.treeId === t.id).slice(-1)[0];
+      return `
+        <div class="job">
+          <div class="job-top">
+            <span class="pill">${t.id}</span>
+            <span class="job-due">${t.age} 年生 · 預估 ${t.kg} kg</span>
+          </div>
+          <b>${t.orchard}</b>
+          <span class="dim">📍 ${t.area}</span>
+          ${last
+            ? `<span class="dim">最近一次回報：${last.at} · ${last.stage} · ${last.health}</span>`
+            : '<span class="dim">還沒有回報紀錄</span>'}
+        </div>`;
+    }).join('') : `
+      <div class="no-result">
+        系統裡還沒有掛在你名下的果樹。<br>
+        請聯絡平台管理員把你的果園建檔並掛上 Tree ID。
+      </div>`;
+    return;
+  }
+
+  if (title) title.textContent = '今日派工單';
   const jobs = [
-    { id:'WO-0312', area:'Song 支流果園',      task:'開花期巡檢 + 追肥確認', trees:'DB-009, DB-010, RB-007, RB-008', due:'今日 12:00' },
-    { id:'WO-0313', area:'Sibu 近郊示範園',    task:'幼果疏果與過磅',        trees:'DR-011, DR-012, RB-009',         due:'今日 16:00' },
-    { id:'WO-0314', area:'Rumah Panjai 上游',  task:'認養樹掛牌 + 拍照存證',  trees:'DB-001, DB-002, DB-003',         due:'明日 09:00' },
+    { id:'WO-0312', area:'Song 支流果園',      task:'開花期巡檢 + 追肥確認', trees:'DB-009, DB-010', due:'今日 12:00' },
+    { id:'WO-0313', area:'Sibu 近郊示範園',    task:'幼果疏果與過磅',        trees:'DB-015, DB-016', due:'今日 16:00' },
+    { id:'WO-0314', area:'Rumah Panjai 上游',  task:'認養樹掛牌 + 拍照存證',  trees:'DB-001, DB-002, DB-003', due:'明日 09:00' },
   ];
-  document.getElementById('jobs').innerHTML = jobs.map(j => `
+  box.innerHTML = jobs.map(j => `
     <div class="job">
       <div class="job-top">
         <span class="pill">${j.id}</span>
@@ -165,7 +227,12 @@ function renderJobs() {
 /* ---------- 我的回報 ---------- */
 function renderMyReports() {
   const who = document.getElementById('who-label').textContent;
-  const mine = Store.read().reports.filter(r => r.by.includes(who)).slice(0, 8);
+  const ids = new Set(myTrees().map(t => t.id));
+  /* 溝通者看自己送的；果農看自己那些樹上的所有回報
+     —— 對果農來說，誰去回報的不重要，重要的是他的樹怎麼了。 */
+  const mine = (Store.read().reports || [])
+    .filter(r => isFarmer() ? ids.has(r.treeId) : String(r.by || '').includes(who))
+    .slice(-8).reverse();
   const pend = queueRead();
   const box = document.getElementById('my-reports');
 
@@ -187,7 +254,7 @@ function renderMyReports() {
 
 /* ---------- 採收標籤 ---------- */
 function renderLabel() {
-  const t = Store.treeList().filter(t => t.crop === 'dabai').find(x => x.id === document.getElementById('l-tree').value);
+  const t = myTrees().find(x => x.id === document.getElementById('l-tree').value);
   if (!t) return;
   const basket = document.getElementById('l-basket').value || 'B-01';
   document.getElementById('label').innerHTML = `

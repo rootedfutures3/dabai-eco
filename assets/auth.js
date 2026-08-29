@@ -236,14 +236,15 @@ function showAlreadySignedIn(username) {
        溝通者平台   —— 現場用，派工、樹況回報、採收標籤
      溝通者進不了 TANJU Portal，所以按角色只給他真正能進的入口。 */
   const portal = ['super', 'admin', 'finance', 'editor'].includes(perm);
-  const isCoord = perm === 'coord';
+  const onField = perm === 'coord' || perm === 'farmer';
 
   const doors = [];
   if (portal) {
     doors.push(['erp.html', 'TANJU Portal', '訂單、果樹、客戶、佣金與帳號權限', true]);
     doors.push(['coordinator.html', '溝通者平台', '現場派工、樹況回報與採收標籤', false]);
-  } else if (isCoord) {
-    doors.push(['coordinator.html', '溝通者平台', '現場派工、樹況回報與採收標籤', true]);
+  } else if (onField) {
+    doors.push(['coordinator.html', '溝通者平台',
+      perm === 'farmer' ? '我的果樹、樹況回報與採收標籤' : '現場派工、樹況回報與採收標籤', true]);
   } else {
     doors.push(['dashboard.html', '進入我的後台', '', true]);
   }

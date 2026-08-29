@@ -70,7 +70,10 @@ const PERMS = {
     can: ['field.report', 'view.trees'],
     home: 'coordinator.html',
   },
-  farmer: { label: '果農',   en: 'Farmer', can: ['view.trees'], home: 'dashboard.html' },
+  /* 果農也在溝通者平台工作 —— 現場的人用手機，不會去碰後台。
+     他只看得到掛在自己名下的樹（見 coordinator.js 的 myTrees）。 */
+  farmer: { label: '果農',   en: 'Farmer', can: ['view.trees', 'field.report'],
+            home: 'coordinator.html' },
   buyer:  { label: '收購商', en: 'Buyer',  can: ['view.trees'], home: 'dashboard.html' },
 };
 

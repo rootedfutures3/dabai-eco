@@ -44,6 +44,15 @@ Store.onReady(() => {
   const user = saved ? Store.read().users.find(x => x.u === saved) : null;
   if (!user) { location.replace('app.html'); return; }
 
+  /* 果農在溝通者平台工作，不走這一頁。
+     TANJU Portal 是獨立的管理後台，只有管理端進得去；
+     兩邊靠同一個資料庫連動。 */
+  const myPerm = user.perm || (user.role === 'admin' ? 'super' : user.role);
+  if (myPerm === 'farmer' || myPerm === 'coord') {
+    location.replace('coordinator.html');
+    return;
+  }
+
 
   document.getElementById('logout').addEventListener('click', () => {
     sessionStorage.removeItem(SESSION);

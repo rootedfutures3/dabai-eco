@@ -2394,3 +2394,128 @@ footer{color:var(--ink-soft)}
 /* flex-basis:auto 在這裡會被解成「可用高度」，按鈕整個被撐成一整欄。
    改用 content，讓它照內容決定高度。 */
 .btn-signout.side{flex:0 0 content;height:fit-content}
+
+/* ============================================================
+   手機優先的觸控調整
+   ------------------------------------------------------------
+   溝通者與果農都是在果園裡用手機操作 —— 站著、單手、可能還戴著手套。
+   把可點的東西放大到至少 44px（Apple 與 Google 的建議值），
+   並讓表單欄位夠大、字夠清楚。
+   ============================================================ */
+@media(max-width:760px){
+  /* 導覽列的可點目標 */
+  .nav-toggle{
+    min-width:44px;min-height:44px;
+    display:inline-flex;align-items:center;justify-content:center;
+    font-size:1.4rem;
+  }
+  .lang-toggle{min-height:44px;padding:8px 14px}
+  .lang-btn{min-height:44px;display:flex;align-items:center}
+  nav .logo img{width:38px;height:38px}
+  .nav-links a{
+    display:flex;align-items:center;min-height:46px;
+    padding:0 4px;font-size:1.02rem;
+  }
+  nav .nav-cta{min-height:44px;display:inline-flex;align-items:center}
+
+  /* 登出 */
+  .btn-signout{min-height:44px;padding:11px 20px}
+
+  /* 表單：欄位要好按、字要看得清楚 */
+  input, select, textarea{
+    min-height:48px;font-size:1.02rem;padding:13px 15px;
+  }
+  textarea{min-height:110px}
+  label{font-size:.95rem;margin-bottom:8px}
+  button[type="submit"], .btn{min-height:48px;font-size:1.02rem}
+
+  /* 溝通者平台：卡片與清單放鬆一點，手指才點得準 */
+  .job{padding:16px 18px}
+  .job-trees .pill{min-height:32px;display:inline-flex;align-items:center;padding:0 12px}
+  .rep{padding:16px 18px}
+
+  /* 分頁與側邊選單 */
+  .tab{min-height:44px;display:inline-flex;align-items:center}
+  .side-item{min-height:50px}
+  .mini-btn{min-height:40px;padding:8px 14px}
+
+  /* 頁尾連結 */
+  .foot-links a{display:inline-flex;align-items:center;min-height:40px}
+}
+
+/* 很窄的螢幕：把並排的欄位改成單欄，不要擠成一團 */
+@media(max-width:480px){
+  .form-row{grid-template-columns:1fr}
+  .btn-row{flex-direction:column;align-items:stretch}
+  .btn-row .btn{width:100%;text-align:center;justify-content:center}
+  .gate-actions .btn{width:100%}
+  .job-top{flex-wrap:wrap}
+}
+
+/* --- 導覽選單抽屜也要跟著淺色 --- */
+/* 抽屜原本是近黑底配白字。全站改淺色之後文字變成深色，
+   底色沒跟著改的話，展開選單就是一片看不見的黑。 */
+@media(max-width:1400px){
+  nav .nav-links{
+    background:rgba(255,253,248,.98);
+    border-top:1px solid var(--line);
+    box-shadow:0 12px 28px rgba(54,36,23,.14);
+  }
+  nav .nav-links a{
+    border-top:1px solid var(--line);
+    color:var(--ink);
+  }
+  nav .nav-links a:first-child{border-top:none}
+  nav .nav-links a:hover,
+  nav .nav-links a.active{background:var(--almond-soft);color:var(--coffee)}
+}
+
+/* 登入頁右上角的語言鈕：底色原本是半透明黑 */
+.auth-page .lang-toggle{
+  background:rgba(255,253,248,.9);border:1px solid var(--line);color:var(--ink);
+}
+
+/* 裝飾用的箭頭在淺底上太淡 */
+.arrows, .split-arrow{color:var(--coffee)}
+
+/* 900px 以下還有另一組同樣的抽屜規則（早期寫的），一併處理 */
+@media(max-width:900px){
+  .nav-links{
+    background:rgba(255,253,248,.98);
+    border-top:1px solid var(--line);
+    box-shadow:0 12px 28px rgba(54,36,23,.14);
+  }
+  .nav-links a{border-top:1px solid var(--line);color:var(--ink)}
+  .nav-links a:first-child{border-top:none}
+}
+
+/* --- 彈窗內的步驟指示與細節字（淺底版本）--- */
+.step{
+  background:var(--almond-soft);color:var(--ink-soft);
+  border:1px solid var(--line);
+}
+.step.on{background:var(--coffee);color:var(--almond);border-color:var(--coffee)}
+.modal em{color:var(--ink-soft);font-style:normal}
+.modal b{color:var(--coffee)}
+.modal .dim{color:var(--taupe-deep)}
+.modal span{color:inherit}
+.howto-arrow{color:var(--coffee)}
+.modal-price{color:var(--coffee)}
+
+/* --- 果園卡片的標題帶：改成淺色 --- */
+.orchard-top{color:var(--ink)}
+.orchard-top.dabai,
+.orchard-top.durian{
+  background:linear-gradient(135deg, var(--cream-dim), #EFE4CE);
+  border-bottom:1px solid var(--line);
+}
+.orchard-top h3{color:var(--ink)}
+.orchard-top .loc{color:var(--ink-soft);opacity:1}
+.orchard-top .crop{color:var(--coffee);opacity:1}
+
+/* 彈窗與登入頁的「返回」：原本是深底用的淺灰字 */
+.btn-back{color:var(--ink-soft)}
+.btn-back:hover{color:var(--coffee)}
+
+/* 裝飾箭頭 */
+.arrows{color:var(--coffee)}
