@@ -52,6 +52,8 @@ Store.onReady(() => {
     renderJobs();
     renderMyReports();
     renderLabel();
+    renderFieldStats();
+    renderDue();
     flushQueue();
   };
 
@@ -135,6 +137,9 @@ Store.onReady(() => {
     f.reset();
     document.getElementById('thumbs').innerHTML = '';
     renderMyReports();
+    renderFieldStats();
+    renderDue();
+    renderJobs();
   });
 
   /* ---- 標籤 ---- */
@@ -273,4 +278,123 @@ function renderLabel() {
       </div>
       <div class="label-foot">Song, Sarawak · 一樹一碼追溯</div>
     </div>`;
+}
+
+/* ============================================================
+   現場數字與「該去看看了」
+   ------------------------------------------------------------
+   站在果園裡最想知道的三件事：
+     今天做了多少、有沒有東西還沒送出去、哪幾棵樹太久沒去了。
+   所以這裡不放圖表，只放能立刻回答這三件事的數字，
+   而且每一張都可以點 —— 點下去直接跳到對應的地方。
+   ============================================================ */
+
+/** 兩個日期字串差幾天。抓不到日期就回傳 null。 */
+function daysSince(at) {
+  if (!at) return null;
+  const d = new Date(String(at).replace(' ', 'T'));
+  if (isNaN(d)) return null;
+  return Math.floor((Date.now() - d.getTime()) / 86400000);
+}
+
+function renderFieldStats() {
+  const box = document.getElementById('field-stats');
+  if (!box) return;
+
+  const who     = document.getElementById('who-label').textContent;
+  const trees   = myTrees();
+  const ids     = new Set(trees.map(t => t.id));
+  const reports = (Store.read().reports || []).filter(r => ids.has(r.treeId));
+  const today   = stamp().slice(0, 10);
+
+  const mineToday = reports.filter(r =>
+    String(r.at).startsWith(today) &&
+    (isFarmer() || String(r.by || '').includes(who))).length;
+  const week = reports.filter(r => {
+    const d = daysSince(r.at); return d !== null && d <= 7;
+  }).length;
+  const pending = queueRead().length;
+  const attention = reports.filter(r => r.health && r.health !== '良好')
+    .map(r => r.treeId);
+  const attentionCount = new Set(attention).size;
+
+  const card = (k, v, s, tone, go) => `
+    <button class="fs" data-go="${go}" type="button">
+      <span class="fs-k">${k}</span>
+      <b class="fs-v ${tone || ''}">${v}</b>
+      <span class="fs-s">${s}</span>
+    </button>`;
+
+  box.innerHTML =
+      card(isFarmer() ? '我的果樹' : '負責的樹', trees.length + ' 棵',
+           '點一下看清單', '', 'jobs')
+    + card('今天已回報', mineToday + ' 筆', '本週 ' + week + ' 筆', '', 'report-form')
+    + card('待同步', pending + ' 筆',
+           pending ? '回到有訊號會自動送出' : '都送出去了',
+           pending ? 'warn' : 'ok', 'my-reports')
+    + card('需要注意', attentionCount + ' 棵',
+           attentionCount ? '樹況不是「良好」' : '目前都正常',
+           attentionCount ? 'warn' : 'ok', 'due-block');
+
+  box.querySelectorAll('[data-go]').forEach(b =>
+    b.addEventListener('click', () => {
+      const el = document.getElementById(b.dataset.go);
+      if (el && !el.hidden) el.scrollIntoView({ behavior:'smooth', block:'start' });
+    }));
+}
+
+/**
+ * 哪幾棵樹太久沒去了。
+ * 產季期間顧問建議至少每兩週看一次，所以超過 14 天就列出來。
+ */
+const DUE_DAYS = 14;
+
+function renderDue() {
+  const block = document.getElementById('due-block');
+  const list  = document.getElementById('due-list');
+  const note  = document.getElementById('due-note');
+  if (!block) return;
+
+  const reports = Store.read().reports || [];
+  const rows = myTrees().map(t => {
+    const last = reports.filter(r => r.treeId === t.id)
+      .sort((a, b) => String(a.at).localeCompare(String(b.at))).slice(-1)[0];
+    return { t, last, days: last ? daysSince(last.at) : null };
+  }).filter(r => r.days === null || r.days >= DUE_DAYS)
+    .sort((a, b) => (b.days ?? 9999) - (a.days ?? 9999));
+
+  if (!rows.length) {
+    block.hidden = true;
+    return;
+  }
+  block.hidden = false;
+
+  /* 手機上一次列 28 筆等於沒列。只顯示最久沒去的幾棵，
+     剩下的用一句話交代，不要假裝清單只有這麼短。 */
+  const SHOW = 6;
+  const shown = rows.slice(0, SHOW);
+  const rest  = rows.length - shown.length;
+  note.textContent = rest > 0
+    ? `這 ${rows.length} 棵超過 ${DUE_DAYS} 天沒有回報了，先列最久沒去的 ${SHOW} 棵（還有 ${rest} 棵）。點一下直接帶進下面的回報表單。`
+    : `這 ${rows.length} 棵超過 ${DUE_DAYS} 天沒有回報了。點一下直接帶進下面的回報表單。`;
+
+  list.innerHTML = shown.map(({ t, last, days }) => `
+    <button class="due" data-tree="${t.id}" type="button">
+      <span class="due-id">${t.id}</span>
+      <span class="due-mid">
+        <b>${t.orchard}</b>
+        <span>${days === null ? '還沒有任何回報' : `上次回報是 ${days} 天前`}</span>
+      </span>
+      <span class="due-go" aria-hidden="true">→</span>
+    </button>`).join('');
+
+  /* 點一下就把樹帶進表單並捲過去 —— 站在樹下用手機，少一次選單就少一次出錯 */
+  list.querySelectorAll('[data-tree]').forEach(b =>
+    b.addEventListener('click', () => {
+      const sel = document.getElementById('r-tree');
+      sel.value = b.dataset.tree;
+      sel.dispatchEvent(new Event('change'));
+      document.getElementById('report-form').scrollIntoView({ behavior:'smooth', block:'center' });
+      document.getElementById('r-note').focus({ preventScroll:true });
+    }));
 }
