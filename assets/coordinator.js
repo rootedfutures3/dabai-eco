@@ -61,16 +61,11 @@ Store.onReady(() => {
   });
 
   /* ---- 連線狀態 ---- */
-  const net = document.getElementById('net');
-  const syncNet = () => {
-    const on = navigator.onLine;
-    net.textContent = on ? '● 已連線' : '● 離線作業中';
-    net.classList.toggle('off', !on);
-    if (on) flushQueue();
-  };
-  window.addEventListener('online', syncNet);
-  window.addEventListener('offline', syncNet);
-  syncNet();
+  /* 連線狀態的標示已經拿掉了 —— 畫面上多一個「已連線」對使用者
+     沒有幫助，反而讓頂欄變擠。離線佇列仍然照常運作：
+     偵測到重新連線時自動把暫存的回報送出去。 */
+  const flushOnline = () => { if (navigator.onLine) flushQueue(); };
+  window.addEventListener('online', flushOnline);
 
   /* ---- 照片預覽（僅本機） ---- */
   document.getElementById('r-photo').addEventListener('change', e => {

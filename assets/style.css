@@ -2120,3 +2120,211 @@ header.hero .hero-tag{ color:var(--ink) }
 
 /* PHASE 編號的金色差一點點 */
 .phase-num{ color:#7A6429 }
+
+/* ============================================================
+   登入頁與溝通者平台也改成淺色
+   ------------------------------------------------------------
+   保持整站一致。上方的導覽列仍然是深色 ——
+   那是一條細窄的框，深色反而讓下面的內容更跳出來。
+   ============================================================ */
+
+.signin{
+  background:
+    radial-gradient(900px 560px at 78% 8%, rgba(198,165,68,.22), transparent 62%),
+    radial-gradient(700px 460px at 10% 92%, rgba(148,44,44,.08), transparent 64%),
+    linear-gradient(163deg, #FFFDF8 0%, var(--cream-dim) 56%, #F0E6D2 100%);
+}
+.signin-card{
+  background:var(--snow);
+  border:1px solid var(--line);
+  color:var(--ink);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.85),
+    0 2px 6px rgba(54,36,23,.07),
+    0 22px 56px rgba(54,36,23,.13);
+}
+.signin-card h1{color:var(--ink)}
+.signin-card .sub{color:var(--ink-soft)}
+/* 標誌在淺底不需要襯圈 */
+.signin-card img{background:none;box-shadow:none;padding:0}
+
+/* 登入頁與溝通者平台的欄位回到淺底樣式 */
+.signin, .signin-card{
+  --accent:var(--coffee);
+  --accent-hi:var(--coffee);
+  --accent-ink:var(--almond);
+  --field-bg:#fff;
+  --field-ink:var(--ink);
+  --field-line:var(--line);
+  --field-ph:var(--taupe-deep);
+  --field-ring:var(--coffee);
+  --note-ink:var(--taupe-deep);
+}
+.signin .btn-gold{background:var(--gold);color:var(--black)}
+.signin .btn-outline{border-color:var(--coffee);color:var(--coffee)}
+.signin .btn-outline:hover{background:var(--coffee);color:var(--almond)}
+
+/* 說明框 */
+.signin .sim-note{
+  background:var(--almond-soft);
+  border:1px solid var(--line);border-left:3px solid var(--gold);
+  color:var(--ink-soft);
+}
+.signin .sim-note b{color:var(--coffee)}
+.signin .demo-cred{
+  background:var(--almond-soft);border:1px solid var(--line);color:var(--ink-soft);
+}
+
+/* 溝通者平台的頂欄 */
+.portal-bar{
+  background:
+    radial-gradient(700px 380px at 50% 0%, rgba(198,165,68,.20), transparent 66%),
+    linear-gradient(160deg, var(--cream-dim), #EFE4CE);
+  color:var(--ink);
+  border-bottom:1px solid var(--line);
+}
+.portal-bar .dim{color:var(--ink-soft)}
+.portal-bar b{color:var(--coffee)}
+.portal-bar .btn-back{color:var(--coffee)}
+.portal-bar .net-pill{color:var(--coffee);border-color:var(--coffee)}
+.portal-bar .net-pill.off{color:var(--ink-soft);background:rgba(54,36,23,.08);border-color:var(--line)}
+
+/* ============================================================
+   全站淺色：導覽列、頁尾、彈窗、表格標題、後台側邊欄
+   ------------------------------------------------------------
+   深色底上有些字（尤其是半透明的灰字）在某些螢幕上看不清楚，
+   所以整站統一改成淺色。剩下仍是深色的只有小塊的圖示徽章
+   （.fact-ico、.flow-dot、.howto-num、.avatar 這些），
+   那是實心色塊配白字，對比很高，本來就看得清楚。
+   ============================================================ */
+
+/* --- 頂端導覽列 --- */
+nav{
+  background:rgba(255,253,248,.92);
+  backdrop-filter:blur(12px);
+  color:var(--ink);
+  border-bottom:1px solid var(--line);
+  box-shadow:0 1px 12px rgba(54,36,23,.06);
+}
+nav .logo-name{color:var(--ink)}
+nav .logo-sub{color:var(--ink-soft)}
+nav .logo-zh{color:var(--coffee)}
+.nav-links a{color:var(--ink-soft);opacity:1}
+.nav-links a:hover{color:var(--coffee)}
+.nav-links a.active{color:var(--coffee);font-weight:700}
+.nav-toggle{color:var(--ink)}
+nav .nav-cta{background:var(--gold);color:var(--black);border:none}
+nav .nav-cta:hover{filter:brightness(1.08)}
+/* 標誌在淺底不需要襯圈 */
+nav .logo img{background:none;box-shadow:none;padding:0}
+/* 語言切換 */
+.lang-toggle{color:var(--ink);border-color:var(--line);background:rgba(54,36,23,.05)}
+.lang-toggle:hover{border-color:var(--coffee)}
+.lang-menu{background:var(--snow);border:1px solid var(--line);
+  box-shadow:0 14px 40px rgba(54,36,23,.16)}
+.lang-btn{color:var(--ink)}
+.lang-btn:hover{background:var(--almond-soft);color:var(--coffee)}
+
+/* --- 頁尾 --- */
+footer{
+  background:var(--cream-dim);
+  color:var(--ink-soft);
+  border-top:1px solid var(--line);
+}
+.foot-grid b{color:var(--coffee)}
+.foot-links a{color:var(--ink-soft)}
+.foot-links a:hover{color:var(--coffee)}
+footer .logo-zh{color:var(--coffee)}
+.foot-brand img{background:none;box-shadow:none;padding:0}
+
+/* --- 彈窗 --- */
+.modal{
+  background:var(--snow);
+  color:var(--ink);
+  border:1px solid var(--line);
+  box-shadow:0 30px 80px rgba(54,36,23,.28);
+  --accent:var(--coffee);
+  --accent-ink:var(--almond);
+  --field-bg:#fff;
+  --field-ink:var(--ink);
+  --field-line:var(--line);
+  --field-ph:var(--taupe-deep);
+  --field-ring:var(--coffee);
+  --note-ink:var(--taupe-deep);
+}
+.modal h3{color:var(--ink)}
+.modal .sub{color:var(--ink-soft)}
+.modal-close{color:var(--ink-soft)}
+.modal-close:hover{color:var(--coffee)}
+.modal .btn-gold{background:var(--gold);color:var(--black)}
+.modal .terms{background:var(--almond-soft);border:1px solid var(--line)}
+.modal .terms ul li{color:var(--ink-soft)}
+.pay-opt{border:1.5px solid var(--line);background:#fff;color:var(--ink)}
+.pay-opt small{color:var(--ink-soft)}
+.pay-opt:hover{border-color:var(--coffee)}
+.cert{background:var(--almond-soft);border:1px solid var(--line)}
+.cert-label{color:var(--gold-deep)}
+.cert-rows dt{color:var(--ink-soft)}
+.cert-rows dd{color:var(--ink)}
+.cert-note{color:var(--taupe-deep)}
+
+/* --- 表格標題列 --- */
+th{
+  background:var(--almond-soft);
+  color:var(--coffee);
+  border-bottom:2px solid var(--gold);
+}
+
+/* --- 後台左側功能列 --- */
+.side{
+  background:var(--cream-dim);
+  color:var(--ink-soft);
+  border-right:1px solid var(--line);
+}
+.side-brand{border-bottom:1px solid var(--line)}
+.side-brand b{color:var(--ink)}
+.side-brand i{color:var(--ink-soft)}
+.side-brand img{background:none;box-shadow:none;padding:0}
+.side-who b{color:var(--ink)}
+.side-who span{color:var(--ink-soft)}
+.side-logout{color:var(--ink-soft)}
+.side-logout:hover{color:var(--coffee)}
+.side-label{color:var(--taupe-deep);border-bottom:1px solid var(--line)}
+.side-item{color:var(--ink-soft)}
+.side-item:hover{background:rgba(54,36,23,.06);color:var(--ink)}
+.side-item.on{
+  background:rgba(198,165,68,.20);color:var(--coffee);
+  border-left-color:var(--gold);font-weight:700;
+}
+
+/* --- 後台頂欄 --- */
+nav.admin-top{
+  background:rgba(255,253,248,.94);
+  color:var(--ink);
+  border-bottom:1px solid var(--line);
+}
+.crumb{color:var(--ink-soft)}
+.crumb b{color:var(--coffee)}
+.side-toggle{color:var(--ink)}
+nav.admin-top .nav-cta{background:var(--gold);color:var(--black)}
+
+/* --- 訊息泡泡 --- */
+.bubble.mine{background:var(--coffee);color:var(--almond)}
+.bubble.mine .dim{color:rgba(241,218,191,.8)}
+
+/* --- 提高對比：淺底上的次要文字與金色標籤 --- */
+.nav-links a{color:var(--ink);opacity:1}
+.nav-links a:hover{color:var(--coffee)}
+.nav-links a.active{color:var(--coffee);font-weight:700}
+
+/* 金色小標在淺底只有 4.3:1，差一點點；改用更深的金 */
+.eyebrow,
+.trust-n,
+.phase-num,
+.cert-label,
+.crop-tag.now{ color:#6E5A24 }
+.crop-tag.now{ background:var(--coffee);color:var(--almond) }
+
+/* 頁尾文字加深 */
+footer{color:var(--ink-soft)}
+.foot-links a{color:var(--ink-soft)}
