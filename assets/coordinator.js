@@ -1,18 +1,20 @@
 /* ============================================================
    溝通者現場門戶（示範）
    ------------------------------------------------------------
-   ⚠️ 沒有真正的登入驗證。這是給 demo 看流程用的畫面，
-      示範代碼直接寫在前端，任何人看原始碼都看得到 ——
-      正式上線必須改成後端驗證 + 一次性密碼或行動裝置綁定。
+   登入沿用平台帳號（sessionStorage 的 rf_app_session），
+      不再有獨立的示範代碼 —— 兩套登入只會讓人以為自己登不進去。
+      能不能進來看的是角色：溝通者，以及需要看現場狀況的管理端。
 
    離線設計：回報寫入 localStorage 佇列；偵測到連線時才「同步」
    （目前同步的目的地就是同一個 localStorage 示範資料庫）。
    照片只在瀏覽器內產生預覽 URL，不會儲存也不會上傳。
    ============================================================ */
 
-const DEMO_CODE = 'SONG2026';
-const SESSION_KEY = 'rf_coordinator_who';
+const SESSION_KEY = 'rf_app_session';   // 和整個平台共用同一個登入
 const QUEUE_KEY = 'rf_report_queue';
+
+/* 誰能進溝通者平台。管理端也放行 —— 他們需要看得到現場在做什麼。 */
+const COORD_ROLES = ['coord', 'super', 'admin', 'editor'];
 
 Store.onReady(() => {
   if (!document.getElementById('signin')) return;
@@ -31,28 +33,31 @@ Store.onReady(() => {
     flushQueue();
   };
 
-  // 已登入過就直接進入
+  /* 用平台帳號判斷能不能進來。
+     原本這裡是一組寫死的示範代碼，等於平台有兩套各自獨立的登入 ——
+     人在官網登入過了，點進來又被要一次代碼，會以為自己登不進去。
+     現在統一：沒登入就請他去登入頁，登入了就看角色放不放行。 */
   const saved = sessionStorage.getItem(SESSION_KEY);
-  if (saved) enter(saved);
+  const user  = saved ? (Store.read().users || []).find(x => x.u === saved) : null;
+  const perm  = user && (user.perm || (user.role === 'admin' ? 'super' : user.role));
 
-  document.getElementById('login-form').addEventListener('submit', e => {
-    e.preventDefault();
+  if (user && COORD_ROLES.includes(perm)) {
+    enter(user.name || user.u);
+  } else {
     const err  = document.getElementById('login-err');
-    const code = document.getElementById('code').value.trim().toUpperCase();
-    if (code !== DEMO_CODE) {
-      err.textContent = `代碼不正確。這是示範系統，請輸入畫面上顯示的 ${DEMO_CODE}。`;
+    const note = document.getElementById('coord-note');
+    if (user) {
+      err.textContent = `「${user.name || user.u}」這個帳號沒有現場回報的權限，`
+                      + '請管理員在 TANJU Portal 的「帳號與權限」把角色改成溝通者。';
       err.style.display = 'block';
-      return;
+      if (note) note.hidden = true;
     }
-    err.style.display = 'none';
-    const who = document.getElementById('who').value;
-    sessionStorage.setItem(SESSION_KEY, who);
-    enter(who);
-  });
+  }
 
   document.getElementById('logout').addEventListener('click', () => {
     sessionStorage.removeItem(SESSION_KEY);
-    location.reload();
+    if (typeof Auth !== 'undefined' && Auth.on) Auth.signOut();
+    location.assign('app.html');
   });
 
   /* ---- 連線狀態 ---- */
@@ -137,7 +142,7 @@ function flushQueue() {
 }
 
 function fillTreeSelects() {
-  const opts = Store.treeList().map(t =>
+  const opts = Store.treeList().filter(t => t.crop === 'dabai').map(t =>
     `<option value="${t.id}">${t.id} · ${CROP_NAME[t.crop]}（${t.orchard}）</option>`).join('');
   document.getElementById('r-tree').innerHTML = opts;
   document.getElementById('l-tree').innerHTML = opts;
@@ -187,7 +192,7 @@ function renderMyReports() {
 
 /* ---------- 採收標籤 ---------- */
 function renderLabel() {
-  const t = Store.treeList().find(x => x.id === document.getElementById('l-tree').value);
+  const t = Store.treeList().filter(t => t.crop === 'dabai').find(x => x.id === document.getElementById('l-tree').value);
   if (!t) return;
   const basket = document.getElementById('l-basket').value || 'B-01';
   document.getElementById('label').innerHTML = `

@@ -1785,3 +1785,338 @@ nav.admin-top{
 .trust-card h3{font-size:1.08rem;margin-bottom:10px}
 .trust-card p{font-size:.97rem;line-height:1.78;color:var(--ink-soft)}
 .trust-card a{color:var(--coffee);text-decoration:underline;font-weight:600}
+
+/* ============================================================
+   層次與立體感
+   ------------------------------------------------------------
+   原本每個區塊都是一塊平的色，深色區塊尤其像一片灰。
+   這裡加三層東西把空間感做出來：
+     1. 頁面底色從單色改成帶暖調的漸層，中間微微亮一點
+     2. 深色區塊改成有方向性的漸層 + 兩顆極淡的光暈，
+        並在上下緣加一道細高光，把「面」的邊界交代清楚
+     3. 卡片用兩層陰影（近距離的實影 + 遠距離的柔影）+ 內側頂端高光，
+        這是實體卡片被光照到的樣子，單層陰影做不出來
+   全部用 CSS 漸層完成，沒有多載任何圖檔。
+   ============================================================ */
+
+body{
+  background:
+    radial-gradient(1200px 620px at 50% -8%, rgba(198,165,68,.10), transparent 60%),
+    radial-gradient(900px 520px at 100% 42%, rgba(148,44,44,.05), transparent 62%),
+    linear-gradient(180deg, var(--cream) 0%, var(--cream-dim) 46%, var(--cream) 100%);
+  background-attachment:fixed;
+}
+
+/* --- 深色區塊：從平灰改成有深度的暗場 --- */
+.dark-section{
+  position:relative;
+  background:
+    radial-gradient(760px 420px at 12% 0%, rgba(198,165,68,.16), transparent 58%),
+    radial-gradient(640px 460px at 88% 96%, rgba(148,44,44,.16), transparent 60%),
+    linear-gradient(168deg, #17150F 0%, #241E14 46%, #2E2618 100%);
+  color:var(--snow);
+}
+/* 上下緣的細高光：讓區塊看起來是一塊「板子」，而不是一片色 */
+.dark-section::before,
+.dark-section::after{
+  content:'';position:absolute;left:0;right:0;height:1px;pointer-events:none;
+  background:linear-gradient(90deg,transparent,rgba(241,218,191,.28),transparent);
+}
+.dark-section::before{top:0}
+.dark-section::after{bottom:0}
+
+/* --- 深色區塊裡的卡片：浮起來 --- */
+.phase,
+.dark-section .card{
+  background:linear-gradient(160deg, rgba(255,251,255,.09), rgba(255,251,255,.04));
+  border:1px solid rgba(241,218,191,.22);
+  box-shadow:
+    inset 0 1px 0 rgba(255,251,255,.14),      /* 頂端高光 */
+    0 2px 6px rgba(0,0,0,.28),                /* 近影：貼著地面 */
+    0 14px 34px rgba(0,0,0,.30);              /* 遠影：撐出高度 */
+  transition:transform .22s, box-shadow .22s, border-color .22s;
+}
+.phase:hover,
+.dark-section .card:hover{
+  transform:translateY(-3px);
+  border-color:rgba(241,218,191,.48);
+  box-shadow:
+    inset 0 1px 0 rgba(255,251,255,.2),
+    0 4px 10px rgba(0,0,0,.32),
+    0 22px 48px rgba(0,0,0,.38);
+}
+
+/* --- 淺底卡片：同樣的兩層影 --- */
+.card,
+.trust-card,
+.hub-card,
+.trio-card,
+.chart-card,
+.new-user,
+.fin-group,
+.big-kpi,
+.kpi-card,
+.post-card,
+.rate-box{
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.7),
+    0 1px 2px rgba(54,36,23,.06),
+    0 10px 28px rgba(54,36,23,.08);
+}
+.card:hover,
+.trust-card:hover{
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.8),
+    0 2px 4px rgba(54,36,23,.07),
+    0 18px 44px rgba(54,36,23,.12);
+}
+.card{transition:box-shadow .22s}
+
+/* --- 淺色分隔帶也給一點漸層，不要平塗 --- */
+section[style*="--almond-soft"],
+.dabai-focus{
+  background:
+    linear-gradient(180deg, rgba(244,237,223,0), rgba(244,237,223,.9) 18%,
+                    rgba(244,237,223,.9) 82%, rgba(244,237,223,0)) !important;
+}
+
+/* Dabai 專章的四個事實 */
+.crop-facts{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(min(230px,100%),1fr));
+  gap:16px;margin-top:26px;
+}
+.cf{
+  background:var(--snow);border:1px solid var(--line);
+  border-left:3px solid var(--gold);border-radius:var(--radius);
+  padding:20px 22px;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.7), 0 8px 22px rgba(54,36,23,.07);
+}
+.cf b{display:block;font-size:1.02rem;color:var(--ink);margin-bottom:6px}
+.cf span{display:block;font-size:.93rem;color:var(--ink-soft);line-height:1.7}
+
+/* ============================================================
+   淺色呈現
+   ------------------------------------------------------------
+   公開頁面整體改成淺色：頁首橫幅、深色區塊、行動呼籲帶都換成
+   帶暖調的淺色面，字色跟著翻成深色。
+
+   不動的地方：導覽列、登入頁、彈窗、後台側邊欄 ——
+   那些是「介面外框」，深色反而讓內容區更跳出來。
+
+   做法是在檔案最後統一覆寫，而不是回頭改上面幾十條規則 ——
+   原本那些規則假設的是深底白字，一條條改容易漏，
+   集中覆寫比較好檢查，也留得住「原本長什麼樣」的脈絡。
+   ============================================================ */
+
+/* --- 頁首橫幅 --- */
+.page-hero{
+  background:
+    radial-gradient(900px 520px at 78% 8%, rgba(198,165,68,.20), transparent 62%),
+    radial-gradient(720px 460px at 10% 92%, rgba(148,44,44,.10), transparent 64%),
+    linear-gradient(165deg, #FFFDF8 0%, var(--cream-dim) 58%, #F0E6D2 100%);
+  color:var(--ink);
+  border-bottom:1px solid var(--line);
+}
+.page-hero p{color:var(--ink-soft)}
+.page-hero .eyebrow{color:var(--gold-deep)}
+.page-hero .accent{color:var(--coffee)}
+
+/* --- 深色區塊 → 淺色面 --- */
+.dark-section{
+  background:
+    radial-gradient(760px 420px at 12% 0%, rgba(198,165,68,.14), transparent 58%),
+    radial-gradient(640px 460px at 88% 96%, rgba(148,44,44,.07), transparent 60%),
+    linear-gradient(168deg, #FFFDF8 0%, var(--cream-dim) 50%, #F3EADA 100%);
+  color:var(--ink);
+}
+.dark-section::before,
+.dark-section::after{
+  background:linear-gradient(90deg,transparent,rgba(54,36,23,.14),transparent);
+}
+.dark-section .sec-sub,
+.dark-section .lead,
+.dark-section p{color:var(--ink-soft)}
+.dark-section .sec-title,
+.dark-section h2,
+.dark-section h3,
+.dark-section h4{color:var(--ink)}
+.dark-section .eyebrow{color:var(--gold-deep)}
+.dark-section .accent{color:var(--coffee)}
+.dark-section a{color:var(--coffee)}
+
+/* 深色區塊裡的卡片 */
+.phase,
+.adv-card,
+.dark-section .card{
+  background:var(--snow);
+  border:1px solid var(--line);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.8),
+    0 1px 2px rgba(54,36,23,.06),
+    0 10px 28px rgba(54,36,23,.08);
+}
+.phase:hover,
+.adv-card:hover,
+.dark-section .card:hover{
+  background:var(--snow);
+  border-color:var(--gold);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.9),
+    0 2px 5px rgba(54,36,23,.08),
+    0 20px 46px rgba(54,36,23,.13);
+}
+.phase h3,.adv-card h3{color:var(--ink)}
+.phase p,.adv-card p{color:var(--ink-soft)}
+.phase-num{color:var(--gold-deep)}
+
+/* 深色卡片 → 淺色卡片，靠左側金色線條分層 */
+.dark-card{
+  background:var(--snow);
+  border:1px solid var(--line);border-left:3px solid var(--gold);
+  color:var(--ink);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.8), 0 8px 24px rgba(54,36,23,.08);
+}
+.dark-card h3{color:var(--coffee)}
+.dark-card p{color:var(--ink-soft)}
+
+/* 流程軌 */
+.rail-col{color:var(--ink-soft)}
+.rail-step span{color:var(--ink-soft)}
+
+/* SDG 角色標 */
+.sdg-11 .sdg-role,.sdg-17 .sdg-role{color:var(--gold-deep)}
+
+/* 閉環說明 */
+.loop-note{
+  background:var(--almond-soft);
+  border:1px solid var(--line);
+  color:var(--ink-soft);
+}
+.loop-note b{color:var(--coffee)}
+
+/* 行動呼籲帶 */
+.cta-band{
+  background:
+    radial-gradient(700px 400px at 50% 0%, rgba(198,165,68,.22), transparent 66%),
+    linear-gradient(160deg, var(--cream-dim), #EFE4CE);
+  color:var(--ink);
+  border-top:1px solid var(--line);
+}
+.cta-band p{color:var(--ink-soft)}
+.cta-band .eyebrow{color:var(--gold-deep)}
+.cta-band .sec-title{color:var(--ink)}
+
+/* 淺底上的次要按鈕：原本是給深底用的白框白字 */
+.page-hero .btn-ghost,
+.dark-section .btn-ghost,
+.cta-band .btn-ghost{
+  border-color:var(--coffee);color:var(--coffee);background:transparent;
+}
+.page-hero .btn-ghost:hover,
+.dark-section .btn-ghost:hover,
+.cta-band .btn-ghost:hover{background:var(--coffee);color:var(--almond)}
+
+/* 照片說明文字 */
+.dark-section .photo figcaption{color:var(--ink-soft)}
+.dark-section .photo-credit{color:var(--taupe-deep)}
+
+/* 引言區塊 */
+.dark-section .quote{color:var(--ink-soft)}
+.dark-section .quote b{color:var(--coffee)}
+
+/* 標誌在淺底上不需要那圈襯底 */
+.page-hero .logo img,
+.dark-section .logo img{background:none;box-shadow:none;padding:0}
+
+/* --- 淺色化的收尾：把仍然假設深底的顏色補齊 --- */
+
+/* 亮金當「文字」在淺底上只有 2:1，一定要換掉。
+   但不能直接覆寫 --accent —— 按鈕的底色也吃這個變數，
+   一改連 .btn-gold 都變咖啡色了。所以只針對文字用途逐一指定。 */
+.page-hero h1 .accent,
+.page-hero .accent,
+.dark-section .sec-title .accent,
+.dark-section h1 .accent,
+.dark-section h2 .accent,
+.dark-section h3 .accent,
+.dark-section .accent,
+.cta-band .sec-title .accent,
+.cta-band .accent{ color:var(--coffee) }
+
+/* eyebrow 的金色在淺底是 4.29:1，差一點點，改用更深的金 */
+.page-hero .eyebrow,
+.dark-section .eyebrow,
+.cta-band .eyebrow{ color:#7A6429 }
+
+/* ESG 三格：原本是深底白字 */
+.esg-box{
+  background:var(--snow);
+  border:1px solid var(--line);border-top:3px solid var(--gold);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.8), 0 8px 24px rgba(54,36,23,.08);
+}
+.esg-box h3{color:var(--coffee)}
+.esg-box p{color:var(--ink-soft)}
+
+/* 流程軌上的圓點：純裝飾，但淺底上要看得見 */
+.rail-dot{background:var(--coffee)}
+
+/* 淺底上的連結一律咖啡色 */
+.page-hero a:not(.btn),
+.dark-section a:not(.btn),
+.cta-band a:not(.btn){ color:var(--coffee) }
+
+
+/* --- 首頁的大 hero 也改成淺色 --- */
+header.hero{
+  background:
+    radial-gradient(900px 560px at 76% 10%, rgba(198,165,68,.22), transparent 62%),
+    radial-gradient(720px 480px at 8% 90%, rgba(148,44,44,.09), transparent 64%),
+    linear-gradient(163deg, #FFFDF8 0%, var(--cream-dim) 56%, #F0E6D2 100%);
+  color:var(--ink);
+  border-bottom:1px solid var(--line);
+}
+header.hero .hero-desc{color:var(--ink-soft)}
+header.hero .hero-desc b{color:var(--coffee)}
+header.hero h1{color:var(--ink)}
+header.hero h1 .accent{color:var(--coffee)}
+header.hero .hero-tag{
+  background:rgba(54,36,23,.06);border:1px solid var(--line);color:var(--ink-soft);
+}
+header.hero .stat b{color:var(--coffee)}
+header.hero .stat span{color:var(--ink-soft)}
+/* 標誌在淺底不需要襯圈 */
+header.hero .logo img{background:none;box-shadow:none;padding:0}
+
+
+/* --- 淺色化的根本修正 --- */
+/* 檔案上方那條「深色底的區塊」規則把 --accent 設成亮金，
+   但這些區塊現在是淺色的，亮金當文字只有 2:1。
+   在這裡把它們的 --accent 換成咖啡色（文字安全），
+   金色留給按鈕 —— 按鈕另外指定，不吃這個變數。 */
+header.hero, .page-hero, .dark-section, .cta-band{
+  --accent:var(--coffee);
+  --accent-hi:var(--coffee);
+  --accent-ink:var(--almond);
+
+  /* 表單欄位也要跟著回到淺底樣式 */
+  --field-bg:#fff;
+  --field-ink:var(--ink);
+  --field-line:var(--line);
+  --field-ph:var(--taupe-deep);
+  --field-ring:var(--coffee);
+  --note-ink:var(--taupe-deep);
+}
+/* 金色按鈕維持金色 */
+header.hero .btn-gold,
+.page-hero .btn-gold,
+.dark-section .btn-gold,
+.cta-band .btn-gold{ background:var(--gold); color:var(--black) }
+
+/* 次要按鈕：原本是深底用的白框白字 */
+header.hero .btn-ghost{ border-color:var(--coffee);color:var(--coffee);background:transparent }
+header.hero .btn-ghost:hover{ background:var(--coffee);color:var(--almond) }
+
+header.hero .hero-tag{ color:var(--ink) }
+
+/* PHASE 編號的金色差一點點 */
+.phase-num{ color:#7A6429 }

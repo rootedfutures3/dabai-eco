@@ -120,7 +120,7 @@ function initPreorderForm(form) {
       非真實果農或果園資訊。正式上線後應改為從後端 API 取得
       經農務顧問查核的實際果園檔案。
    ============================================================ */
-const ORCHARDS = [
+const ORCHARDS_RAW = [
   { id:'SBW-01', name:'Rumah Panjai 上游果園', area:'Sibu',    crop:'dabai',  variety:'在地原生種',      age:34, trees:120, yield:'2.4 噸', health:'A', status:'open',
     note:'河岸沖積土，老欉果肉油脂含量高，歷年是當地公認品質最好的一批。' , farmer:'Ak. Jelani 一家', farmYears:28, household:6, need:'希望有穩定買家，不必每年被中盤商殺價' },
   { id:'KPT-02', name:'Nanga Sepit 河谷果園',  area:'Kapit',   crop:'dabai',  variety:'在地原生種',      age:18, trees:260, yield:'4.1 噸', health:'A', status:'open',
@@ -146,6 +146,9 @@ const ORCHARDS = [
   { id:'SBW-12', name:'Sibu 近郊示範園',       area:'Sibu',    crop:'durian', variety:'D101',            age:7,  trees:200, yield:'0.9 噸', health:'A', status:'open',
     note:'平台輔導的標準化示範果園，全程導入顧問農法，資料最完整。' , farmer:'平台示範園（契作）', farmYears:7, household:8, need:'全程導入顧問農法，作為標準化示範' },
 ];
+
+/* 同上：前台只顯示 Dabai 果園 */
+const ORCHARDS = ORCHARDS_RAW.filter(o => o.crop === 'dabai');
 
 /* 作物圖示：Unicode 沒有榴槤 emoji（🥭 是芒果），
    且 emoji 自帶的鮮豔色彩與品牌色票衝突，故改用自繪 SVG。 */
@@ -310,7 +313,7 @@ function initClaimModal(grid) {
 /* ============================================================
    單株果樹資產（Tree ID）—— B2C 包樹認養
    ------------------------------------------------------------
-   ⚠️ 示範資料（Demo Data）。Phase 1 MVP 先放 36 棵示範樹。
+   ⚠️ 示範資料（Demo Data）。Phase 1 MVP 先放 30 棵 Dabai 示範樹。
       正式營運時此陣列應改為由 ERP 後端提供，
       Tree ID 為資產綁定的唯一鍵（DB=Dabai / DR=榴槤 / RB=紅毛丹）。
    欄位：[樹號, 作物, 品種, 樹齡, 果園, 地區, 果農, 預估年產量kg, 年認養金RM, 狀態]
@@ -330,6 +333,24 @@ const TREE_ROWS = [
   ['DB-012','dabai','在地原生種',9,'Serian 混作果園','Serian','Anak Bunsu',32,260,'available'],
   ['DB-013','dabai','在地原生種',9,'Serian 混作果園','Serian','Anak Bunsu',30,260,'available'],
   ['DB-014','dabai','在地原生種',31,'Meradong 家族果園','Meradong','Rumah Belaja 長屋',75,410,'adopted'],
+  /* 補到 30 棵 —— 對齊「第 1 年試點 30 棵」的規劃，
+     讓網站上看到的規模和簡報講的一致。全部是示範資料。 */
+  ['DB-015','dabai','在地原生種',29,'Rumah Panjai 上游果園','Sibu','Ak. Jelani 一家',68,380,'available'],
+  ['DB-016','dabai','在地原生種',22,'Rumah Panjai 上游果園','Sibu','Ak. Jelani 一家',59,340,'available'],
+  ['DB-017','dabai','在地原生種',15,'Nanga Sepit 河谷果園','Kapit','Lim 氏果園（第二代）',52,320,'available'],
+  ['DB-018','dabai','在地原生種',15,'Nanga Sepit 河谷果園','Kapit','Lim 氏果園（第二代）',50,320,'reserved'],
+  ['DB-019','dabai','在地原生種',36,'Sarikei 老欉園','Sarikei','Tan 老先生',86,450,'available'],
+  ['DB-020','dabai','在地原生種',36,'Sarikei 老欉園','Sarikei','Tan 老先生',83,440,'available'],
+  ['DB-021','dabai','在地原生種',24,'Song 支流果園','Song','Empaling 一家',63,360,'adopted'],
+  ['DB-022','dabai','在地原生種',24,'Song 支流果園','Song','Empaling 一家',61,360,'available'],
+  ['DB-023','dabai','在地原生種',19,'Song 支流果園','Song','Empaling 一家',55,330,'available'],
+  ['DB-024','dabai','在地原生種',44,'Kapit 高地老欉','Kapit','Bujang 老欉園',95,470,'available'],
+  ['DB-025','dabai','在地原生種',44,'Kapit 高地老欉','Kapit','Bujang 老欉園',90,460,'reserved'],
+  ['DB-026','dabai','在地原生種',11,'Serian 混作果園','Serian','Anak Bunsu',38,280,'available'],
+  ['DB-027','dabai','在地原生種',11,'Serian 混作果園','Serian','Anak Bunsu',36,280,'available'],
+  ['DB-028','dabai','在地原生種',28,'Meradong 家族果園','Meradong','Rumah Belaja 長屋',71,390,'available'],
+  ['DB-029','dabai','在地原生種',28,'Meradong 家族果園','Meradong','Rumah Belaja 長屋',69,390,'available'],
+  ['DB-030','dabai','在地原生種',21,'Meradong 家族果園','Meradong','Rumah Belaja 長屋',58,340,'available'],
 
   ['DR-001','durian','貓山王 Musang King',12,'Kanowit 坡地果園','Kanowit','Nyawai 家族',48,1200,'available'],
   ['DR-002','durian','貓山王 Musang King',12,'Kanowit 坡地果園','Kanowit','Nyawai 家族',45,1180,'adopted'],
@@ -356,8 +377,14 @@ const TREE_ROWS = [
   ['RB-010','rambutan','在地原生種',8,'Sibu 近郊示範園','Sibu','平台示範園（契作）',52,190,'available'],
 ];
 
-const TREES = TREE_ROWS.map(([id,crop,variety,age,orchard,area,farmer,kg,price,status]) =>
-  ({id,crop,variety,age,orchard,area,farmer,kg,price,status}));
+/* 前台只列 Dabai。
+   我們的定位是「先把一種果子做透」，網站上就不該出現其他作物 ——
+   榴槤與紅毛丹的資料列還留在 TREE_ROWS 裡沒刪，因為系統本來就支援
+   多作物（crop 欄位還在），將來要擴充，把這個 filter 拿掉就好。 */
+const TREES = TREE_ROWS
+  .filter(row => row[1] === 'dabai')
+  .map(([id,crop,variety,age,orchard,area,farmer,kg,price,status]) =>
+    ({id,crop,variety,age,orchard,area,farmer,kg,price,status}));
 
 const TREE_STATUS = {
   available:{t:'開放認養', c:'st-open'},

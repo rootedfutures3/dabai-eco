@@ -5,22 +5,22 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>溝通者現場門戶（示範）— TANJU</title>
 <meta name="robots" content="noindex">
-<link rel="icon" type="image/png" sizes="32x32" href="assets/img/favicon-32.png?v=7b25649a">
-<link rel="stylesheet" href="assets/style.css?v=7b25649a">
-<script src="assets/config.js?v=7b25649a" defer></script>
-<script src="assets/auth-sb.js?v=7b25649a" defer></script>
-<script src="assets/store.js?v=7b25649a" defer></script>
-<script src="assets/site.js?v=7b25649a" defer></script>
-<script src="assets/coordinator.js?v=7b25649a" defer></script>
-<script src="assets/lang/ms.js?v=7b25649a" defer></script>
-<script src="assets/lang/en.js?v=7b25649a" defer></script>
-<script src="assets/lang/iba.js?v=7b25649a" defer></script>
-<script src="assets/i18n.js?v=7b25649a" defer></script>
+<link rel="icon" type="image/png" sizes="32x32" href="assets/img/favicon-32.png?v=2bcac650">
+<link rel="stylesheet" href="assets/style.css?v=2bcac650">
+<script src="assets/config.js?v=2bcac650" defer></script>
+<script src="assets/auth-sb.js?v=2bcac650" defer></script>
+<script src="assets/store.js?v=2bcac650" defer></script>
+<script src="assets/site.js?v=2bcac650" defer></script>
+<script src="assets/coordinator.js?v=2bcac650" defer></script>
+<script src="assets/lang/ms.js?v=2bcac650" defer></script>
+<script src="assets/lang/en.js?v=2bcac650" defer></script>
+<script src="assets/lang/iba.js?v=2bcac650" defer></script>
+<script src="assets/i18n.js?v=2bcac650" defer></script>
 </head>
 <body class="app">
 
 <nav>
-  <a class="logo" href="index.html"><img src="assets/img/logo.png?v=7b25649a" alt="" width="40" height="40"><span class="logo-wm"><b class="logo-name">TANJU</b><i class="logo-sub">ROOTED FUTURES<span class="logo-zh"> · 根築新局</span></i></span></a>
+  <a class="logo" href="index.html"><img src="assets/img/logo.png?v=2bcac650" alt="" width="40" height="40"><span class="logo-wm"><b class="logo-name">TANJU</b><i class="logo-sub">ROOTED FUTURES<span class="logo-zh"> · 根築新局</span></i></span></a>
   <button class="nav-toggle" aria-label="開關選單" aria-expanded="false">☰</button>
   <div class="nav-links">
     <a href="index.html">回前台</a>
@@ -33,36 +33,20 @@
 <!-- ===== 登入畫面 ===== -->
 <div class="signin" id="signin">
   <div class="signin-card">
-    <img src="assets/img/logo.png?v=7b25649a" alt="" width="72" height="72">
-    <h1>溝通者現場門戶</h1>
-    <p class="sub">Coordinator Portal · Song, Sarawak</p>
+    <img src="assets/img/logo.png?v=2bcac650" alt="" width="72" height="72">
+    <h1>溝通者平台</h1>
+    <p class="sub">Coordinator Platform · Song, Sarawak</p>
 
-    <div class="sim-note" style="text-align:left">
-      🧪 <b>示範登入</b> —— 這是給 demo 看流程用的畫面，<b>沒有真正的帳號驗證</b>。
-      請<b>不要輸入任何真實密碼</b>。輸入下面顯示的示範代碼即可進入。
+    <div class="sim-note" style="text-align:left" id="coord-note">
+      這個平台要先用平台帳號登入。溝通者、以及管理端的角色都進得來。
     </div>
 
-    <div class="demo-cred">
-      示範代碼：<b>SONG2026</b>
-    </div>
-
-    <form id="login-form">
-      <div>
-        <label for="who">你是誰</label>
-        <select id="who" name="who">
-          <option>Anding</option>
-          <option>Melissa</option>
-          <option>Jimmy</option>
-        </select>
-      </div>
-      <div>
-        <label for="code">示範代碼</label>
-        <input id="code" name="code" type="text" inputmode="latin"
-               autocomplete="off" placeholder="SONG2026" required>
-      </div>
-      <button class="btn btn-gold" type="submit" style="border:none;cursor:pointer;width:100%">進入現場門戶</button>
-    </form>
     <div class="form-error" id="login-err" role="alert"></div>
+
+    <div class="btn-row" style="justify-content:center;margin-top:20px">
+      <a class="btn btn-gold" href="app.html">前往登入</a>
+      <a class="btn btn-outline" href="index.html">回官網</a>
+    </div>
   </div>
 </div>
 
@@ -161,7 +145,7 @@
 
 <footer>
   <div class="foot-grid">
-    <div class="foot-brand"><img src="assets/img/logo.png?v=7b25649a" alt="TANJU · ROOTED FUTURES 根築新局" width="56" height="56"><div><b>TANJU</b><br>ROOTED FUTURES<span class="logo-zh"> 根築新局</span><br>Social Enterprise · Song, Sarawak</div></div>
+    <div class="foot-brand"><img src="assets/img/logo.png?v=2bcac650" alt="TANJU · ROOTED FUTURES 根築新局" width="56" height="56"><div><b>TANJU</b><br>ROOTED FUTURES<span class="logo-zh"> 根築新局</span><br>Social Enterprise · Song, Sarawak</div></div>
     <div class="foot-links">
       <a href="index.html">回前台</a>
       <a href="erp.html">TANJU Portal</a>

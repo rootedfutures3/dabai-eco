@@ -36,14 +36,6 @@ Store.onReady(() => {
       document.querySelector('.auth-card').scrollTop = 0;
     }));
 
-  /* ---- 快速身分 ---- */
-  document.querySelectorAll('[data-quick]').forEach(b =>
-    b.addEventListener('click', () => {
-      document.getElementById('g-user').value = b.dataset.quick;
-      document.getElementById('g-pass').value = 'admin';
-      document.getElementById('login-form').requestSubmit();
-    }));
-
   /* ---- 登入 ---- */
   document.getElementById('login-form').addEventListener('submit', async e => {
     e.preventDefault();
@@ -80,7 +72,7 @@ Store.onReady(() => {
     const user = Store.findUser(
       document.getElementById('g-user').value,
       document.getElementById('g-pass').value);
-    if (!user) return fail('帳號或密碼不正確。預設帳號 admin、密碼 admin。');
+    if (!user) return fail('帳號或密碼不正確，請再確認一次。');
     err.style.display = 'none';
     handoff(user);
   });
@@ -179,7 +171,9 @@ function buildDrift() {
  */
 function applyAuthMode() {
   const on = typeof Auth !== 'undefined' && Auth.on;
-  const $ = id => document.getElementById(id);
+  /* 有些元素（示範帳號提示、快速身分）已經拿掉了，
+     這裡用安全存取，少了也不會整段停掉。 */
+  const $ = id => document.getElementById(id) || { style:{}, dataset:{}, classList:{ toggle(){} } };
 
   $('fld-email').hidden = !on;
   $('fld-user').hidden  = on;
@@ -188,14 +182,13 @@ function applyAuthMode() {
   $('fld-reg-email').hidden = !on;
   $('r-email').required = on;
   $('r-pass-hint').hidden = !on;
-  $('quick-demo').hidden = on;
 
   if (on) {
-    $('demo-cred').innerHTML =
+    const cred = $('demo-cred');
+    cred.hidden = false;
+    cred.innerHTML =
       '🔐 <b>已啟用 Supabase Auth</b> —— 用你的 Email 與密碼登入。'
       + '密碼由伺服器加鹽雜湊保管，權限由資料庫強制執行。';
-    $('g-user').value = '';
-    $('g-pass').value = '';
     const banner = document.querySelector('.sim-note');
     if (banner) {
       banner.innerHTML =
