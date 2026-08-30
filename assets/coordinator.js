@@ -67,6 +67,17 @@ Store.onReady(() => {
 
   if (user && COORD_ROLES.includes(perm)) {
     ME = { ...user, perm };
+
+    /* 導覽列不要秀出他進不去的地方。
+       溝通者與果農點 TANJU Portal 只會被彈回來，
+       那種「點了又跳回來」最讓人覺得系統是壞的。 */
+    if (!['super', 'admin', 'finance', 'editor'].includes(perm)) {
+      document.querySelectorAll('.nav-links a[href="erp.html"]')
+        .forEach(a => a.remove());
+    }
+
+    mountPlatformSwitch(perm);
+
     const roleEl = document.getElementById('who-role');
     if (roleEl) {
       roleEl.textContent = { farmer:'果農', coord:'現場溝通者' }[perm] || '管理端';
@@ -86,7 +97,7 @@ Store.onReady(() => {
   document.getElementById('logout').addEventListener('click', () => {
     sessionStorage.removeItem(SESSION_KEY);
     if (typeof Auth !== 'undefined' && Auth.on) Auth.signOut();
-    location.assign('app.html');
+    location.assign('app.html?next=coordinator.html');
   });
 
   /* ---- 連線狀態 ---- */
@@ -397,4 +408,36 @@ function renderDue() {
       document.getElementById('report-form').scrollIntoView({ behavior:'smooth', block:'center' });
       document.getElementById('r-note').focus({ preventScroll:true });
     }));
+}
+
+/* ============================================================
+   平台切換
+   ------------------------------------------------------------
+   TANJU Portal 與溝通者平台是兩個獨立的系統，但同一個人
+   （管理端）常常兩邊都要看。不該為了換一邊而登出再登入 ——
+   session 本來就是共用的，只要換頁就好。
+
+   只有兩邊都進得去的角色才看得到這個切換器；
+   溝通者與果農看到的是單純的標題，不是一顆點了會被彈回來的按鈕。
+   ============================================================ */
+function mountPlatformSwitch(perm) {
+  const box = document.getElementById('plat-switch');
+  if (!box) return;
+
+  const canPortal = ['super', 'admin', 'finance', 'editor'].includes(perm);
+  if (!canPortal) { box.hidden = true; return; }
+  box.hidden = false;
+
+  const here = location.pathname.split('/').pop() || 'erp.html';
+  const tabs = [
+    ['erp.html', '📊', 'TANJU Portal'],
+    ['coordinator.html', '📍', '溝通者平台'],
+  ];
+
+  box.innerHTML = tabs.map(([href, icon, label]) => {
+    const on = here === href;
+    return on
+      ? `<span class="ps on"><span aria-hidden="true">${icon}</span>${label}</span>`
+      : `<a class="ps" href="${href}"><span aria-hidden="true">${icon}</span>${label}</a>`;
+  }).join('');
 }

@@ -138,8 +138,16 @@ function handoff(user, isNew) {
   document.getElementById('auth').classList.add('leaving');
   box.classList.add('on');
 
+  /* 去哪裡：
+       1. 網址指定的 next（他原本要去的地方）
+       2. 沒指定就照角色 —— 溝通者與果農直接進溝通者平台，
+          管理端才停在入口頁選要去哪 */
+  const perm = user.perm || (user.role === 'admin' ? 'super' : user.role);
+  const go = nextPage()
+    || (['coord', 'farmer'].includes(perm) ? 'coordinator.html' : 'dashboard.html');
+
   // 讓進度條跑完再換頁，避免畫面瞬間閃動
-  setTimeout(() => location.assign('dashboard.html'), 1100);
+  setTimeout(() => location.assign(go), 1100);
 }
 
 /* ---------- 背景飄浮的果實圖示 ---------- */
@@ -194,6 +202,23 @@ function applyAuthMode() {
     if (hint.style) hint.textContent = '密碼由伺服器加鹽雜湊保管。忘記密碼請聯絡管理員重設。';
   }
   if (typeof I18N !== 'undefined') I18N.refresh(document.querySelector('.auth-card'));
+}
+
+/**
+ * 登入後要去哪裡。
+ *
+ * 網址帶 ?next= 就回那一頁 —— 有人是先點「溝通者平台」撞到登入牆才來的，
+ * 登入完應該回到他原本要去的地方，而不是丟到一個他沒要去的首頁。
+ *
+ * 只認白名單裡的頁面。直接吃網址參數會變成開放轉址：
+ * 別人寄一條 app.html?next=https://釣魚網站 給你的果農，
+ * 登入後就被送去假網站了。
+ */
+const NEXT_OK = ['coordinator.html', 'erp.html', 'dashboard.html', 'trees.html', 'index.html'];
+
+function nextPage() {
+  const n = new URLSearchParams(location.search).get('next');
+  return NEXT_OK.includes(n) ? n : null;
 }
 
 /** 用 auth 使用者去 users 表撈側寫（角色、權限都在那裡） */
