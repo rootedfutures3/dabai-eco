@@ -178,6 +178,15 @@ const I18N = {
       if (el.tagName === 'DIV' &&
           el.querySelector('div,section,article,ul,ol,li,table,form,p,h1,h2,h3,h4,h5,h6,button,label')) return;
 
+      /* 文字全部住在子元素裡的容器，不是一個句子，是一個排版盒子：
+           <div class="btn-row"><a class="btn" href="platform.html">看平台怎麼運作</a></div>
+         這個 div 的 textContent 剛好等於那顆按鈕的字，字典查得到，
+         整段替換會把 <a> 連同 href 一起換成純文字 —— 按鈕就這樣消失了。
+         判斷依據是「元素自己有沒有非空白的文字節點」：沒有就代表
+         它只是個容器，跳過它，讓子元素各自被翻譯。 */
+      if (el.children.length && ![...el.childNodes].some(
+            n => n.nodeType === 3 && n.textContent.trim())) return;
+
       if (el.dataset.oHtml === undefined) {
         const txt = this.norm(el.textContent);
         if (!txt || txt.length > 400) return;
@@ -188,7 +197,12 @@ const I18N = {
       }
       const out = this.translate(el.dataset.oFull);
       if (out !== el.dataset.oFull) {
-        el.textContent = out;
+        /* 字典值可以自己帶標記。句子裡的連結、<b> 強調、換行都是內容的一
+           部分，攤成純文字會讓英文版少掉兩顆按鈕、少掉整段的重點。
+           譯文由我們自己寫在 assets/lang/*.js，不是外部輸入，
+           所以這裡用 innerHTML 是安全的。 */
+        if (out.includes('<')) el.innerHTML = out;
+        else el.textContent = out;
         handled.add(el);
       } else if (this.lang === 'zh') {
         el.innerHTML = el.dataset.oHtml;   // 切回中文時還原原本的 <b> 等標記

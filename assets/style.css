@@ -1919,7 +1919,7 @@ section[style*="--almond-soft"],
 }
 .page-hero p{color:var(--ink-soft)}
 .page-hero .eyebrow{color:var(--gold-deep)}
-.page-hero .accent{color:var(--coffee)}
+.page-hero .accent{color:var(--gold-deep)}
 
 /* --- 深色區塊 → 淺色面 --- */
 .dark-section{
@@ -1941,7 +1941,7 @@ section[style*="--almond-soft"],
 .dark-section h3,
 .dark-section h4{color:var(--ink)}
 .dark-section .eyebrow{color:var(--gold-deep)}
-.dark-section .accent{color:var(--coffee)}
+.dark-section .accent{color:var(--gold-deep)}
 .dark-section a{color:var(--coffee)}
 
 /* 深色區塊裡的卡片 */
@@ -2032,7 +2032,12 @@ section[style*="--almond-soft"],
 
 /* 亮金當「文字」在淺底上只有 2:1，一定要換掉。
    但不能直接覆寫 --accent —— 按鈕的底色也吃這個變數，
-   一改連 .btn-gold 都變咖啡色了。所以只針對文字用途逐一指定。 */
+   一改連 .btn-gold 都變咖啡色了。所以只針對文字用途逐一指定。
+
+   用 --gold-deep 而不是 --coffee：淺色化之後 --coffee 被改成 #1D1B1B，
+   跟 --ink 是同一個顏色，於是「重點字」跟內文長得一模一樣 ——
+   標了 .accent 等於沒標。--gold-deep (#89712F) 對白底 4.7:1，
+   標題級文字的門檻是 3:1，看得出是金色又讀得清楚。 */
 .page-hero h1 .accent,
 .page-hero .accent,
 .dark-section .sec-title .accent,
@@ -2041,7 +2046,7 @@ section[style*="--almond-soft"],
 .dark-section h3 .accent,
 .dark-section .accent,
 .cta-band .sec-title .accent,
-.cta-band .accent{ color:var(--coffee) }
+.cta-band .accent{ color:var(--gold-deep) }
 
 /* eyebrow 的金色在淺底是 4.29:1，差一點點，改用更深的金 */
 .page-hero .eyebrow,
@@ -2078,7 +2083,7 @@ header.hero{
 header.hero .hero-desc{color:var(--ink-soft)}
 header.hero .hero-desc b{color:var(--coffee)}
 header.hero h1{color:var(--ink)}
-header.hero h1 .accent{color:var(--coffee)}
+header.hero h1 .accent{color:var(--gold-deep)}
 header.hero .hero-tag{
   background:rgba(54,36,23,.06);border:1px solid var(--line);color:var(--ink-soft);
 }
@@ -2537,6 +2542,8 @@ footer{color:var(--ink-soft)}
   filter:drop-shadow(0 16px 34px rgba(54,36,23,.22));
 }
 .auth-brand-in h1{color:var(--ink)}
+/* 登入頁的招牌句跟首頁是同一句，重點字也該是同一個金色 */
+.auth-brand-in h1 .accent{color:var(--gold-deep)}
 .auth-brand-in p{color:var(--ink-soft)}
 .auth-points b{color:var(--coffee)}
 .auth-points span{color:var(--ink-soft)}
