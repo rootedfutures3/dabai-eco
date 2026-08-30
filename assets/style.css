@@ -2700,3 +2700,6 @@ footer{color:var(--ink-soft)}
   .acct-bar{flex-direction:column;align-items:stretch}
   .acct{justify-content:space-between}
 }
+/* 營收卡的標題本來是 h4，改成 h3 是為了標題層級不跳號；
+   字級維持原本的大小，視覺不變。 */
+.rev h3.rev-h{font-size:1.06rem;margin-bottom:8px}

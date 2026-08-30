@@ -102,6 +102,30 @@ def dict_keys(path):
 
 def main():
     pages = sorted(ROOT.glob('*.html'))
+
+    # JS 裡也有大量會顯示出來的中文（帳號綁定的步驟、派工單、提示訊息）。
+    # 只掃 HTML 的話這些永遠抓不到 —— 除錯時就是這樣漏了 30 條。
+    js_strings = {}
+    for jf in sorted((ROOT / 'assets').glob('*.js')):
+        src = jf.read_text(encoding='utf-8')
+        # 去掉註解，避免把說明文字當成要翻譯的內容
+        src = re.sub(r'/\*.*?\*/', '', src, flags=re.S)
+        src = re.sub(r'^\s*//.*$', '', src, flags=re.M)
+        for m in re.finditer(r"'([^'\\\n]{2,})'|\"([^\"\\\n]{2,})\"", src):
+            t = (m.group(1) or m.group(2)).strip()
+            if not HAN.search(t):
+                continue
+            # 只收「看起來像完整句子或標籤」的字串。
+            # 樣板碎片、HTML 片段、class 名稱不是給人看的，收進來只會製造噪音：
+            #   '<div class="no-result">…</div>'  ← HTML
+            #   'badge-${o.status === '已付全額' …'  ← 樣板運算式
+            #   '棵'、'張'                        ← 接在數字後面的量詞，靠 {n} 樣板處理
+            if any(x in t for x in ('<', '${', '}', 'badge-', '\\n')):
+                continue
+            if len(t) < 4:
+                continue
+            js_strings.setdefault(t, set()).add(jf.name)
+
     langs = {p.stem: dict_keys(p) for p in sorted((ROOT / 'assets/lang').glob('*.js'))}
 
     where = {}
@@ -110,6 +134,9 @@ def main():
         ex.feed(page.read_text(encoding='utf-8'))
         for text in ex.found + ex.loose:
             where.setdefault(text, set()).add(page.stem)
+
+    for t, files in js_strings.items():
+        where.setdefault(t, set()).update(files)
 
     missing = {}
     for text, pgs in where.items():

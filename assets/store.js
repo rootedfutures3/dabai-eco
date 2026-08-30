@@ -554,11 +554,29 @@ function push(tableName, row) {
     });
 }
 
-/** 更新雲端既有的一列（失敗只記錄，本機快取已經改好了） */
+/**
+ * 更新雲端既有的一列（失敗只記錄，本機快取已經改好了）。
+ *
+ * 同一列的更新會排隊。這些請求是射後不理的，同時飛出去時
+ * 誰先到伺服器並不保證 —— 連續把佣金比例改成 0 再改回 20，
+ * 有可能 0 那筆後到，資料庫就停在 0。
+ * 除錯時真的遇到了：deposit_share 被留在 0。
+ * 用一條 per-row 的 promise 鏈把順序釘住。
+ */
+const patchQueue = new Map();
+
 function patchRow(tableName, pk, pkVal, patch) {
   if (!SB.on) return;
-  SB.patch(tableName, pk, pkVal, patch)
-    .catch(e => console.warn('[雲端更新失敗]', tableName, e.message));
+  const lane = `${tableName}:${pk}:${pkVal}`;
+  const prev = patchQueue.get(lane) || Promise.resolve();
+
+  const next = prev
+    .catch(() => {})                       // 前一筆失敗不該卡住後面的
+    .then(() => SB.patch(tableName, pk, pkVal, patch))
+    .catch(e => console.warn('[雲端更新失敗]', tableName, e.message))
+    .finally(() => { if (patchQueue.get(lane) === next) patchQueue.delete(lane); });
+
+  patchQueue.set(lane, next);
 }
 
 /** 開機：載入雲端資料。沒設定 config.js 就直接沿用 localStorage。 */
