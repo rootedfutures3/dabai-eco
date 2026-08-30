@@ -1038,9 +1038,9 @@ function showAuthMode() {
        但<b>擋不住懂技術的人</b>：任何人打開瀏覽器主控台都能改，
        密碼也是明文存放的。
        <br><br>
-       要換成真正的登入：到 Supabase 跑一次 <code>supabase-setup-v3.sql</code>，
-       建立第一個管理員帳號，再把 <code>assets/config.js</code> 裡的
-       <code>AUTH_MODE</code> 改成 <code>'supabase'</code>。`;
+       <span>要換成真正的登入：先到 Supabase 的 SQL Editor 跑一次
+       supabase-setup-v3.sql，建立第一個管理員帳號，
+       再把 assets/config.js 的 AUTH_MODE 改成 supabase。</span>`;
 
   box.style.borderLeftColor = on ? 'var(--gold)' : 'var(--red)';
   if (typeof I18N !== 'undefined') I18N.refresh(box);

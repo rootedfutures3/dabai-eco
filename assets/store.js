@@ -243,10 +243,30 @@ const Store = {
   },
 
   /** 下一個訂單編號，格式 RF-YYYY-NNNN */
+  /**
+   * 下一個訂單編號。
+   *
+   * 原本是「訂單筆數 + 1」，那會出事：
+   * 雲端有 6 筆、本機快取還沒載完只有 0 筆時，算出來是 RF-2026-0001,
+   * 而那個編號已經有人在用了。orders 的主鍵就是 no，
+   * 寫入又帶著 merge-duplicates，於是新訂單直接「蓋掉」舊訂單 ——
+   * 沒有任何錯誤訊息，舊的那筆就這樣消失了。
+   * （這在示範資料上真的發生過：RF-2026-0001 的認養人被換掉了。）
+   *
+   * 改成看「同一年已用過的最大號碼」再加一，並且避開所有已用過的號碼。
+   */
   nextOrderNo(year) {
-    const db = Store.read();
-    const n = db.orders.length + 1;
-    return `RF-${year}-${String(n).padStart(4, '0')}`;
+    const orders = Store.read().orders || [];
+    const used = new Set(orders.map(o => o.no));
+    const maxN = orders.reduce((m, o) => {
+      const hit = /^RF-(\d{4})-(\d+)$/.exec(o.no || '');
+      return (hit && hit[1] === String(year)) ? Math.max(m, Number(hit[2])) : m;
+    }, 0);
+
+    let n = maxN + 1;
+    const make = i => `RF-${year}-${String(i).padStart(4, '0')}`;
+    while (used.has(make(n))) n++;
+    return make(n);
   },
 
   /* ---------- 系統設定（佣金比例等） ---------- */
@@ -386,13 +406,27 @@ const SB = {
     return r.json();
   },
 
-  async insert(tableName, rows) {
+  /**
+   * merge 只用在「重跑種子」那種場合。
+   * orders 這種有主鍵、又代表真實交易的資料絕對不能 merge ——
+   * 撞號時應該報錯讓上層處理，而不是無聲把舊那筆蓋掉。
+   */
+  async insert(tableName, rows, { merge = true } = {}) {
+    const prefer = merge
+      ? 'resolution=merge-duplicates,return=minimal'
+      : 'return=minimal';
     const r = await fetch(`${SB.url}/rest/v1/${tableName}`, {
       method: 'POST',
-      headers: SB.head({ Prefer: 'resolution=merge-duplicates,return=minimal' }, await SB.bearer()),
+      headers: SB.head({ Prefer: prefer }, await SB.bearer()),
       body: JSON.stringify(rows),
     });
-    if (!r.ok) throw new Error(`寫入 ${tableName} 失敗（${r.status}）：${await r.text()}`);
+    if (!r.ok) {
+      const body = await r.text();
+      const err = new Error(`寫入 ${tableName} 失敗（${r.status}）：${body}`);
+      err.status = r.status;
+      err.duplicate = r.status === 409 || /duplicate key|already exists/i.test(body);
+      throw err;
+    }
   },
 
   async patch(tableName, pk, pkVal, patch) {
@@ -482,10 +516,42 @@ function ownerOf(tree) {
 }
 
 /** 寫入雲端（失敗只記錄，不阻斷畫面 —— 資料仍在本機快取） */
+/* 這幾張表有主鍵、而且代表真實紀錄，撞號要報錯不能覆蓋 */
+const NO_MERGE = new Set(['orders', 'payouts']);
+
 function push(tableName, row) {
   if (!SB.on) return;
-  SB.insert(tableName, [MAP[tableName].out(row)])
-    .catch(e => console.warn('[雲端寫入失敗]', tableName, e.message));
+  const merge = !NO_MERGE.has(tableName);
+
+  SB.insert(tableName, [MAP[tableName].out(row)], { merge })
+    .catch(async e => {
+      /* 撞號多半是本機快取比雲端舊。重新抓一次雲端的號碼再試一次，
+         而不是讓這筆訂單就這樣消失。 */
+      if (e.duplicate && tableName === 'orders') {
+        console.warn('[訂單編號撞號，重新取號]', row.no);
+        try {
+          /* 順序很重要：nextOrderNo 讀的是 localStorage，
+             所以要先把重抓回來的訂單寫回去，再算新號碼 ——
+             不然算出來的還是同一個號，重試一定再撞一次。 */
+          const rows = await SB.get('orders');
+          const db = Store.read();
+          db.orders = rows.map(MAP.orders.in);
+          Store.write(db);
+
+          const fresh = Store.nextOrderNo(String(row.no).split('-')[1]);
+          const retry = { ...row, no: fresh };
+          db.orders.push(retry);
+          Store.write(db);
+
+          await SB.insert('orders', [MAP.orders.out(retry)], { merge: false });
+          console.warn('[已改用新編號]', fresh);
+          return;
+        } catch (e2) {
+          console.warn('[重新取號也失敗]', e2.message);
+        }
+      }
+      console.warn('[雲端寫入失敗]', tableName, e.message);
+    });
 }
 
 /** 更新雲端既有的一列（失敗只記錄，本機快取已經改好了） */

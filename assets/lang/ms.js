@@ -2103,10 +2103,6 @@ window.LANG_MS = {
   '目前是示範模式（前端權限控制）': 'Kini dalam mod demo (kawalan kebenaran bahagian hadapan)',
   '—— 它決定每個角色看得到哪些功能、按不按得到哪些按鈕，足以支撐日常分工， 但': ' — ia menentukan ciri yang dilihat setiap peranan dan butang yang boleh ditekan, memadai untuk pembahagian kerja harian, tetapi ',
   '：任何人打開瀏覽器主控台都能改， 密碼也是明文存放的。': ': sesiapa boleh mengubahnya dari konsol pelayar, dan kata laluan disimpan sebagai teks biasa.',
-  '要換成真正的登入：到 Supabase 跑一次': 'Untuk beralih kepada pengesahan sebenar, jalankan ',
-  '， 建立第一個管理員帳號，再把': ' dalam Supabase, cipta akaun pentadbir pertama, kemudian tetapkan ',
-  '裡的': ' ',
-  '改成': ' kepada ',
   '已啟用 Supabase Auth': 'Supabase Auth diaktifkan',
   '密碼由伺服器加鹽雜湊保管，前端拿不到；登入後帶著 JWT 讀寫資料庫，': 'Kata laluan digaram dan dicincang di pelayan dan tidak pernah sampai ke pelayar. Selepas log masuk, setiap bacaan dan tulisan membawa JWT, jadi ',
   '權限由資料庫的 RLS 政策強制執行': 'kebenaran dikuatkuasakan oleh dasar RLS pangkalan data',
@@ -2313,4 +2309,5 @@ window.LANG_MS = {
   '發文 →': 'Siar →',
   '會開啟 Business Suite 的發文視窗，可以同時勾選粉專與 IG': 'Membuka penggubah Business Suite, di mana anda boleh menanda Halaman dan Instagram sekali gus',
   '手機用分享面板最快；桌機走 Business Suite（IG 網頁版不能發圖文）': 'Helaian kongsi paling pantas pada telefon; pada desktop gunakan Business Suite (IG di web tidak boleh menyiarkan foto)',
+  '要換成真正的登入：先到 Supabase 的 SQL Editor 跑一次 supabase-setup-v3.sql，建立第一個管理員帳號， 再把 assets/config.js 的 AUTH_MODE 改成 supabase。': 'Untuk beralih kepada pengesahan sebenar: jalankan supabase-setup-v3.sql dalam SQL Editor Supabase, cipta akaun pentadbir pertama, kemudian tetapkan AUTH_MODE dalam assets/config.js kepada supabase.',
 };

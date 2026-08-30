@@ -2102,10 +2102,6 @@ window.LANG_EN = {
   '目前是示範模式（前端權限控制）': 'Currently in demo mode (front-end permission control)',
   '—— 它決定每個角色看得到哪些功能、按不按得到哪些按鈕，足以支撐日常分工， 但': ' — it decides which features each role sees and which buttons they can press, which is enough for day-to-day division of work, but ',
   '：任何人打開瀏覽器主控台都能改， 密碼也是明文存放的。': ': anyone can change it from the browser console, and passwords are stored in plain text.',
-  '要換成真正的登入：到 Supabase 跑一次': 'To switch to real authentication, run ',
-  '， 建立第一個管理員帳號，再把': ' in Supabase, create the first admin account, then set ',
-  '裡的': ' ',
-  '改成': ' to ',
   '已啟用 Supabase Auth': 'Supabase Auth is enabled',
   '密碼由伺服器加鹽雜湊保管，前端拿不到；登入後帶著 JWT 讀寫資料庫，': 'Passwords are salted and hashed on the server and never reach the browser. Once signed in, every read and write carries a JWT, so ',
   '權限由資料庫的 RLS 政策強制執行': 'permissions are enforced by the database\'s RLS policies',
@@ -2312,4 +2308,5 @@ window.LANG_EN = {
   '發文 →': 'Post →',
   '會開啟 Business Suite 的發文視窗，可以同時勾選粉專與 IG': 'Opens the Business Suite composer, where you can tick the Page and Instagram together',
   '手機用分享面板最快；桌機走 Business Suite（IG 網頁版不能發圖文）': 'The share sheet is fastest on a phone; on desktop use Business Suite (IG on the web cannot post photos)',
+  '要換成真正的登入：先到 Supabase 的 SQL Editor 跑一次 supabase-setup-v3.sql，建立第一個管理員帳號， 再把 assets/config.js 的 AUTH_MODE 改成 supabase。': 'To switch to real authentication: run supabase-setup-v3.sql in the Supabase SQL Editor, create the first admin account, then set AUTH_MODE in assets/config.js to supabase.',
 };
