@@ -2309,4 +2309,8 @@ window.LANG_MS = {
   '已開好：': 'Akaun sedia: ',
   '帳號尚未建立': 'Akaun belum dicipta',
   '文案開頭': 'Permulaan kapsyen',
+  '已綁定的帳號': 'Akaun bersambung',
+  '發文 →': 'Siar →',
+  '會開啟 Business Suite 的發文視窗，可以同時勾選粉專與 IG': 'Membuka penggubah Business Suite, di mana anda boleh menanda Halaman dan Instagram sekali gus',
+  '手機用分享面板最快；桌機走 Business Suite（IG 網頁版不能發圖文）': 'Helaian kongsi paling pantas pada telefon; pada desktop gunakan Business Suite (IG di web tidak boleh menyiarkan foto)',
 };

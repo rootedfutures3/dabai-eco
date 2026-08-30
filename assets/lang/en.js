@@ -2308,4 +2308,8 @@ window.LANG_EN = {
   '已開好：': 'Account ready: ',
   '帳號尚未建立': 'Account not created yet',
   '文案開頭': 'Caption opening',
+  '已綁定的帳號': 'Connected accounts',
+  '發文 →': 'Post →',
+  '會開啟 Business Suite 的發文視窗，可以同時勾選粉專與 IG': 'Opens the Business Suite composer, where you can tick the Page and Instagram together',
+  '手機用分享面板最快；桌機走 Business Suite（IG 網頁版不能發圖文）': 'The share sheet is fastest on a phone; on desktop use Business Suite (IG on the web cannot post photos)',
 };

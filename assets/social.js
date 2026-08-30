@@ -15,26 +15,54 @@
    本檔會改走 POST 到那個網址（見 publish()）。
    ============================================================ */
 
+/** 取得已綁定的帳號設定（config.js）。沒設定就回空物件，不要炸掉。 */
+function acct(key) {
+  return (typeof SOCIAL_ACCOUNTS !== 'undefined' && SOCIAL_ACCOUNTS[key]) || {};
+}
+
 const CHANNELS = {
   facebook: {
     name: 'Facebook', icon: '📘', limit: 2000,
-    /* sharer 只保證帶得動連結，內文一律靠剪貼簿 */
-    composer: u => 'https://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent(u),
-    hint: '貼文視窗開啟後，Ctrl/⌘+V 貼上文案',
+    /* 直接開 Meta Business Suite 的發文視窗，而且指定我們自己的粉專。
+       原本開的是通用的 sharer.php，還要自己找粉專、還不能同時發 IG。
+       Business Suite 的 composer 可以一次勾選粉專和 IG。 */
+    composer() {
+      const id = acct('facebook').pageId;
+      return id
+        ? `https://business.facebook.com/latest/composer/?asset_id=${id}`
+        : 'https://business.facebook.com/latest/composer/';
+    },
+    open: () => acct('facebook').url || 'https://www.facebook.com/',
+    hint: '會開啟 Business Suite 的發文視窗，可以同時勾選粉專與 IG',
   },
   instagram: {
     name: 'Instagram', icon: '📸', limit: 2200,
-    composer: () => 'https://www.instagram.com/',
-    hint: 'IG 的圖文發布只能在手機 App 或 Meta Business Suite 完成',
+    /* IG 網頁版不能發圖文，所以一樣送去 Business Suite；
+       手機上則走系統的分享面板（見 publish()）。 */
+    composer() {
+      const id = acct('facebook').pageId;
+      return id
+        ? `https://business.facebook.com/latest/composer/?asset_id=${id}`
+        : 'https://www.instagram.com/';
+    },
+    open: () => acct('instagram').url || 'https://www.instagram.com/',
+    hint: '手機用分享面板最快；桌機走 Business Suite（IG 網頁版不能發圖文）',
   },
   youtube: {
     name: 'YouTube', icon: '▶️', limit: 5000,
-    composer: () => 'https://studio.youtube.com/',
+    composer() {
+      const id = acct('youtube').channelId;
+      return id
+        ? `https://studio.youtube.com/channel/${id}/posts`
+        : 'https://studio.youtube.com/';
+    },
+    open: () => acct('youtube').url || 'https://www.youtube.com/',
     hint: '用於社群貼文或 Shorts 說明欄',
   },
   rednote: {
     name: '小紅書', icon: '📕', limit: 1000,
     composer: () => 'https://creator.xiaohongshu.com/publish/publish',
+    open: () => acct('rednote').url || 'https://www.xiaohongshu.com/',
     hint: '標題建議 20 字以內，正文重點放前三行',
   },
 };
@@ -250,7 +278,7 @@ async function publish(channel, text, post) {
   }
 
   await copy(text);
-  window.open(CHANNELS[channel].composer(SITE), '_blank', 'noopener');
+  window.open(CHANNELS[channel].composer(), '_blank', 'noopener');
   return { mode: 'manual', link: '' };
 }
 
@@ -345,6 +373,7 @@ function renderSocial() {
   fillSubjects();
   renderPostLog();
   renderConnections();
+  renderAccountBar();
   initCalendar();
 
   const topic = document.getElementById('po-topic');
@@ -703,4 +732,36 @@ function exportCalendarCsv() {
   a.click();
   a.remove();
   setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+}
+
+/* ============================================================
+   帳號快捷列
+   ------------------------------------------------------------
+   把已經綁好的帳號放在最上面，一鍵打開粉專／IG／頻道，
+   或直接跳到那個帳號的發文視窗。
+   不用再自己開分頁、找粉專、切帳號。
+   ============================================================ */
+function renderAccountBar() {
+  const box = document.getElementById('acct-bar');
+  if (!box) return;
+
+  const rows = Object.entries(CHANNELS)
+    .map(([key, ch]) => ({ key, ch, a: acct(key) }))
+    .filter(r => r.a.url);          // 沒開帳號的就不佔位置
+
+  if (!rows.length) { box.hidden = true; return; }
+  box.hidden = false;
+
+  box.innerHTML = `
+    <span class="acct-label">已綁定的帳號</span>
+    ${rows.map(({ key, ch, a }) => `
+      <span class="acct">
+        <a class="acct-name" href="${a.url}" target="_blank" rel="noopener"
+           title="打開${ch.name}">
+          <span aria-hidden="true">${ch.icon}</span>
+          ${a.handle ? '@' + a.handle : ch.name}
+        </a>
+        <a class="acct-go" href="${ch.composer()}" target="_blank" rel="noopener"
+           title="到${ch.name}發文">發文 →</a>
+      </span>`).join('')}`;
 }
