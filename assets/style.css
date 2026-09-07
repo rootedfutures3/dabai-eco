@@ -2841,3 +2841,31 @@ table tfoot td:first-child{color:var(--ink-soft);font-weight:600}
   .ov-switch{width:100%}
   .ovs{flex:1 1 0;padding:0 8px}
 }
+
+/* 編輯視窗 */
+.ed-back{
+  position:fixed;inset:0;z-index:120;
+  display:flex;align-items:flex-start;justify-content:center;
+  padding:5vh 16px;overflow-y:auto;
+  background:rgba(29,27,27,.45);backdrop-filter:blur(3px);
+}
+.ed{
+  width:100%;max-width:560px;
+  background:var(--snow);border:1px solid var(--line);
+  border-radius:var(--radius);padding:28px;
+  box-shadow:0 26px 70px rgba(29,27,27,.28);
+}
+.ed h3{font-size:1.28rem;margin-bottom:6px;color:var(--ink)}
+.ed-sub{font-size:.94rem;color:var(--ink-soft);margin-bottom:22px;line-height:1.6}
+.ed-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.ed-grid .fld{display:flex;flex-direction:column;gap:6px}
+.ed-grid .fld > span{font-size:.9rem;font-weight:600;color:var(--ink-soft)}
+.ed-grid .fld small{font-size:.84rem}
+.ed-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:24px}
+.ed .form-error:empty{display:none}
+@media(max-width:560px), (pointer:coarse){
+  .ed-grid{grid-template-columns:1fr}
+  .ed{padding:20px}
+  .ed-actions{flex-direction:column-reverse}
+  .ed-actions .btn{width:100%;justify-content:center}
+}

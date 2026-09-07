@@ -172,6 +172,14 @@ const Perm = {
   },
 
   /** 能不能做某件事。'view.all' 自動涵蓋所有 view.* */
+  /** 只有超級管理員能做的事（改樹、改客戶、改金額）用這個判斷。
+      不用權限旗標是刻意的 —— 這幾項牽涉錢與資產，
+      不希望有人自訂一個角色就把它勾起來。 */
+  isSuper() {
+    const m = Perm.me();
+    return !!m && m.perm === 'super';
+  },
+
   can(action) {
     const r = Perm.role();
     if (!r || !PERMS[r]) return false;

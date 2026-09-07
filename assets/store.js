@@ -183,7 +183,11 @@ const Store = {
   },
   upsertTree(tree) {
     const db = Store.read();
-    db.trees = db.trees || [];
+    /* treeList() 在 db.trees 還空著時是回傳 TREES 種子的。
+       如果這裡直接往空陣列 push，db.trees 就變成「只有這一棵」，
+       treeList() 之後不再走種子，另外 29 棵就消失了。
+       所以先把目前看得到的清單落地，再改其中一筆。 */
+    if (!db.trees || !db.trees.length) db.trees = Store.treeList().map(t => ({ ...t }));
     const i = db.trees.findIndex(t => t.id === tree.id);
     if (i >= 0) {
       db.trees[i] = { ...db.trees[i], ...tree };
@@ -194,6 +198,37 @@ const Store = {
       push('trees', tree);
     }
     return Store.write(db).trees;
+  },
+
+  /**
+   * 改一筆訂單。訂單編號是主鍵，不開放修改 ——
+   * 改編號等於換一筆交易，會讓撥款紀錄對不到來源。
+   * 金額改動會連帶影響佣金拆帳，所以呼叫端記得重畫佣金那一頁。
+   */
+  updateOrder(no, patch) {
+    const db = Store.read();
+    const o = (db.orders || []).find(x => x.no === no);
+    if (!o) return false;
+    const clean = {};
+    for (const [k, v] of Object.entries(patch)) {
+      if (k === 'no') continue;                       // 主鍵不給改
+      clean[k] = (k === 'amount' || k === 'paid') ? Number(v) || 0 : v;
+    }
+    Object.assign(o, clean);
+    Store.write(db);
+    patchRow('orders', 'no', no, clean);
+    return true;
+  },
+
+  /** 改一筆 B2B 潛在客戶。 */
+  updateLead(id, patch) {
+    const db = Store.read();
+    const l = (db.leads || []).find(x => String(x.id) === String(id));
+    if (!l) return false;
+    Object.assign(l, patch);
+    Store.write(db);
+    patchRow('leads', 'id', l.id, patch);
+    return true;
   },
 
   /* ---- 訊息 ---- */

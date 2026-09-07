@@ -71,6 +71,16 @@ Store.onReady((info) => {
     if (b) makePayout(b.dataset.payout);
   });
 
+  // 編輯（只有超管看得到按鈕，這裡再擋一次 —— 按鈕藏起來不算權限控制）
+  document.addEventListener('click', e => {
+    const b = e.target.closest('[data-tree-edit],[data-cust-edit],[data-lead-edit],[data-order-edit]');
+    if (!b || !Perm.isSuper()) return;
+    if (b.dataset.treeEdit)  editTree(b.dataset.treeEdit);
+    if (b.dataset.custEdit)  editCustomer(b.dataset.custEdit);
+    if (b.dataset.leadEdit)  editLead(b.dataset.leadEdit);
+    if (b.dataset.orderEdit) editOrder(b.dataset.orderEdit);
+  });
+
   document.getElementById('db-reset').addEventListener('click', () => {
     if (confirm('確定要清除本機的示範資料，回到初始狀態嗎？')) {
       Store.reset();
@@ -188,6 +198,183 @@ function renderKpis() {
   `).join('');
 }
 
+
+/* ============================================================
+   編輯視窗
+   ------------------------------------------------------------
+   樹、客戶、金額這幾樣改下去會動到資產與帳，所以只開放給超級管理員。
+   權限不是用旗標判斷的 —— 旗標可以被自訂角色勾起來，
+   這幾項希望它固定綁在 super 身上。
+   ============================================================ */
+
+/**
+ * 開一個編輯視窗。
+ * fields: [{ k, label, type:'text'|'number'|'select', opts, hint, step }]
+ * onSave(值物件) 回傳 falsy 就不關窗（可以拿來擋驗證）。
+ */
+function openEditor({ title, sub, fields, values, onSave }) {
+  document.querySelector('.ed-back')?.remove();
+
+  const input = f => {
+    const v = values[f.k] ?? '';
+    if (f.type === 'select') {
+      return `<select id="ed-${f.k}">${f.opts.map(([val, lab]) =>
+        `<option value="${val}"${String(val) === String(v) ? ' selected' : ''}>${lab}</option>`).join('')}</select>`;
+    }
+    return `<input id="ed-${f.k}" type="${f.type || 'text'}"
+              ${f.step ? `step="${f.step}"` : ''} value="${String(v).replace(/"/g, '&quot;')}">`;
+  };
+
+  const back = document.createElement('div');
+  back.className = 'ed-back';
+  back.innerHTML = `
+    <div class="ed" role="dialog" aria-modal="true" aria-label="${title}">
+      <h3>${title}</h3>
+      ${sub ? `<p class="ed-sub">${sub}</p>` : ''}
+      <div class="ed-grid">
+        ${fields.map(f => `
+          <label class="fld">
+            <span>${f.label}</span>
+            ${input(f)}
+            ${f.hint ? `<small class="dim">${f.hint}</small>` : ''}
+          </label>`).join('')}
+      </div>
+      <div class="ed-err form-error" role="alert"></div>
+      <div class="ed-actions">
+        <button class="btn btn-outline" data-ed-cancel type="button">取消</button>
+        <button class="btn btn-gold" data-ed-save type="button">儲存</button>
+      </div>
+    </div>`;
+  document.body.appendChild(back);
+
+  const close = () => back.remove();
+  back.addEventListener('click', e => { if (e.target === back) close(); });
+  back.querySelector('[data-ed-cancel]').addEventListener('click', close);
+  document.addEventListener('keydown', function esc(e) {
+    if (e.key === 'Escape') { close(); document.removeEventListener('keydown', esc); }
+  });
+
+  back.querySelector('[data-ed-save]').addEventListener('click', () => {
+    const out = {};
+    fields.forEach(f => {
+      const el = back.querySelector(`#ed-${f.k}`);
+      out[f.k] = f.type === 'number' ? Number(el.value) : el.value.trim();
+    });
+    const err = onSave(out);
+    if (typeof err === 'string') { back.querySelector('.ed-err').textContent = err; return; }
+    close();
+  });
+
+  back.querySelector('input,select')?.focus();
+}
+
+/** 表格裡的「編輯」按鈕。不是超管就完全不畫，不留一顆按不動的按鈕。 */
+const editBtn = (attr, id) =>
+  Perm.isSuper() ? `<button class="mini-btn" data-${attr}="${id}">編輯</button>` : '';
+
+
+/* ---------- 各表的編輯動作 ---------- */
+
+function editTree(id) {
+  const t = Store.treeList().find(x => x.id === id);
+  if (!t) return;
+  openEditor({
+    title: `編輯樹體 ${id}`,
+    sub: 'Tree ID 是主鍵，不開放修改 —— 改編號等於換一棵樹，撥款與回報就對不上了。',
+    values: t,
+    fields: [
+      { k:'variety', label:'品種' },
+      { k:'age',     label:'樹齡（年）',    type:'number' },
+      { k:'kg',      label:'預估產量（kg）', type:'number' },
+      { k:'price',   label:'年認養金（RM）', type:'number', step:'0.01' },
+      { k:'orchard', label:'果園' },
+      { k:'area',    label:'地區' },
+      { k:'farmer',  label:'果農' },
+      { k:'status',  label:'狀態', type:'select',
+        opts:[['available','開放認養'], ['reserved','保留中'], ['adopted','已認養']] },
+    ],
+    onSave(v) {
+      if (!v.variety) return '品種不能空白。';
+      if (v.price < 0) return '年認養金不能是負數。';
+      Store.upsertTree({ id, ...v });
+      renderAll();
+    },
+  });
+}
+
+/** 認養人資料存在他名下的每一筆訂單裡，所以要一起改。 */
+function editCustomer(email) {
+  const db = Store.read();
+  const mine = db.orders.filter(o => o.email === email);
+  if (!mine.length) return;
+  const first = mine[0];
+  openEditor({
+    title: `編輯認養人 ${first.customer}`,
+    sub: `這個人名下有 ${mine.length} 筆訂單，改動會一起套用到全部。`,
+    values: { customer: first.customer, email: first.email, phone: first.phone || '' },
+    fields: [
+      { k:'customer', label:'姓名' },
+      { k:'email',    label:'Email', type:'email' },
+      { k:'phone',    label:'電話' },
+    ],
+    onSave(v) {
+      if (!v.customer) return '姓名不能空白。';
+      if (!v.email)    return 'Email 不能空白。';
+      mine.forEach(o => Store.updateOrder(o.no, v));
+      renderAll();
+    },
+  });
+}
+
+function editLead(id) {
+  const l = (Store.read().leads || []).find(x => String(x.id) === String(id));
+  if (!l) return;
+  openEditor({
+    title: `編輯企業名單 ${l.company}`,
+    values: l,
+    fields: [
+      { k:'company', label:'公司' },
+      { k:'contact', label:'窗口' },
+      { k:'title',   label:'職稱' },
+      { k:'email',   label:'Email', type:'email' },
+      { k:'need',    label:'需求' },
+      { k:'budget',  label:'預算' },
+      { k:'stage',   label:'階段', type:'select',
+        opts:[['初次接觸','初次接觸'], ['洽談中','洽談中'], ['提案中','提案中'],
+              ['待回覆','待回覆'], ['已成交','已成交'], ['已擱置','已擱置']] },
+    ],
+    onSave(v) { Store.updateLead(id, v); renderAll(); },
+  });
+}
+
+/** 改金額會直接改變佣金拆帳，所以視窗裡先把新的拆法算給你看。 */
+function editOrder(no) {
+  const o = (Store.read().orders || []).find(x => x.no === no);
+  if (!o) return;
+  const rate = Store.settingNum('commission_rate', 20);
+  openEditor({
+    title: `編輯訂單 ${no}`,
+    sub: `平台佣金 ${rate}%。改動合約金額會重新計算佣金與果農應得，已撥出去的金額不會變。`,
+    values: o,
+    fields: [
+      { k:'customer', label:'認養人' },
+      { k:'amount',   label:'合約金額（RM）', type:'number', step:'0.01',
+        hint:`目前佣金 ${money(o.amount * rate / 100)}、果農應得 ${money(o.amount * (100 - rate) / 100)}` },
+      { k:'paid',     label:'已收（RM）', type:'number', step:'0.01' },
+      { k:'channel',  label:'付款方式' },
+      { k:'status',   label:'狀態', type:'select',
+        opts:[['已付訂金','已付訂金'], ['已付全額','已付全額'], ['待付款','待付款']] },
+    ],
+    onSave(v) {
+      if (v.amount <= 0) return '合約金額要大於 0。';
+      if (v.paid < 0)    return '已收不能是負數。';
+      if (v.paid > v.amount) return '已收不能超過合約金額。';
+      Store.updateOrder(no, v);
+      renderAll();
+    },
+  });
+}
+
 /* ---------- 訂單 ---------- */
 function renderOrders() {
   const db = Store.read();
@@ -229,6 +416,7 @@ function renderTrees() {
         num(t.price), t.orchard, t.area, t.farmer,
         `<span class="badge-${stat[1]}">${stat[0]}</span>`,
         o ? `<span class="pill">${o.no}</span>` : '<span class="dim">—</span>',
+        editBtn('tree-edit', t.id),
       ];
     });
 
@@ -237,7 +425,7 @@ function renderTrees() {
     { h:'樹齡',    num:true },
     { h:'預估產量', num:true },
     { h:'年認養金', num:true, sum:true },
-    '果園', '地區', '果農', '狀態', '綁定訂單'], rows);
+    '果園', '地區', '果農', '狀態', '綁定訂單', ''], rows);
 }
 
 /* ---------- 客戶 ---------- */
@@ -257,19 +445,21 @@ function renderCustomers() {
     `<b>${c.name}</b>`, `<span class="dim">${c.email}</span>`, c.phone,
     c.trees.map(t => `<span class="pill">${t}</span>`).join(' '),
     num(c.trees.length, n => qty(n) + ' 棵'), num(c.paid),
+    editBtn('cust-edit', c.email),
   ]);
   document.getElementById('t-b2c').innerHTML = table([
     '認養人', 'Email', '電話', '認養樹',
     { h:'棵數',     num:true },
-    { h:'累計已付', num:true, sum:true }], b2c);
+    { h:'累計已付', num:true, sum:true }, ''], b2c);
 
   const b2b = db.leads.map(l => [
     l.date, `<b>${l.company}</b>`, l.contact, `<span class="dim">${l.title}</span>`,
     `<span class="dim">${l.email}</span>`, l.need, l.budget,
     `<span class="badge-wait">${l.stage}</span>`,
+    editBtn('lead-edit', l.id),
   ]);
   document.getElementById('t-b2b').innerHTML = table(
-    ['日期', '公司', '窗口', '職稱', 'Email', '需求', '預算', '階段'], b2b);
+    ['日期', '公司', '窗口', '職稱', 'Email', '需求', '預算', '階段', ''], b2b);
 }
 
 /* ---------- 樹況回報 ---------- */
@@ -364,8 +554,8 @@ function renderCommission() {
       num(s.paidOut),
       { n: s.pending, html: done ? '<span class="badge-ok">已結清</span>'
                                  : `<span class="badge-wait">${money(s.pending)}</span>` },
-      done ? '—'
-           : `<button class="mini-btn" data-payout="${o.no}">撥款</button>`,
+      (done ? '—' : `<button class="mini-btn" data-payout="${o.no}">撥款</button>`)
+        + editBtn('order-edit', o.no),
     ];
   });
   document.getElementById('t-commission').innerHTML = table([
