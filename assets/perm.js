@@ -84,6 +84,7 @@ const PAGE_PERM = {
   trees:      'view.trees',
   customers:  'view.all',
   reports:    'view.trees',
+  invoices:   'view.money',
   commission: 'view.money',
   social:     'edit.social',
   wages:      'view.money',

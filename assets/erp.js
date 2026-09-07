@@ -23,6 +23,7 @@ Store.onReady((info) => {
   });
 
   initOverviewSwitch();
+  document.getElementById('inv-filter')?.addEventListener('change', renderInvoices);
 
   // 手機：漢堡開關側邊欄
   const side = document.getElementById('side');
@@ -179,6 +180,7 @@ function renderAll() {
   };
   draw('累計數字',   renderKpis);
   draw('訂單',       renderOrders);
+  draw('發票',       renderInvoices);
   draw('樹體資產',   renderTrees);
   draw('客戶',       renderCustomers);
   draw('樹況回報',   renderReports);
@@ -406,14 +408,94 @@ function renderOrders() {
     num(o.amount), num(o.paid), num(o.amount - o.paid),
     `${o.channel || '—'}<span class="sub-line">`
       + `<span class="badge-${o.status === '已付全額' ? 'ok' : 'wait'}">${o.status}</span></span>`,
-    `<button class="mini-btn" data-invoice="${o.no}">發票</button>`,
   ]);
   document.getElementById('t-orders').innerHTML = table([
     '訂單 / 日期', 'Tree ID', '認養人 / Email',
     { h:'合約金額', num:true, sum:true },
     { h:'已收',     num:true, sum:true },
     { h:'待收',     num:true, sum:true },
-    '付款 / 狀態', ''], rows);
+    '付款 / 狀態'], rows);
+}
+
+
+/* ============================================================
+   發票
+   ------------------------------------------------------------
+   自己一個模組，不掛在訂單或佣金底下 —— 開發票、追未收、看逾期
+   是一條獨立的作業流程，做這件事的人不需要先去訂單頁繞一圈。
+
+   發票不另外存一份：一筆訂單對應一張發票，編號跟著訂單走。
+   多存一份就會有「訂單改了、發票沒改」的對不上風險。
+   ============================================================ */
+
+const INV_DUE_DAYS = 14;
+
+/** 一筆訂單推出它那張發票的狀態。 */
+function invoiceOf(o) {
+  const sst   = Store.settingNum('sst_rate', 0);
+  const total = (Number(o.amount) || 0) * (1 + sst / 100);
+  const due   = new Date(o.date);
+  due.setDate(due.getDate() + INV_DUE_DAYS);
+  const owed  = total - (Number(o.paid) || 0);
+  const late  = owed > 0.005 && Date.now() > due.getTime();
+  return {
+    no: 'INV-' + o.no.replace(/^RF-/, ''),
+    order: o.no,
+    date: o.date,
+    due: due.toISOString().slice(0, 10),
+    customer: o.customer,
+    email: o.email || '',
+    total, paid: Number(o.paid) || 0, owed,
+    late,
+    state: owed <= 0.005 ? 'paid' : (late ? 'overdue' : 'open'),
+    overdueDays: late ? Math.round((Date.now() - due.getTime()) / 86400000) : 0,
+  };
+}
+
+function renderInvoices() {
+  const el = document.getElementById('t-invoices');
+  if (!el) return;
+
+  const all = (Store.read().orders || []).map(invoiceOf)
+    .sort((a, b) => b.no.localeCompare(a.no));
+
+  const kpi = document.getElementById('inv-kpis');
+  if (kpi) {
+    const owed    = all.reduce((t, i) => t + i.owed, 0);
+    const paid    = all.reduce((t, i) => t + i.paid, 0);
+    const overdue = all.filter(i => i.state === 'overdue');
+    kpi.innerHTML = [
+      ['已開立', qty(all.length) + ' 張', '每筆訂單一張'],
+      ['已收',   money(paid), '含訂金與全額'],
+      ['未收',   money(owed), `${qty(all.filter(i => i.state !== 'paid').length)} 張還沒收足`],
+      ['逾期',   money(overdue.reduce((t, i) => t + i.owed, 0)),
+        overdue.length ? `${qty(overdue.length)} 張 · 最久 ${qty(Math.max(...overdue.map(i => i.overdueDays)))} 天` : '目前沒有逾期'],
+    ].map(([k, v, sub]) =>
+      `<div class="kpi-card"><span class="k">${k}</span><b>${v}</b><small>${sub}</small></div>`).join('');
+  }
+
+  const want = document.getElementById('inv-filter')?.value || '';
+  const rows = all
+    .filter(i => !want || (want === 'open' ? i.state !== 'paid' : i.state === want))
+    .map(i => [
+      `<b>${i.no}</b><span class="sub-line">${i.order}</span>`,
+      `${i.date}<span class="sub-line">到期 ${i.due}</span>`,
+      `${i.customer}<span class="sub-line" title="${i.email}">${i.email}</span>`,
+      num(i.total), num(i.paid), num(i.owed),
+      { n: i.overdueDays, html: i.state === 'paid'
+          ? '<span class="badge-ok">已收足</span>'
+          : i.state === 'overdue'
+            ? `<span class="badge-late">逾期 ${qty(i.overdueDays)} 天</span>`
+            : '<span class="badge-wait">未到期</span>' },
+      `<button class="mini-btn" data-invoice="${i.order}">開啟</button>`,
+    ]);
+
+  el.innerHTML = table([
+    '發票 / 訂單', '開立 / 到期', '客戶 / Email',
+    { h:'發票金額', num:true, sum:true },
+    { h:'已收',     num:true, sum:true },
+    { h:'未收',     num:true, sum:true },
+    '狀態', ''], rows);
 }
 
 /* ---------- 樹體資產 ---------- */
@@ -582,7 +664,6 @@ function renderCommission() {
       { n: s.pending, html: done ? '<span class="badge-ok">已結清</span>'
                                  : `<span class="badge-wait">${money(s.pending)}</span>` },
       (done ? '—' : `<button class="mini-btn" data-payout="${o.no}">撥款</button>`)
-        + `<button class="mini-btn" data-invoice="${o.no}">發票</button>`
         + editBtn('order-edit', o.no),
     ];
   });
