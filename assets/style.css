@@ -2794,7 +2794,12 @@ table tfoot td:first-child{color:var(--ink-soft);font-weight:600}
 /* 窄螢幕：表格改成一列一張卡片。
    原本要左右滑才看得到後面的欄位 —— 在果園裡單手拿手機時特別難用。
    拆成卡片之後每一筆的全部欄位都在同一個畫面上，只要往下捲。 */
-@media(max-width:760px), (pointer:coarse){
+/* 何時改用卡片：門檻是「表格真的放得下嗎」，不是「這是不是手機」。
+   後台側邊欄在 >1000px 時固定佔掉 246px，所以內容區大約是
+   視窗寬 − 298px。訂單表併欄之後的自然寬度約 940px，
+   換算下來要 1240px 以上的視窗才塞得進去 —— 比這窄就改卡片，
+   免得又出現那條左右拉的捲軸。 */
+@media(max-width:1240px), (pointer:coarse){
   .table-scroll{overflow-x:visible}
   .table-scroll table{min-width:0;background:none;border-radius:0}
   .table-scroll thead{display:none}
@@ -2816,6 +2821,14 @@ table tfoot td:first-child{color:var(--ink-soft);font-weight:600}
     color:var(--ink-soft);font-weight:600;font-size:.9rem;
   }
   .table-scroll td[data-label=""]::before{content:none}
+  /* 併欄的第二行在桌機要截斷（欄寬有限），但卡片裡空間夠，
+     不該還把日期截成「2026…」。放開寬度限制，改成疊在下面。 */
+  .table-scroll .sub-line{
+    flex:1 0 100%;                /* 佔滿一整列，右對齊才會跟主要值對齊 */
+    max-width:none;white-space:normal;overflow:visible;
+    text-align:right;margin-top:2px;
+  }
+  .table-scroll td{flex-wrap:wrap}
   .table-scroll tfoot tr{background:var(--cream-dim);border-color:var(--ink)}
   .table-scroll tfoot td{border-top:none}
   .table-scroll tfoot td:empty{display:none}
@@ -3018,4 +3031,42 @@ table tfoot td:first-child{color:var(--ink-soft);font-weight:600}
 }
 @media(max-width:760px), (pointer:coarse){
   .btn-google{min-height:52px}
+}
+
+/* ============================================================
+   後台的寬表格
+   ------------------------------------------------------------
+   認養訂單有 11 欄。原本 14px/18px 的內距加上不設限的 Email 欄，
+   自然寬度是 1425px，而內容區只有 1127px —— 右邊兩欄被切掉，
+   底下多一條橫向捲軸。ERP 的表就是要一眼掃完，不該左右拉。
+
+   做法是三件事一起：收緊內距、給幾個欄位寬度上限（Email 過長就
+   截斷並用 title 保留全文）、把內容區的上限放寬讓大螢幕用得到空間。
+   ============================================================ */
+.admin-body{max-width:1480px}
+
+.admin-body table th,
+.admin-body table td{padding:12px 12px;font-size:.94rem}
+/* 表頭折行會把整列撐高，而且「品種 / 樹齡」斷成兩行很難讀 */
+.admin-body table th{white-space:nowrap}
+
+/* 日期、金額、編號都不該折行 —— 折了反而更難讀 */
+.admin-body table td:first-child,
+.admin-body table th:first-child{white-space:nowrap}
+.admin-body table td.num{padding-left:8px}
+
+/* 併欄之後的第二行：日期、Email、狀態徽章都放在主要值底下，
+   小一號、淡一點，掃視時眼睛先抓到主要那行。 */
+.sub-line{
+  display:block;margin-top:3px;
+  font-size:.84rem;font-weight:400;color:var(--ink-soft);
+  max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.sub-line .badge-ok, .sub-line .badge-wait{font-size:.78rem}
+
+/* Email 是最寬的一欄，也是最不需要看全的。截斷，滑鼠移上去看全文 */
+.admin-body table td .dim[title],
+.admin-body table td.cell-clip{
+  display:inline-block;max-width:180px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:bottom;
 }

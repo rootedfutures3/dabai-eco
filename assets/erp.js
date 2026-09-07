@@ -395,22 +395,25 @@ function editOrder(no) {
 /* ---------- 訂單 ---------- */
 function renderOrders() {
   const db = Store.read();
+  /* 欄位刻意併過：訂單編號和日期是同一件事、姓名和 Email 是同一個人、
+     付款方式和狀態都在講這筆錢收到哪了。11 欄併成 8 欄之後表格才塞得進
+     內容區 —— 併之前自然寬度 1425px、容器只有 1127px，右邊兩欄被切掉，
+     底下多一條橫向捲軸。資料一筆都沒有少。 */
   const rows = [...db.orders].reverse().map(o => [
-    `<b>${o.no}</b>`, o.date,
+    `<b>${o.no}</b><span class="sub-line">${o.date}</span>`,
     `<span class="pill">${o.treeId}</span>`,
-    o.customer,
-    `<span class="dim">${o.email}</span>`,
+    `${o.customer}<span class="sub-line" title="${o.email || ''}">${o.email || ''}</span>`,
     num(o.amount), num(o.paid), num(o.amount - o.paid),
-    o.channel,
-    `<span class="badge-${o.status === '已付全額' ? 'ok' : 'wait'}">${o.status}</span>`,
+    `${o.channel || '—'}<span class="sub-line">`
+      + `<span class="badge-${o.status === '已付全額' ? 'ok' : 'wait'}">${o.status}</span></span>`,
     `<button class="mini-btn" data-invoice="${o.no}">發票</button>`,
   ]);
   document.getElementById('t-orders').innerHTML = table([
-    '訂單編號', '日期', 'Tree ID', '認養人', 'Email',
+    '訂單 / 日期', 'Tree ID', '認養人 / Email',
     { h:'合約金額', num:true, sum:true },
     { h:'已收',     num:true, sum:true },
     { h:'待收',     num:true, sum:true },
-    '付款方式', '狀態', ''], rows);
+    '付款 / 狀態', ''], rows);
 }
 
 /* ---------- 樹體資產 ---------- */
@@ -428,23 +431,26 @@ function renderTrees() {
       const o = db.orders.find(x => x.treeId === t.id);
       const stat = { available:['開放認養','wait'], reserved:['保留中','wait'], adopted:['已認養','ok'] }[effective(t)];
       return [
-        `<b>${t.id}</b>`, CROP_NAME[t.crop], t.variety,
-        num(t.age, n => qty(n) + ' 年'),
+        `<b>${t.id}</b><span class="sub-line">${CROP_NAME[t.crop] || ''}</span>`,
+        `${t.variety || '—'}<span class="sub-line">${qty(t.age)} 年生</span>`,
         num(t.kg,  n => qty(n) + ' kg'),
-        num(t.price), t.orchard, t.area, t.farmer,
-        `<span class="badge-${stat[1]}">${stat[0]}</span>`,
-        o ? `<span class="pill">${o.no}</span>` : '<span class="dim">—</span>',
+        num(t.price),
+        `${t.orchard || '—'}<span class="sub-line">${t.area || ''}</span>`,
+        t.farmer,
+        `<span class="badge-${stat[1]}">${stat[0]}</span>`
+          + `<span class="sub-line">${o ? o.no : '—'}</span>`,
         `<button class="mini-btn" data-contract="${t.id}">合約</button>`
           + editBtn('tree-edit', t.id),
       ];
     });
 
+  /* 同樣併欄：作物跟著 Tree ID、樹齡跟著品種、地區跟著果園、
+     綁定的訂單跟著狀態。12 欄併成 8 欄，1440px 下就不必左右拉了。 */
   document.getElementById('t-trees').innerHTML = table([
-    'Tree ID', '作物', '品種',
-    { h:'樹齡',    num:true },
+    'Tree ID / 作物', '品種 / 樹齡',
     { h:'預估產量', num:true },
     { h:'年認養金', num:true, sum:true },
-    '果園', '地區', '果農', '狀態', '綁定訂單', ''], rows);
+    '果園 / 地區', '果農', '狀態 / 訂單', ''], rows);
 }
 
 /* ---------- 客戶 ---------- */
