@@ -2869,3 +2869,109 @@ table tfoot td:first-child{color:var(--ink-soft);font-weight:600}
   .ed-actions{flex-direction:column-reverse}
   .ed-actions .btn{width:100%;justify-content:center}
 }
+
+/* ============================================================
+   單據：發票與合約
+   ------------------------------------------------------------
+   螢幕上看起來就像一張 A4，因為它最後多半會被印出來或存成 PDF。
+   ============================================================ */
+.doc-back{
+  position:fixed;inset:0;z-index:130;overflow-y:auto;
+  background:rgba(29,27,27,.5);backdrop-filter:blur(3px);
+  padding:24px 16px 60px;
+}
+.doc-wrap{max-width:820px;margin:0 auto}
+.doc-bar{display:flex;gap:10px;justify-content:flex-end;margin-bottom:14px}
+.doc-sheet{
+  background:#fff;color:var(--ink);
+  padding:48px 52px;border-radius:6px;
+  box-shadow:0 26px 70px rgba(29,27,27,.32);
+  font-size:.95rem;line-height:1.7;
+}
+.doc-head{
+  display:flex;justify-content:space-between;gap:24px;align-items:flex-start;
+  padding-bottom:20px;border-bottom:3px solid var(--ink);
+}
+.doc-org b{display:block;font-size:1.12rem;letter-spacing:.02em}
+.doc-org span{display:block;font-size:.86rem;color:var(--ink-soft)}
+.doc-id{text-align:right}
+.doc-id b{display:block;font-size:1.7rem;letter-spacing:.06em}
+.doc-en{display:block;font-size:.76rem;letter-spacing:.18em;color:var(--ink-soft)}
+.doc-no{
+  display:block;margin-top:6px;font-weight:700;
+  font-variant-numeric:tabular-nums;color:var(--gold-deep);
+}
+.doc-meta{
+  display:flex;flex-wrap:wrap;gap:26px;
+  padding:16px 0;border-bottom:1px solid var(--line);margin-bottom:26px;
+}
+.doc-meta span{display:block;font-size:.78rem;color:var(--ink-soft)}
+.doc-meta b{font-variant-numeric:tabular-nums}
+.doc-parties{display:grid;grid-template-columns:1fr 1fr;gap:26px;margin-bottom:30px}
+.doc-parties.doc-three{grid-template-columns:repeat(3,1fr)}
+.doc-lab{
+  display:block;font-size:.74rem;letter-spacing:.14em;
+  color:var(--ink-soft);margin-bottom:6px;text-transform:uppercase;
+}
+.doc-parties b{display:block;font-size:1.02rem}
+.doc-parties span{display:block;font-size:.88rem;color:var(--ink-soft)}
+.doc-table{width:100%;min-width:0;border-collapse:collapse;margin-bottom:22px;background:none}
+.doc-table th{
+  text-align:left;font-size:.78rem;letter-spacing:.08em;
+  color:var(--ink-soft);border-bottom:2px solid var(--ink);padding:8px 10px;
+}
+.doc-table td{padding:11px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+.doc-table .num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.doc-ind{padding-left:26px;color:var(--ink-soft)}
+.doc-dim{color:var(--ink-soft);font-size:.86rem}
+.doc-sum{margin:0 0 26px auto;max-width:340px}
+.doc-sum > div{
+  display:flex;justify-content:space-between;gap:20px;
+  padding:7px 0;font-variant-numeric:tabular-nums;
+}
+.doc-sum .doc-total{border-top:1px solid var(--line);font-size:1.04rem}
+.doc-sum .doc-due{
+  border-top:2px solid var(--ink);margin-top:4px;padding-top:11px;font-size:1.14rem;
+}
+.doc-sum .doc-due b{color:var(--gold-deep)}
+.doc-h{font-size:1rem;margin:26px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--line)}
+.doc-list{margin:0 0 8px;padding-left:22px}
+.doc-list li{margin-bottom:8px}
+.doc-note{
+  margin-top:26px;padding-top:18px;border-top:1px solid var(--line);
+  font-size:.9rem;color:var(--ink-soft);
+}
+.doc-note p{margin-bottom:6px}
+.doc-sign{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;margin-top:46px}
+.doc-sign span{display:block;font-size:.8rem;color:var(--ink-soft);margin-bottom:38px}
+.doc-sign i{display:block;border-top:1px solid var(--ink)}
+.doc-warn{
+  margin-top:32px;padding:14px 16px;
+  background:var(--cream-dim);border-left:3px solid var(--gold-deep);
+  font-size:.86rem;color:var(--ink-soft);line-height:1.65;
+}
+
+@media(max-width:760px), (pointer:coarse){
+  .doc-back{padding:12px 10px 40px}
+  .doc-sheet{padding:24px 20px}
+  .doc-head{flex-direction:column;gap:14px}
+  .doc-id{text-align:left}
+  .doc-id b{font-size:1.4rem}
+  .doc-parties, .doc-parties.doc-three, .doc-sign{grid-template-columns:1fr}
+  .doc-sum{max-width:none}
+  .doc-bar{position:sticky;top:0;z-index:2}
+  .doc-bar .btn{flex:1 1 0;justify-content:center}
+}
+
+/* 列印時只留單據本身，不要側邊欄、頂欄和那兩顆按鈕 */
+@media print{
+  body:has(.doc-back) *{visibility:hidden}
+  body:has(.doc-back) #doc-sheet,
+  body:has(.doc-back) #doc-sheet *{visibility:visible}
+  body:has(.doc-back) #doc-sheet{
+    position:absolute;left:0;top:0;width:100%;
+    padding:0;box-shadow:none;border-radius:0;
+  }
+  .doc-back{position:static;background:none;backdrop-filter:none;padding:0}
+  .doc-bar{display:none}
+}

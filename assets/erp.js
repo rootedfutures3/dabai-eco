@@ -55,8 +55,11 @@ Store.onReady((info) => {
     if (!Number.isFinite(c) || c < 0 || c > 100) return alert('佣金％請填 0–100 之間的數字。');
     if (!Number.isFinite(d) || d < 0 || d > 100) return alert('訂金％請填 0–100 之間的數字。');
     if (c + d > 100) return alert(`佣金 ${c}% ＋ 訂金 ${d}% 超過 100%，果農的尾款會變成負數。`);
+    const t = parseFloat(document.getElementById('rate-sst').value);
+    if (!Number.isFinite(t) || t < 0 || t > 100) return alert('SST％請填 0–100 之間的數字。');
     Store.saveSetting('commission_rate', c);
     Store.saveSetting('deposit_share', d);
+    Store.saveSetting('sst_rate', t);
     renderCommission();
     renderKpis();
   });
@@ -69,6 +72,14 @@ Store.onReady((info) => {
   document.getElementById('t-commission').addEventListener('click', e => {
     const b = e.target.closest('[data-payout]');
     if (b) makePayout(b.dataset.payout);
+  });
+
+  // 單據：發票與合約（所有進得了後台的角色都能開，這是唯讀輸出）
+  document.addEventListener('click', e => {
+    const b = e.target.closest('[data-invoice],[data-contract]');
+    if (!b) return;
+    if (b.dataset.invoice)  invoiceFor(b.dataset.invoice);
+    if (b.dataset.contract) contractFor(b.dataset.contract);
   });
 
   // 編輯（只有超管看得到按鈕，這裡再擋一次 —— 按鈕藏起來不算權限控制）
@@ -386,13 +397,14 @@ function renderOrders() {
     num(o.amount), num(o.paid), num(o.amount - o.paid),
     o.channel,
     `<span class="badge-${o.status === '已付全額' ? 'ok' : 'wait'}">${o.status}</span>`,
+    `<button class="mini-btn" data-invoice="${o.no}">發票</button>`,
   ]);
   document.getElementById('t-orders').innerHTML = table([
     '訂單編號', '日期', 'Tree ID', '認養人', 'Email',
     { h:'合約金額', num:true, sum:true },
     { h:'已收',     num:true, sum:true },
     { h:'待收',     num:true, sum:true },
-    '付款方式', '狀態'], rows);
+    '付款方式', '狀態', ''], rows);
 }
 
 /* ---------- 樹體資產 ---------- */
@@ -416,7 +428,8 @@ function renderTrees() {
         num(t.price), t.orchard, t.area, t.farmer,
         `<span class="badge-${stat[1]}">${stat[0]}</span>`,
         o ? `<span class="pill">${o.no}</span>` : '<span class="dim">—</span>',
-        editBtn('tree-edit', t.id),
+        `<button class="mini-btn" data-contract="${t.id}">合約</button>`
+          + editBtn('tree-edit', t.id),
       ];
     });
 
@@ -505,8 +518,10 @@ function renderCommission() {
 
   const rc = document.getElementById('rate-commission');
   const rd = document.getElementById('rate-deposit');
+  const rs = document.getElementById('rate-sst');
   if (rc && document.activeElement !== rc) rc.value = rate;
   if (rd && document.activeElement !== rd) rd.value = dep;
+  if (rs && document.activeElement !== rs) rs.value = Store.settingNum('sst_rate', 0);
 
   const ex = document.getElementById('rate-explain');
   if (ex) {
@@ -555,6 +570,7 @@ function renderCommission() {
       { n: s.pending, html: done ? '<span class="badge-ok">已結清</span>'
                                  : `<span class="badge-wait">${money(s.pending)}</span>` },
       (done ? '—' : `<button class="mini-btn" data-payout="${o.no}">撥款</button>`)
+        + `<button class="mini-btn" data-invoice="${o.no}">發票</button>`
         + editBtn('order-edit', o.no),
     ];
   });
