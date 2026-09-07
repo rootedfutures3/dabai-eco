@@ -701,6 +701,18 @@ Store.onReady = function (fn) {
     return Store._boot;
   };
   const go = () => start().then(info => { try { fn(info); } catch (e) { console.error(e); } });
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', go);
-  else go();
+
+  /* 一定要等到所有 defer 腳本都執行完才回呼。
+     踩過的坑：defer 腳本執行的當下 readyState 已經是 'interactive'，
+     不是 'loading'。所以只判斷 'loading' 的話，erp.js 註冊的回呼會在
+     排在它後面的 social.js 還沒載入時就跑掉 —— renderAll() 走到
+     renderSocial() 直接 ReferenceError，後面的總覽、帳號頁全都沒畫。
+     以前雲端探測要好幾秒，剛好蓋掉這個順序問題；探測改成三秒逾時
+     （DNS 失敗時是瞬間）之後就每次都中。
+     DOMContentLoaded 保證在所有 defer 腳本之後才觸發。 */
+  if (document.readyState === 'complete') { go(); return; }
+  let fired = false;
+  const once = () => { if (fired) return; fired = true; go(); };
+  document.addEventListener('DOMContentLoaded', once, { once: true });
+  window.addEventListener('load', once, { once: true });   // 保險：萬一已經錯過
 };

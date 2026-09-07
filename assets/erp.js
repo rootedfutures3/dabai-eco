@@ -171,16 +171,22 @@ function table(cols, rows) {
 }
 
 function renderAll() {
-  renderKpis();
-  renderOrders();
-  renderTrees();
-  renderCustomers();
-  renderReports();
-  renderWages();
-  renderCommission();
-  renderSocial();
-  renderOverview();
-  renderUsers();
+  /* 一個區塊出錯不該把整個後台畫不出來。
+     這裡逐一呼叫並各自 try —— 缺一塊就只缺那一塊，其餘照畫，
+     錯誤留在 console 給人查。 */
+  const draw = (name, fn) => {
+    try { fn(); } catch (e) { console.error(`[TANJU] ${name} 沒畫成功`, e); }
+  };
+  draw('累計數字',   renderKpis);
+  draw('訂單',       renderOrders);
+  draw('樹體資產',   renderTrees);
+  draw('客戶',       renderCustomers);
+  draw('樹況回報',   renderReports);
+  draw('收益與工資', renderWages);
+  draw('佣金分潤',   renderCommission);
+  draw('社群發文',   renderSocial);
+  draw('營運總覽',   renderOverview);
+  draw('帳號與權限', renderUsers);
   initNewUser();
   initRoleEditor();
 }
