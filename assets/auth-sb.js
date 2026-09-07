@@ -73,6 +73,54 @@ const Auth = {
     }
   },
 
+  /* ---------- Google 登入 ---------- */
+
+  /**
+   * 用 Google 帳號登入。
+   *
+   * 靜態網站沒有後端可以保管 client secret，所以走 Supabase 代理的
+   * OAuth：我們只把人送去 Supabase 的 authorize，Supabase 那邊拿著
+   * secret 跟 Google 換 token，再把結果放在網址的 # 後面送回來。
+   * 整個過程前端不碰任何機密。
+   *
+   * next 是登入後要回到哪一頁。
+   */
+  signInWithGoogle(next) {
+    const back = new URL(next || location.pathname.replace(/[^/]*$/, 'app.html'), location.href);
+    const url = `${Auth.url}/auth/v1/authorize`
+      + `?provider=google&redirect_to=${encodeURIComponent(back.href)}`;
+    location.href = url;
+  },
+
+  /**
+   * 從 Google 導回來時，token 會掛在網址的 # 後面。
+   * 存起來之後要立刻把它從網址上抹掉 —— access_token 留在網址列，
+   * 會被瀏覽器歷史、書籤、以及使用者手動分享連結時一起帶出去。
+   *
+   * 有撈到 session 就回傳 true。
+   */
+  captureRedirect() {
+    const h = location.hash || '';
+    if (!h.includes('access_token=')) {
+      // OAuth 失敗時回傳的是 error 而不是 token
+      if (h.includes('error=')) {
+        const q = new URLSearchParams(h.slice(1));
+        history.replaceState(null, '', location.pathname + location.search);
+        return { ok: false, error: q.get('error_description') || q.get('error') };
+      }
+      return null;
+    }
+    const q = new URLSearchParams(h.slice(1));
+    Auth.save({
+      access_token:  q.get('access_token'),
+      refresh_token: q.get('refresh_token'),
+      expires_in:    Number(q.get('expires_in') || 3600),
+      token_type:    q.get('token_type') || 'bearer',
+    });
+    history.replaceState(null, '', location.pathname + location.search);
+    return { ok: true };
+  },
+
   /* ---------- 登入 / 註冊 / 登出 ---------- */
 
   /** 回傳 { ok:true, user } 或 { ok:false, error:'給人看的訊息' } */

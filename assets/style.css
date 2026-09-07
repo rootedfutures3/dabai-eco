@@ -2989,3 +2989,33 @@ table tfoot td:first-child{color:var(--ink-soft);font-weight:600}
 @media(max-width:760px), (pointer:coarse){
   .pl{min-height:44px;flex:1 1 auto}
 }
+
+/* Google 登入按鈕。用 Google 品牌指引的白底樣式，
+   不要把它做成金色 —— 使用者要一眼認出這是 Google，而不是我們的按鈕。 */
+.btn-google{
+  display:flex;align-items:center;justify-content:center;gap:12px;
+  width:100%;min-height:48px;
+  background:#fff;color:#1f1f1f;
+  border:1px solid #dadce0;border-radius:999px;
+  font-weight:600;font-size:1rem;
+}
+.btn-google:hover{background:#f7f8f8;border-color:#c9ccd1}
+.btn-google.is-off{opacity:.62}
+.g-mark{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:22px;height:22px;border-radius:50%;
+  background:conic-gradient(#ea4335 0 25%, #fbbc05 0 50%, #34a853 0 75%, #4285f4 0);
+  color:#fff;font-weight:800;font-size:.82rem;line-height:1;
+}
+#google-box{margin-bottom:22px}
+#google-box .fld-hint{margin-top:10px}
+.or-line{
+  display:flex;align-items:center;gap:14px;
+  margin:22px 0 4px;color:var(--ink-soft);font-size:.86rem;
+}
+.or-line::before, .or-line::after{
+  content:"";flex:1;height:1px;background:var(--line);
+}
+@media(max-width:760px), (pointer:coarse){
+  .btn-google{min-height:52px}
+}

@@ -22,6 +22,7 @@ Store.onReady(() => {
 
   buildDrift();
   applyAuthMode();
+  initGoogle();
 
   /* ---- 登入／註冊切換 ---- */
   document.querySelectorAll('[data-goto]').forEach(b =>
@@ -177,6 +178,32 @@ function buildDrift() {
  * Auth 模式用 Email 登入、沒有「快速身分」那些捷徑，
  * 示範模式維持原本的帳號密碼。
  */
+/** Google 按鈕與導回。導回帶的 token 在網址的 # 裡，要立刻收走。 */
+function initGoogle() {
+  const btn = document.getElementById('google-in');
+  const err = document.getElementById('login-err');
+  if (!btn) return;
+
+  const on = typeof Auth !== 'undefined' && Auth.on;
+
+  // 從 Google 回來時，網址上會帶 token 或錯誤
+  if (on) {
+    const back = Auth.captureRedirect();
+    if (back && !back.ok && err) err.textContent = back.error || 'Google 登入沒有完成，請再試一次。';
+  }
+
+  btn.addEventListener('click', () => {
+    if (!on) {
+      if (err) err.textContent =
+        'Google 登入還沒設定好 —— 需要先在 Supabase 開啟 Google provider，'
+        + '並把專案網址與 key 填進 assets/config.js。步驟見 GOOGLE-LOGIN.md。';
+      return;
+    }
+    const next = new URLSearchParams(location.search).get('next') || 'app.html';
+    Auth.signInWithGoogle(next);
+  });
+}
+
 function applyAuthMode() {
   const on = typeof Auth !== 'undefined' && Auth.on;
   /* 有些元素（示範帳號提示、快速身分）已經拿掉了，
@@ -191,15 +218,29 @@ function applyAuthMode() {
   $('r-email').required = on;
   $('r-pass-hint').hidden = !on;
 
+  /* Google 登入。
+     接通之後（AUTH_MODE='supabase'）它就是唯一入口，帳號密碼整組收起來 ——
+     這是「不要再存帳號密碼」要的結果：密碼根本不存在我們這邊，
+     由 Google 驗證身分，Supabase 只拿回一個有時效的 token。
+
+     還沒接通之前不能直接把密碼登入拿掉，不然沒有人進得去後台，
+     所以按鈕先擺著、寫清楚還要設定，等 config 一填好就自動換過去。 */
+  const gBox  = $('google-box');
+  const gHint = $('google-hint');
+  const orLine = $('or-line');
   if (on) {
-    const cred = $('demo-cred');
-    cred.hidden = false;
-    cred.innerHTML =
-      '🔐 <b>已啟用 Supabase Auth</b> —— 用你的 Email 與密碼登入。'
-      + '密碼由伺服器加鹽雜湊保管，權限由資料庫強制執行。';
-    /* 正式模式下密碼有雜湊保護，那句「明文儲存」的提醒就不該再出現 */
-    const hint = $('pass-hint');
-    if (hint.style) hint.textContent = '密碼由伺服器加鹽雜湊保管。忘記密碼請聯絡管理員重設。';
+    if (gHint.style) gHint.textContent = '登入後由管理員指派你的角色。';
+    if (orLine.style) orLine.hidden = true;
+    $('login-form').hidden = true;
+    $('demo-cred').hidden = true;
+    const back = document.querySelector('[data-goto="register"]');
+    if (back) back.hidden = true;      // Google 登入不需要另外註冊
+  } else {
+    if (gHint.style) gHint.textContent =
+      'Google 登入尚未設定完成。設定步驟見專案的 GOOGLE-LOGIN.md，'
+      + '填好 assets/config.js 之後這裡就會變成唯一的登入方式。';
+    const b = $('google-in');
+    if (b.classList && b.classList.add) b.classList.add('is-off');
   }
   if (typeof I18N !== 'undefined') I18N.refresh(document.querySelector('.auth-card'));
 }
