@@ -7,7 +7,9 @@
    ============================================================ */
 
 Store.onReady((info) => {
-  if (!document.getElementById('kpis')) return;
+  // 用總覽的月度卡片當「這頁是不是後台」的判斷。
+  // （以前是看 #kpis，那個容器已經拆進三個視角了。）
+  if (!document.getElementById('month-kpis')) return;
   showDbStatus(info);
   Perm.load();          // 自訂角色要先讀進來，renderAll 才畫得出角色欄位
   renderAll();
@@ -19,6 +21,8 @@ Store.onReady((info) => {
     show(btn.dataset.tab);
     closeSide();          // 手機上點完就把抽屜收起來
   });
+
+  initOverviewSwitch();
 
   // 手機：漢堡開關側邊欄
   const side = document.getElementById('side');
@@ -75,37 +79,74 @@ Store.onReady((info) => {
   });
 });
 
-/** 在頁面上標示目前是接雲端資料庫還是本機 localStorage */
+/* 資料庫連線狀態不再顯示在畫面上。
+   原本這裡會畫一條橫幅說「已連線到雲端」或「連線錯誤：…」，
+   但那條紅字出現在後台每一頁的最上面，示範的時候看起來像壞掉了。
+   狀態本身還是有用，所以改成寫進 console —— 要查的時候打開開發者工具就看得到，
+   使用者不會看到。 */
 function showDbStatus(info) {
   const box = document.querySelector('.demo-banner');
-  if (!box) return;
+  if (box) box.hidden = true;
+
   const cloud = info && info.mode === 'cloud';
   const missing = (info && info.missing) || [];
-  const warn = missing.length
-    ? `<br><span class="dim">⚠️ 以下資料表尚未建立，目前只存在這台裝置：<b>${missing.join('、')}</b>。
-       到 Supabase 的 SQL Editor 跑一次專案裡的 <code>supabase-setup-v2.sql</code> 就會同步到雲端。</span>`
-    : '';
-  box.innerHTML = cloud
-    ? `☁️ <b>已連線到雲端資料庫</b> —— 資料存在 Supabase，所有裝置共用同一份。
-       目前有 ${info.trees || 0} 棵樹、${info.orders || 0} 筆訂單、${info.users || 0} 個帳號。${warn}`
-    : `⚠️ <b>目前使用本機儲存</b> —— 尚未設定雲端資料庫，資料只存在<b>這台瀏覽器</b>，
-       換一台裝置看不到。設定方式見專案的 <code>assets/config.js</code>。`
-       + (info && info.error ? `<br><span class="dim">連線錯誤：${info.error}</span>` : '');
-  box.style.borderLeftColor = cloud ? 'var(--gold)' : 'var(--red)';
-
-  // 這段是連上雲端之後才換掉的內容，i18n 先前快取的原文已經過期，
-  // 要它重新抓一次，否則切語言會跳回上面那段示範系統的舊文字。
-  if (typeof I18N !== 'undefined') I18N.refresh(box);
+  console.info(cloud
+    ? `[TANJU] 雲端資料庫已連線 · ${info.trees || 0} 棵樹 / ${info.orders || 0} 筆訂單 / ${info.users || 0} 個帳號`
+      + (missing.length ? ` · 尚未建立的資料表：${missing.join('、')}` : '')
+    : `[TANJU] 使用本機儲存${info && info.error ? ` · ${info.error}` : ''}`);
 
   showAuthMode();
 }
 
-const money = n => 'RM ' + Number(n).toLocaleString('en-MY');
+/* 金額一律兩位小數。真的帳務系統不會一行寫 RM 410、下一行寫 RM 1,180 ——
+   位數對不齊就沒辦法用眼睛掃過去核對。 */
+const money = n => 'RM ' + Number(n || 0).toLocaleString('en-MY',
+  { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+/** 數量用的格式：不補小數，但一樣有千分位。 */
+const qty = n => Number(n || 0).toLocaleString('en-MY');
 
-function table(headers, rows) {
-  if (!rows.length) return '<tbody><tr><td style="text-align:center;padding:34px">目前沒有資料</td></tr></tbody>';
-  return `<thead><tr>${headers.map(h => `<th>${h}</th>`).join('')}</tr></thead>
-          <tbody>${rows.map(r => `<tr>${r.map(c => `<td>${c}</td>`).join('')}</tr>`).join('')}</tbody>`;
+/** 把一個數字包成「數字儲存格」：右對齊、等寬數字，而且可以被合計。 */
+const num = (n, fmt = money) => ({ n: Number(n) || 0, html: fmt(n) });
+
+/**
+ * 表格。欄位可以只給標題字串，也可以給 { h, num, sum } ——
+ *   num: 這欄是數字，右對齊 + 等寬數字，位數才對得齊
+ *   sum: 這欄要出現在最下面的合計列
+ * 儲存格用 num(值) 包起來的話，才知道要怎麼加總。
+ *
+ * 每個 td 都帶 data-label。窄螢幕上 CSS 會把表格拆成一張張卡片，
+ * 用這個屬性當欄位名 —— 手機上就不必左右滑了。
+ */
+function table(cols, rows) {
+  const spec = cols.map(c => (typeof c === 'string' ? { h: c } : c));
+  const esc  = t => String(t).replace(/"/g, '&quot;');
+
+  if (!rows.length) {
+    return `<tbody><tr><td colspan="${spec.length}" style="text-align:center;padding:34px" class="dim">目前沒有資料</td></tr></tbody>`;
+  }
+
+  const head = `<thead><tr>${spec.map(c =>
+    `<th${c.num ? ' class="num"' : ''}>${c.h}</th>`).join('')}</tr></thead>`;
+
+  const body = `<tbody>${rows.map(r => `<tr>${r.map((c, i) => {
+    const sp   = spec[i] || {};
+    const html = (c && typeof c === 'object' && 'html' in c) ? c.html : c;
+    return `<td data-label="${esc(sp.h || '')}"${sp.num ? ' class="num"' : ''}>${html}</td>`;
+  }).join('')}</tr>`).join('')}</tbody>`;
+
+  // 合計列：只在真的有欄位要加總時才出現
+  const sums = spec.map((c, i) => c.sum
+    ? rows.reduce((t, r) => t + ((r[i] && typeof r[i] === 'object' && 'n' in r[i]) ? r[i].n : 0), 0)
+    : null);
+  const foot = sums.some(v => v !== null)
+    ? `<tfoot><tr>${spec.map((c, i) => {
+        if (i === 0) return `<td data-label="">合計 · ${rows.length} 筆</td>`;
+        return `<td data-label="${esc(c.h || '')}"${c.num ? ' class="num"' : ''}>${
+          sums[i] === null ? '' : `<b>${money(sums[i])}</b>`}</td>`;
+      }).join('')}</tr></tfoot>`
+    : '';
+
+  return head + body + foot;
 }
 
 function renderAll() {
@@ -125,6 +166,8 @@ function renderAll() {
 
 /* ---------- KPI ---------- */
 function renderKpis() {
+  // 「累計」那一欄已經拆進總覽的三個視角，這個容器不再存在
+  if (!document.getElementById('kpis')) return;
   const db = Store.read();
   const paid      = db.orders.reduce((s, o) => s + o.paid, 0);
   const contract  = db.orders.reduce((s, o) => s + o.amount, 0);
@@ -153,13 +196,16 @@ function renderOrders() {
     `<span class="pill">${o.treeId}</span>`,
     o.customer,
     `<span class="dim">${o.email}</span>`,
-    money(o.amount), `<b>${money(o.paid)}</b>`,
-    money(o.amount - o.paid),
+    num(o.amount), num(o.paid), num(o.amount - o.paid),
     o.channel,
     `<span class="badge-${o.status === '已付全額' ? 'ok' : 'wait'}">${o.status}</span>`,
   ]);
-  document.getElementById('t-orders').innerHTML = table(
-    ['訂單編號', '日期', 'Tree ID', '認養人', 'Email', '合約金額', '已收', '待收', '付款方式', '狀態'], rows);
+  document.getElementById('t-orders').innerHTML = table([
+    '訂單編號', '日期', 'Tree ID', '認養人', 'Email',
+    { h:'合約金額', num:true, sum:true },
+    { h:'已收',     num:true, sum:true },
+    { h:'待收',     num:true, sum:true },
+    '付款方式', '狀態'], rows);
 }
 
 /* ---------- 樹體資產 ---------- */
@@ -177,15 +223,21 @@ function renderTrees() {
       const o = db.orders.find(x => x.treeId === t.id);
       const stat = { available:['開放認養','wait'], reserved:['保留中','wait'], adopted:['已認養','ok'] }[effective(t)];
       return [
-        `<b>${t.id}</b>`, CROP_NAME[t.crop], t.variety, t.age + ' 年',
-        t.kg + ' kg', money(t.price), t.orchard, t.area, t.farmer,
+        `<b>${t.id}</b>`, CROP_NAME[t.crop], t.variety,
+        num(t.age, n => qty(n) + ' 年'),
+        num(t.kg,  n => qty(n) + ' kg'),
+        num(t.price), t.orchard, t.area, t.farmer,
         `<span class="badge-${stat[1]}">${stat[0]}</span>`,
         o ? `<span class="pill">${o.no}</span>` : '<span class="dim">—</span>',
       ];
     });
 
-  document.getElementById('t-trees').innerHTML = table(
-    ['Tree ID', '作物', '品種', '樹齡', '預估產量', '年認養金', '果園', '地區', '果農', '狀態', '綁定訂單'], rows);
+  document.getElementById('t-trees').innerHTML = table([
+    'Tree ID', '作物', '品種',
+    { h:'樹齡',    num:true },
+    { h:'預估產量', num:true },
+    { h:'年認養金', num:true, sum:true },
+    '果園', '地區', '果農', '狀態', '綁定訂單'], rows);
 }
 
 /* ---------- 客戶 ---------- */
@@ -204,10 +256,12 @@ function renderCustomers() {
   const b2c = [...map.values()].map(c => [
     `<b>${c.name}</b>`, `<span class="dim">${c.email}</span>`, c.phone,
     c.trees.map(t => `<span class="pill">${t}</span>`).join(' '),
-    c.trees.length + ' 棵', `<b>${money(c.paid)}</b>`,
+    num(c.trees.length, n => qty(n) + ' 棵'), num(c.paid),
   ]);
-  document.getElementById('t-b2c').innerHTML = table(
-    ['認養人', 'Email', '電話', '認養樹', '棵數', '累計已付'], b2c);
+  document.getElementById('t-b2c').innerHTML = table([
+    '認養人', 'Email', '電話', '認養樹',
+    { h:'棵數',     num:true },
+    { h:'累計已付', num:true, sum:true }], b2c);
 
   const b2b = db.leads.map(l => [
     l.date, `<b>${l.company}</b>`, l.contact, `<span class="dim">${l.title}</span>`,
@@ -224,10 +278,11 @@ function renderReports() {
   const rows = db.reports.map(r => [
     r.at, `<span class="pill">${r.treeId}</span>`, r.by, r.stage,
     `<span class="badge-${r.health === '良好' ? 'ok' : 'wait'}">${r.health}</span>`,
-    r.note, r.photos + ' 張',
+    r.note, num(r.photos, n => qty(n) + ' 張'),
   ]);
-  document.getElementById('t-reports').innerHTML = table(
-    ['時間', 'Tree ID', '回報人', '生長階段', '樹況', '備註', '照片'], rows);
+  document.getElementById('t-reports').innerHTML = table([
+    '時間', 'Tree ID', '回報人', '生長階段', '樹況', '備註',
+    { h:'照片', num:true }], rows);
 }
 
 /* ---------- 工資 ---------- */
@@ -235,10 +290,14 @@ function renderWages() {
   const db = Store.read();
   const rows = db.wages.map(w => [
     w.month, `<b>${w.person}</b>`, w.role,
-    money(w.base), money(w.bonus), `<b>${money(w.base + w.bonus)}</b>`, `<span class="dim">${w.note}</span>`,
+    num(w.base), num(w.bonus), num(w.base + w.bonus), `<span class="dim">${w.note}</span>`,
   ]);
-  document.getElementById('t-wages').innerHTML = table(
-    ['月份', '對象', '身分', '基本', '分潤／獎金', '合計', '備註'], rows);
+  document.getElementById('t-wages').innerHTML = table([
+    '月份', '對象', '身分',
+    { h:'基本',      num:true, sum:true },
+    { h:'分潤／獎金', num:true, sum:true },
+    { h:'合計',      num:true, sum:true },
+    '備註'], rows);
 }
 
 /* ============================================================
@@ -299,19 +358,24 @@ function renderCommission() {
       `<b>${o.no}</b>`,
       `<span class="pill">${o.treeId}</span>`,
       o.customer,
-      money(s.amount),
-      `<span class="num fee">${money(s.fee)}</span>`,
-      `<span class="num">${money(s.farmer)}</span>`,
-      money(s.paidOut),
-      done ? '<span class="badge-ok">已結清</span>'
-           : `<span class="badge-wait">${money(s.pending)}</span>`,
+      num(s.amount),
+      { n: s.fee,    html: `<span class="fee">${money(s.fee)}</span>` },
+      num(s.farmer),
+      num(s.paidOut),
+      { n: s.pending, html: done ? '<span class="badge-ok">已結清</span>'
+                                 : `<span class="badge-wait">${money(s.pending)}</span>` },
       done ? '—'
            : `<button class="mini-btn" data-payout="${o.no}">撥款</button>`,
     ];
   });
-  document.getElementById('t-commission').innerHTML = table(
-    ['訂單編號', 'Tree ID', '認養人', '合約總額', `平台佣金 ${rate}%`,
-     `果農應得 ${fmt(100 - rate)}%`, '已撥', '待撥', ''], rows);
+  document.getElementById('t-commission').innerHTML = table([
+    '訂單編號', 'Tree ID', '認養人',
+    { h:'合約總額', num:true, sum:true },
+    { h:`平台佣金 ${rate}%`, num:true, sum:true },
+    { h:`果農應得 ${fmt(100 - rate)}%`, num:true, sum:true },
+    { h:'已撥', num:true, sum:true },
+    { h:'待撥', num:true, sum:true },
+    ''], rows);
 
   /* 撥款紀錄 */
   const pays = [...(db.payouts || [])].reverse().map(p => [
@@ -319,12 +383,14 @@ function renderCommission() {
     `<span class="pill">${p.treeId || '—'}</span>`,
     p.farmer || '—',
     { deposit:'開花前訂金', balance:'採收後尾款', adjust:'調整' }[p.kind] || p.kind,
-    `<span class="num">${money(p.amount)}</span>`,
+    num(p.amount),
     p.method || '—',
     `<span class="badge-ok">${p.status || '已撥款'}</span>`,
   ]);
-  document.getElementById('t-payouts').innerHTML = table(
-    ['撥款編號', '日期', '訂單', 'Tree ID', '果農', '性質', '金額', '方式', '狀態'], pays);
+  document.getElementById('t-payouts').innerHTML = table([
+    '撥款編號', '日期', '訂單', 'Tree ID', '果農', '性質',
+    { h:'金額', num:true, sum:true },
+    '方式', '狀態'], pays);
 }
 
 /** 建立一筆撥款。優先撥「開花前訂金」，訂金撥完才輪到尾款。 */
@@ -508,7 +574,159 @@ function renderOverview() {
   drawMonthKpis(cur, prev);
   drawMonthChart(months);
   drawMonthTable(months);
-  drawRecent();
+  drawAR();
+  drawSocialOverview();
+  drawTreeOverview();
+}
+
+/** 總覽的三個視角：財務／社群／樹況。一次只顯示一個。 */
+function initOverviewSwitch() {
+  const bar = document.getElementById('ov-switch');
+  if (!bar) return;
+  bar.addEventListener('click', e => {
+    const btn = e.target.closest('.ovs');
+    if (!btn) return;
+    const want = btn.dataset.ov;
+    bar.querySelectorAll('.ovs').forEach(b => {
+      const on = b.dataset.ov === want;
+      b.classList.toggle('on', on);
+      b.setAttribute('aria-selected', String(on));
+    });
+    document.querySelectorAll('.ov-view').forEach(v =>
+      v.classList.toggle('on', v.dataset.ov === want));
+  });
+}
+
+/* ---------- 財務：應收帳款 ---------- */
+/** 合約成立但還沒收足的訂單。帳齡從訂單日算起 —— 越久沒收越該追。 */
+function drawAR() {
+  const el = document.getElementById('t-ar');
+  if (!el) return;
+  const today = new Date();
+  const rows = (Store.read().orders || [])
+    .filter(o => o.amount - o.paid > 0.005)
+    .map(o => {
+      const days = Math.max(0, Math.round((today - new Date(o.date)) / 86400000));
+      const band = days > 90 ? 'over' : days > 30 ? 'wait' : 'ok';
+      return {
+        days,
+        row: [
+          `<b>${o.no}</b>`, o.date, o.customer,
+          num(o.amount), num(o.paid), num(o.amount - o.paid),
+          { n: days, html: `<span class="badge-${band === 'ok' ? 'ok' : 'wait'}">${qty(days)} 天</span>` },
+        ],
+      };
+    })
+    .sort((a, b) => b.days - a.days)
+    .map(x => x.row);
+
+  el.innerHTML = table([
+    '訂單編號', '訂單日期', '認養人',
+    { h:'合約金額', num:true, sum:true },
+    { h:'已收',     num:true, sum:true },
+    { h:'未收',     num:true, sum:true },
+    { h:'帳齡',     num:true },
+  ], rows);
+}
+
+/* ---------- 社群視角 ---------- */
+const CH_NAME = { facebook:'Facebook', instagram:'Instagram', youtube:'YouTube', rednote:'小紅書' };
+const LANG_NAME = { zh:'中文', ms:'Bahasa Melayu', en:'English' };
+
+function drawSocialOverview() {
+  const posts = Store.read().posts || [];
+  const kpi = document.getElementById('social-kpis');
+  if (kpi) {
+    const done  = posts.filter(p => p.status === '已發布').length;
+    const draft = posts.filter(p => p.status === '草稿').length;
+    const plan  = posts.filter(p => p.scheduled).length;
+    kpi.innerHTML = [
+      ['貼文總數', qty(posts.length) + ' 篇', '所有平台合計'],
+      ['已發布',   qty(done) + ' 篇',  posts.length ? Math.round(done / posts.length * 100) + '% 完成' : '—'],
+      ['草稿',     qty(draft) + ' 篇', '等待送出'],
+      ['已排程',   qty(plan) + ' 篇',  '排在行事曆上'],
+    ].map(([k, v, sub]) =>
+      `<div class="kpi-card"><span class="k">${k}</span><b>${v}</b><small>${sub}</small></div>`).join('');
+  }
+
+  const byCh = {};
+  posts.forEach(p => {
+    const c = byCh[p.channel] || (byCh[p.channel] = { all:0, done:0, langs:new Set() });
+    c.all++; if (p.status === '已發布') c.done++; if (p.lang) c.langs.add(p.lang);
+  });
+  const chRows = Object.entries(byCh).map(([ch, c]) => [
+    `<b>${CH_NAME[ch] || ch}</b>`,
+    num(c.all,  n => qty(n) + ' 篇'),
+    num(c.done, n => qty(n) + ' 篇'),
+    [...c.langs].map(l => `<span class="pill">${LANG_NAME[l] || l}</span>`).join(' ') || '—',
+  ]);
+  const chEl = document.getElementById('t-ov-channels');
+  if (chEl) chEl.innerHTML = table(
+    ['平台', { h:'貼文數', num:true }, { h:'已發布', num:true }, '語言'], chRows);
+
+  const postRows = [...posts].reverse().slice(0, 8).map(p => [
+    p.at, `<span class="pill">${CH_NAME[p.channel] || p.channel}</span>`,
+    `<b>${p.title || '—'}</b>`,
+    `<span class="pill">${LANG_NAME[p.lang] || p.lang || '—'}</span>`,
+    `<span class="badge-${p.status === '已發布' ? 'ok' : 'wait'}">${p.status}</span>`,
+  ]);
+  const pEl = document.getElementById('t-ov-posts');
+  if (pEl) pEl.innerHTML = table(['時間', '平台', '標題', '語言', '狀態'], postRows);
+}
+
+/* ---------- 樹況視角 ---------- */
+function drawTreeOverview() {
+  const db = Store.read();
+  const trees = Store.treeList();
+  const adopted = trees.filter(t =>
+    t.status === 'adopted' || db.orders.some(o => o.treeId === t.id));
+  const reports = db.reports || [];
+
+  // 超過 14 天沒有現場回報的樹 —— 這是要派工的名單
+  const last = {};
+  reports.forEach(r => { if (!last[r.treeId] || r.at > last[r.treeId]) last[r.treeId] = r.at; });
+  const stale = trees.filter(t => {
+    const at = last[t.id];
+    if (!at) return true;
+    return (Date.now() - new Date(at.replace(' ', 'T'))) / 86400000 > 14;
+  }).length;
+
+  const kpi = document.getElementById('tree-kpis');
+  if (kpi) kpi.innerHTML = [
+    ['樹體資產', qty(trees.length) + ' 棵', '一樹一碼'],
+    ['已認養',   qty(adopted.length) + ' 棵',
+      trees.length ? '認養率 ' + Math.round(adopted.length / trees.length * 100) + '%' : '—'],
+    ['現場回報', qty(reports.length) + ' 筆', '溝通者累計紀錄'],
+    ['待回報',   qty(stale) + ' 棵', '超過 14 天沒有紀錄'],
+  ].map(([k, v, sub]) =>
+    `<div class="kpi-card"><span class="k">${k}</span><b>${v}</b><small>${sub}</small></div>`).join('');
+
+  const byOrch = {};
+  trees.forEach(t => {
+    const o = byOrch[t.orchard] || (byOrch[t.orchard] = { all:0, adopted:0, value:0, area:t.area });
+    o.all++; o.value += Number(t.price) || 0;
+    if (t.status === 'adopted' || db.orders.some(x => x.treeId === t.id)) o.adopted++;
+  });
+  const orchRows = Object.entries(byOrch).map(([name, o]) => [
+    `<b>${name}</b>`, o.area,
+    num(o.all,     n => qty(n) + ' 棵'),
+    num(o.adopted, n => qty(n) + ' 棵'),
+    num(o.value),
+  ]);
+  const oEl = document.getElementById('t-ov-orchards');
+  if (oEl) oEl.innerHTML = table([
+    '果園', '地區',
+    { h:'樹數',   num:true, },
+    { h:'已認養', num:true },
+    { h:'年認養金總額', num:true, sum:true },
+  ], orchRows);
+
+  const repRows = [...reports].reverse().slice(0, 8).map(r => [
+    r.at, `<span class="pill">${r.treeId}</span>`, r.by, r.stage,
+    `<span class="badge-${r.health === '良好' ? 'ok' : 'wait'}">${r.health}</span>`,
+  ]);
+  const rEl = document.getElementById('t-ov-reports');
+  if (rEl) rEl.innerHTML = table(['時間', 'Tree ID', '回報人', '生長階段', '樹況'], repRows);
 }
 
 /** 大字卡：收入、支出、淨利、流水，各自帶一個和上月比較的箭頭。 */
@@ -616,19 +834,6 @@ function drawMonthTable(months) {
   el.innerHTML = table(
     ['月份', '平台流水 GMV', '平台收入', '平台支出', '淨利',
      '收入成長', '代撥果農', '訂單/回報/貼文'], rows);
-}
-
-function drawRecent() {
-  const db = Store.read();
-  const feed = [
-    ...(db.orders  || []).map(o => [o.date, '🧾 認養訂單', `${o.no} · ${o.treeId} · ${o.customer}`]),
-    ...(db.reports || []).map(r => [r.at,   '📋 樹況回報', `${r.treeId} · ${r.stage} · ${r.health}`]),
-    ...(db.payouts || []).map(p => [p.date, '💰 撥款',     `${p.ref} · ${p.farmer || p.treeId} · ${money(p.amount)}`]),
-    ...(db.posts   || []).map(p => [p.at,   '📣 社群貼文', `${p.channel} · ${(p.title || '').slice(0, 24)}`]),
-  ].sort((a, b) => String(b[0]).localeCompare(String(a[0]))).slice(0, 10);
-
-  document.getElementById('t-recent').innerHTML =
-    table(['時間', '類型', '內容'], feed);
 }
 
 /* ============================================================

@@ -2770,3 +2770,74 @@ footer{color:var(--ink-soft)}
 /* 營收卡的標題本來是 h4，改成 h3 是為了標題層級不跳號；
    字級維持原本的大小，視覺不變。 */
 .rev h3.rev-h{font-size:1.06rem;margin-bottom:8px}
+
+/* ============================================================
+   帳務表格
+   ------------------------------------------------------------
+   這是拿來核帳的表，不是拿來看的圖。金額靠右、用等寬數字，
+   位數才會上下對齊，一眼掃得出哪一筆特別大。
+   ============================================================ */
+td.num, th.num{
+  text-align:right;
+  font-variant-numeric:tabular-nums lining-nums;
+  font-feature-settings:"tnum" 1;
+  white-space:nowrap;
+}
+table tfoot td{
+  border-top:2px solid var(--ink);
+  background:var(--cream-dim);
+  font-weight:700;
+  padding-top:14px;padding-bottom:14px;
+}
+table tfoot td:first-child{color:var(--ink-soft);font-weight:600}
+
+/* 窄螢幕：表格改成一列一張卡片。
+   原本要左右滑才看得到後面的欄位 —— 在果園裡單手拿手機時特別難用。
+   拆成卡片之後每一筆的全部欄位都在同一個畫面上，只要往下捲。 */
+@media(max-width:760px), (pointer:coarse){
+  .table-scroll{overflow-x:visible}
+  .table-scroll table{min-width:0;background:none;border-radius:0}
+  .table-scroll thead{display:none}
+  .table-scroll table, .table-scroll tbody, .table-scroll tfoot,
+  .table-scroll tr, .table-scroll td{display:block;width:auto}
+  .table-scroll tr{
+    background:var(--snow);border:1px solid var(--line);
+    border-radius:var(--radius);padding:6px 16px;margin-bottom:12px;
+  }
+  .table-scroll td{
+    display:flex;align-items:baseline;justify-content:space-between;gap:18px;
+    border:none;padding:9px 0;text-align:right;
+  }
+  .table-scroll td + td{border-top:1px solid var(--line)}
+  /* 欄位名從 data-label 來，卡片裡才知道每個值是什麼 */
+  .table-scroll td::before{
+    content:attr(data-label);
+    flex:0 0 auto;text-align:left;
+    color:var(--ink-soft);font-weight:600;font-size:.9rem;
+  }
+  .table-scroll td[data-label=""]::before{content:none}
+  .table-scroll tfoot tr{background:var(--cream-dim);border-color:var(--ink)}
+  .table-scroll tfoot td{border-top:none}
+  .table-scroll tfoot td:empty{display:none}
+}
+
+/* 總覽的三個視角切換 */
+.ov-switch{
+  display:flex;gap:4px;padding:4px;margin:0 0 26px;
+  background:var(--cream-dim);border:1px solid var(--line);
+  border-radius:999px;width:fit-content;max-width:100%;
+}
+.ovs{
+  flex:0 1 auto;min-height:44px;padding:0 26px;
+  border:none;border-radius:999px;background:none;cursor:pointer;
+  font-family:inherit;font-size:.98rem;font-weight:600;color:var(--ink-soft);
+  transition:.16s;white-space:nowrap;
+}
+.ovs:hover{color:var(--ink)}
+.ovs.on{background:var(--coffee);color:var(--almond)}
+.ov-view{display:none}
+.ov-view.on{display:block}
+@media(max-width:560px){
+  .ov-switch{width:100%}
+  .ovs{flex:1 1 0;padding:0 8px}
+}

@@ -399,9 +399,14 @@ const SB = {
     return Auth.token();
   },
 
-  async get(tableName) {
+  /* 開頁時要讀好幾張表。雲端連不上的時候（專案被刪、網路不通、
+     公司防火牆擋住），沒有逾時就會卡在那裡等瀏覽器自己放棄 ——
+     實測空白六秒。與其讓人盯著空畫面，不如三秒就放棄、
+     改用本機資料先把畫面畫出來。 */
+  async get(tableName, ms = 3000) {
+    const stop = AbortSignal.timeout ? AbortSignal.timeout(ms) : undefined;
     const r = await fetch(`${SB.url}/rest/v1/${tableName}?select=*`,
-      { headers: SB.head(null, await SB.bearer()) });
+      { headers: SB.head(null, await SB.bearer()), signal: stop });
     if (!r.ok) throw new Error(`讀取 ${tableName} 失敗（${r.status}）`);
     return r.json();
   },
