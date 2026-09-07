@@ -2975,3 +2975,17 @@ table tfoot td:first-child{color:var(--ink-soft);font-weight:600}
   .doc-back{position:static;background:none;backdrop-filter:none;padding:0}
   .doc-bar{display:none}
 }
+
+/* 貼文卡片裡的語言切換 */
+.post-langs{display:flex;gap:4px;margin:0 0 10px;flex-wrap:wrap}
+.pl{
+  min-height:36px;padding:0 14px;border-radius:999px;cursor:pointer;
+  border:1px solid var(--line);background:none;
+  font-family:inherit;font-size:.84rem;font-weight:600;color:var(--ink-soft);
+  transition:.14s;
+}
+.pl:hover{border-color:var(--coffee);color:var(--ink)}
+.pl.on{background:var(--coffee);border-color:var(--coffee);color:var(--almond)}
+@media(max-width:760px), (pointer:coarse){
+  .pl{min-height:44px;flex:1 1 auto}
+}

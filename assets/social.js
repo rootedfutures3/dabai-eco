@@ -104,6 +104,23 @@ const TAGS = {
 };
 
 /** 依題材整理出一組素材，再由各平台各自組裝。 */
+/* 樹況回報的「生長階段」與「樹況」是用中文存進資料庫的。
+   直接塞進英文或馬來文的句子裡會夾一段中文，所以這裡先翻過。
+   查不到就原樣輸出 —— 溝通者手打的自由文字本來就沒辦法翻。 */
+const STAGE_TR = {
+  '開花期': { en:'flowering',   ms:'berbunga' },
+  '幼果期': { en:'fruit set',   ms:'buah muda' },
+  '成熟期': { en:'ripening',    ms:'matang' },
+  '採收期': { en:'harvest',     ms:'menuai' },
+  '休眠期': { en:'dormant',     ms:'dorman' },
+};
+const HEALTH_TR = {
+  '良好':   { en:'healthy',          ms:'sihat' },
+  '需注意': { en:'needs attention',  ms:'perlu perhatian' },
+  '不佳':   { en:'poor',             ms:'kurang baik' },
+};
+const trTerm = (map, v, lang) => (lang === 'zh' ? v : (map[v]?.[lang] || v));
+
 function material(topic, id, lang) {
   const db = Store.read();
   const L = s => s[lang] || s.zh;
@@ -128,8 +145,11 @@ function material(topic, id, lang) {
       }[lang],
       story: rpt
         ? { zh:`溝通者最近一次回報：${rpt.stage}，樹況${rpt.health}。${rpt.note}`,
-            en:`Latest field report: ${rpt.stage}, condition ${rpt.health}. ${rpt.note}`,
-            ms:`Laporan lapangan terkini: ${rpt.stage}, keadaan ${rpt.health}. ${rpt.note}` }[lang]
+            /* 備註是溝通者在果園裡用中文手打的，沒辦法翻。
+               與其讓英文貼文中間卡一句中文，不如只帶結構化的那部分 ——
+               階段和樹況已經說完這次回報的重點了。 */
+            en:`Latest field report: ${trTerm(STAGE_TR, rpt.stage, 'en')}, condition ${trTerm(HEALTH_TR, rpt.health, 'en')}.`,
+            ms:`Laporan lapangan terkini: ${trTerm(STAGE_TR, rpt.stage, 'ms')}, keadaan ${trTerm(HEALTH_TR, rpt.health, 'ms')}.` }[lang]
         : { zh:'這棵樹是祖先種下的老欉，現在有了自己的編號、自己的檔案。',
             en:'An old tree planted by a previous generation — now with its own ID and its own record.',
             ms:'Pokok tua yang ditanam generasi terdahulu — kini ada nombor dan failnya sendiri.' }[lang],
@@ -406,28 +426,48 @@ function fillSubjects() {
                 || '<option value="">（沒有資料）</option>';
 }
 
+/* 三種語言一次產生。
+   原本要先在上面選語言、再按一次產生，一次只拿得到一種 ——
+   實際貼文時三個受眾都要餵：中文給華人社群、馬來文給在地、
+   英文給企業與海外。所以每張卡片自己帶三份文案，點一下就換。 */
+const POST_LANGS = [['zh', '中文'], ['ms', 'Bahasa Melayu'], ['en', 'English']];
+
 function generate() {
   const topic = document.getElementById('po-topic').value;
   const id    = document.getElementById('po-subject').value;
-  const lang  = document.getElementById('po-lang').value;
+  const first = document.getElementById('po-lang').value;
   const tone  = document.getElementById('po-tone').value;
 
-  const m = material(topic, id, lang);
   const wrap = document.getElementById('po-cards');
-  if (!m) { wrap.innerHTML = '<p class="dim">找不到這個對象的資料。</p>'; return; }
+  if (!material(topic, id, 'zh')) {
+    wrap.innerHTML = '<p class="dim">找不到這個對象的資料。</p>';
+    return;
+  }
 
   POSTS_DRAFT = {};
   wrap.innerHTML = Object.entries(CHANNELS).map(([key, ch]) => {
-    const text = compose(key, m, lang, tone);
-    POSTS_DRAFT[key] = { text, topic, topicId: id, lang };
-    const over = text.length > ch.limit;
+    // 每個平台各產三份
+    const texts = {};
+    POST_LANGS.forEach(([code]) => {
+      texts[code] = compose(key, material(topic, id, code), code, tone);
+    });
+    POSTS_DRAFT[key] = { texts, lang: first, topic, topicId: id,
+                         get text() { return this.texts[this.lang]; } };
+
+    const cur  = texts[first];
+    const over = cur.length > ch.limit;
     return `
       <div class="post-card" data-ch="${key}">
         <div class="post-head">
           <b>${ch.icon} ${ch.name}</b>
-          <span class="post-count ${over ? 'over' : ''}">${text.length} / ${ch.limit}</span>
+          <span class="post-count ${over ? 'over' : ''}">${cur.length} / ${ch.limit}</span>
         </div>
-        <textarea class="post-body" rows="9" spellcheck="false">${esc(text)}</textarea>
+        <div class="post-langs" role="tablist">
+          ${POST_LANGS.map(([code, label]) => `
+            <button class="pl${code === first ? ' on' : ''}" data-lang="${code}"
+                    role="tab" aria-selected="${code === first}">${label}</button>`).join('')}
+        </div>
+        <textarea class="post-body" rows="9" spellcheck="false">${esc(cur)}</textarea>
         <p class="post-hint">${ch.hint}</p>
         <div class="post-acts">
           <button class="mini-btn" data-act="copy">複製文案</button>
@@ -438,15 +478,39 @@ function generate() {
       </div>`;
   }).join('');
 
-  /* 使用者手改文案時，字數即時重算 */
+  const recount = card => {
+    const ta = card.querySelector('.post-body');
+    const ch = CHANNELS[card.dataset.ch];
+    const c  = card.querySelector('.post-count');
+    c.textContent = `${ta.value.length} / ${ch.limit}`;
+    c.classList.toggle('over', ta.value.length > ch.limit);
+  };
+
+  /* 使用者手改文案時，字數即時重算 —— 改的是「目前這個語言」那一份，
+     切到別的語言再切回來，剛才的修改還在。 */
   wrap.querySelectorAll('.post-body').forEach(ta => {
     ta.addEventListener('input', () => {
       const card = ta.closest('.post-card');
-      const ch   = CHANNELS[card.dataset.ch];
-      const c    = card.querySelector('.post-count');
-      c.textContent = `${ta.value.length} / ${ch.limit}`;
-      c.classList.toggle('over', ta.value.length > ch.limit);
-      POSTS_DRAFT[card.dataset.ch].text = ta.value;
+      const d = POSTS_DRAFT[card.dataset.ch];
+      d.texts[d.lang] = ta.value;
+      recount(card);
+    });
+  });
+
+  wrap.querySelectorAll('.post-langs').forEach(bar => {
+    bar.addEventListener('click', e => {
+      const b = e.target.closest('.pl');
+      if (!b) return;
+      const card = bar.closest('.post-card');
+      const d = POSTS_DRAFT[card.dataset.ch];
+      d.lang = b.dataset.lang;
+      bar.querySelectorAll('.pl').forEach(x => {
+        const on = x.dataset.lang === d.lang;
+        x.classList.toggle('on', on);
+        x.setAttribute('aria-selected', String(on));
+      });
+      card.querySelector('.post-body').value = d.texts[d.lang];
+      recount(card);
     });
   });
 }
