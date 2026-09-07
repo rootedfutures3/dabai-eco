@@ -2414,8 +2414,12 @@ footer{color:var(--ink-soft)}
    溝通者與果農都是在果園裡用手機操作 —— 站著、單手、可能還戴著手套。
    把可點的東西放大到至少 44px（Apple 與 Google 的建議值），
    並讓表單欄位夠大、字夠清楚。
+
+   條件用「寬度窄」或「粗指標」二選一，而不是只看寬度：
+   平板橫著拿是 1024px，一樣是用手指點的，只看寬度就漏掉了；
+   反過來，桌機把視窗縮到 800px 仍然是滑鼠，不需要放大。
    ============================================================ */
-@media(max-width:760px){
+@media(max-width:760px), (pointer:coarse){
   /* 導覽列的可點目標 */
   .nav-toggle{
     min-width:44px;min-height:44px;
@@ -2449,6 +2453,10 @@ footer{color:var(--ink-soft)}
 
   /* 分頁與側邊選單 */
   .tab{min-height:44px;display:inline-flex;align-items:center}
+  /* dabai 頁上方的錨點列，和註冊／回登入的切換鈕，
+     都是獨立的點擊目標，不是句子裡的連結 */
+  .anchor-bar a{min-height:44px;display:inline-flex;align-items:center}
+  .btn-back{min-height:44px;display:inline-flex;align-items:center;justify-content:center}
   .side-item{min-height:50px}
   .mini-btn{min-height:40px;padding:8px 14px}
 
@@ -2698,7 +2706,35 @@ footer{color:var(--ink-soft)}
   .ps:not(.on) > :not(span){display:none}
   .ps.on{padding:9px 14px}
 }
+/* --- 後台頂欄在手機上的優先順序 --- */
+/* 頂欄只有 375px 可用，四個東西要塞：導覽、頁名、語言、重設示範資料。
+   原本最搶眼的金色按鈕是「重設示範資料」—— 一個會把資料清掉的動作，
+   而真正要用的導覽 ☰ 反而最小。示範當下誤觸的代價很高，
+   所以在手機上把它降成外框樣式，讓位給頁名。 */
 @media(max-width:560px){
+  nav.admin-top{gap:10px;padding:10px 14px}
+  nav.admin-top .nav-cta{
+    background:none;color:var(--ink-soft);
+    border:1px solid var(--line);font-weight:600;
+    padding:10px 12px;font-size:.86rem;
+  }
+  /* 沒有平台可切換時，這個空殼還是佔著寬度 */
+  .plat-switch:empty{display:none}
+
+  /* 麵包屑是「TANJU Portal / 認養訂單」。375px 放不下，
+     截斷之後只剩「TANJU Port…」—— 產品名被切一半，
+     而你在哪一頁反而看不到。手機上只留現在這一頁的名字，
+     產品名在抽屜裡本來就有。 */
+  .crumb > span{display:none}
+  .crumb b{color:var(--ink);font-size:1rem}
+}
+
+@media(max-width:560px){
+  /* 手機上這條列擠不下「身分 + 平台切換 + 登出」。
+     不換行的話身分那格會被壓到 59px 寬，「現場溝通者」
+     就被折成三行。讓它換行：第一行放身分，第二行放動作。 */
+  .portal-bar .wrap{flex-wrap:wrap;row-gap:12px}
+  .portal-bar .wrap > :first-child{flex:1 1 100%;min-width:0}
   .plat-switch{order:3}
   .portal-actions{width:100%;justify-content:space-between}
 }
