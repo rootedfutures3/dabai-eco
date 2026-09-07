@@ -2,6 +2,14 @@
    ROOTED FUTURES — 共用樣式
    ============================================ */
 
+/* hidden 屬性一定要贏。
+   瀏覽器預設的 [hidden]{display:none} 特異性是 0,0,1，任何
+   .class{display:flex} 都壓得過它 —— 於是 JS 明明設了 hidden，
+   東西還是留在畫面上。溝通者平台就中過：登入之後 signin.hidden
+   = true，但 .signin{display:flex} 讓那張登入卡繼續佔著 1376px，
+   果農每次進來都要先捲過一整個登入畫面才看得到今天要做的事。 */
+[hidden]{display:none !important}
+
 /* ============================================
    品牌色票 —— 取自 logo
    --------------------------------------------
@@ -2445,7 +2453,23 @@ footer{color:var(--ink-soft)}
   .mini-btn{min-height:40px;padding:8px 14px}
 
   /* 頁尾連結 */
-  .foot-links a{display:inline-flex;align-items:center;min-height:40px}
+  .foot-links a{display:inline-flex;align-items:center;min-height:44px}
+
+  /* 手機上用拇指點，44×44 是能穩定命中的最小範圍。
+     後台的 ☰ 原本只有 28×26 —— 它是手機上唯一的導覽入口，
+     卻比旁邊的語言鈕還小。 */
+  .side-toggle{
+    min-width:44px;min-height:44px;
+    display:inline-flex;align-items:center;justify-content:center;
+    margin-left:-6px;              /* 補回加大的內距，視覺位置不變 */
+  }
+  .logo{min-height:44px;min-width:44px}
+  .auth-back{
+    min-height:44px;display:inline-flex;align-items:center;
+    padding-right:8px;
+  }
+  .mini-btn{min-height:44px}
+  .ps{min-height:44px}
 }
 
 /* 很窄的螢幕：把並排的欄位改成單欄，不要擠成一團 */
@@ -2670,7 +2694,7 @@ footer{color:var(--ink-soft)}
 
 /* 窄畫面只留圖示，文字收起來 —— 頂欄擠不下兩個平台名 */
 @media(max-width:900px){
-  .ps{padding:9px 11px}
+  .ps{padding:9px 11px;min-height:44px}
   .ps:not(.on) > :not(span){display:none}
   .ps.on{padding:9px 14px}
 }
