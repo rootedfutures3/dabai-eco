@@ -753,11 +753,19 @@ function buildCalendar() {
     const date = `${day.getFullYear()}-${String(day.getMonth() + 1).padStart(2, '0')}-${String(day.getDate()).padStart(2, '0')}`;
     /* 早上九點與晚上八點交替 —— 砂拉越的兩個上網高峰 */
     const time = i % 2 ? '20:00' : '09:00';
-    const m = material(p.kind, p.id, 'zh');
-    const text = m ? compose('facebook', m, 'zh', 'warm') : '';
+    /* 用目前的介面語言產生，而不是寫死中文。
+       寫死的話，排程表的預覽永遠是中文，切到英文之後翻譯器只能對
+       「截斷過」的字串做比對 —— 比對不到整句，就變成
+       「DB-001 — a 34-year-old Dabai 黑橄欖…」這種半中半英。
+       文案本來就有三種語言，直接產對的那一種就好。 */
+    const lang = (typeof I18N !== 'undefined' && ['zh', 'en', 'ms'].includes(I18N.lang))
+      ? I18N.lang : 'zh';
+    const m = material(p.kind, p.id, lang);
+    const text = m ? compose('facebook', m, lang, 'warm') : '';
     return {
       date, time,
       topic: { tree:'果樹', product:'產品', order:'認養捷報', free:'平台介紹' }[p.kind],
+      kind: p.kind,
       subject: p.id,
       title: text.split('\n')[0],
       text,
@@ -779,6 +787,12 @@ function buildCalendar() {
  * 匯出 CSV。欄位順序照 Meta Business Suite 大量上傳的格式，
  * 並且加 BOM —— 沒有 BOM 的話，Excel 開中文會變亂碼。
  */
+/* 換語言時把排程表重新產生一次 —— 它的內容是整段文案，
+   不是可以逐句替換的介面文字。 */
+document.addEventListener('i18n:change', () => {
+  if (document.getElementById('t-calendar')?.innerHTML) buildCalendar();
+});
+
 function exportCalendarCsv() {
   if (!CAL_ROWS.length) return;
   const esc = v => `"${String(v).replace(/"/g, '""')}"`;

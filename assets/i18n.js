@@ -149,7 +149,11 @@ const I18N = {
       // 已被祖先整段處理過就跳過
       for (let a = el.parentElement; a; a = a.parentElement) if (handled.has(a)) return;
       // 品牌字標不翻譯
-      if (el.closest('script,style,code,pre,.lang-menu,.lang-toggle,.logo,.foot-brand b')) return;
+      /* .doc-sheet 是發票與合約。那兩份自己就有三種語言版本（見 docs.js），
+         整份一起產出。不能讓逐句翻譯碰它 —— 字典裡剛好有的詞會被換掉、
+         沒有的留著，結果是「甲方 · Platform」「Variety … 所在果園」
+         這種半中半英的合約，比整份中文還糟。 */
+      if (el.closest('script,style,code,pre,.lang-menu,.lang-toggle,.logo,.foot-brand b,.doc-sheet')) return;
       /* 整段替換是用 textContent 寫回去的，會把子元素整個抹掉。
          所以只要元素裡有「不是純文字」的東西，就不能整段處理：
 
@@ -215,7 +219,7 @@ const I18N = {
       acceptNode(n) {
         const p = n.parentElement;
         if (!p) return NodeFilter.FILTER_REJECT;
-        if (p.closest('script,style,code,pre,.lang-menu,.lang-toggle')) return NodeFilter.FILTER_REJECT;
+        if (p.closest('script,style,code,pre,.lang-menu,.lang-toggle,.doc-sheet')) return NodeFilter.FILTER_REJECT;
         if (p.tagName === 'OPTION') return NodeFilter.FILTER_REJECT;
         for (let a = p; a; a = a.parentElement) if (handled.has(a)) return NodeFilter.FILTER_REJECT;
         return n.nodeValue.trim() ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT;
@@ -252,6 +256,11 @@ const I18N = {
 
     this.apply(document.body);
     this.syncSwitch();
+
+    /* 有些區塊的內容本身就是「用某個語言寫出來的」，不是可以逐句翻譯的
+       介面文字 —— 例如社群排程表裡的文案預覽。那種要整段重新產生，
+       所以換語言時發一個事件出去，由它們自己重畫。 */
+    document.dispatchEvent(new CustomEvent('i18n:change', { detail: { lang } }));
   },
 
   syncSwitch() {

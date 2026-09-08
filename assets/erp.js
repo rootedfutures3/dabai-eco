@@ -465,7 +465,9 @@ function renderInvoices() {
     const paid    = all.reduce((t, i) => t + i.paid, 0);
     const overdue = all.filter(i => i.state === 'overdue');
     kpi.innerHTML = [
-      ['已開立', qty(all.length) + ' 張', '每筆訂單一張'],
+      /* 用「張發票」而不是單獨的「張」：「{n} 張」在字典裡是樹況回報
+         的照片量詞，馬來文會翻成 foto，變成「7 張照片」。 */
+      ['已開立', qty(all.length) + ' 張發票', '每筆訂單一張'],
       ['已收',   money(paid), '含訂金與全額'],
       ['未收',   money(owed), `${qty(all.filter(i => i.state !== 'paid').length)} 張還沒收足`],
       ['逾期',   money(overdue.reduce((t, i) => t + i.owed, 0)),
