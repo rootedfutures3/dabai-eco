@@ -3060,7 +3060,10 @@ table tfoot td:first-child{color:var(--ink-soft);font-weight:600}
 .sub-line{
   display:block;margin-top:3px;
   font-size:.84rem;font-weight:400;color:var(--ink-soft);
-  max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  /* 126px 放得下「到期 2026-03-22」和「INV-2026-0007」。
+     原本 150px：發票表有三欄都由這個上限決定寬度，三欄一起
+     多要 72px，剛好把表格推出內容區。 */
+  max-width:126px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
 }
 .sub-line .badge-ok, .sub-line .badge-wait{font-size:.78rem}
 
@@ -3078,3 +3081,37 @@ table tfoot td:first-child{color:var(--ink-soft);font-weight:600}
   border:1px solid rgba(148,44,44,.3);
   font-size:.84rem;font-weight:700;white-space:nowrap;
 }
+
+/* ============================================================
+   後台表格：讓它塞得進內容區，而不是靠左右滑
+   ------------------------------------------------------------
+   同一張表在中文塞得下、換成英文或馬來文就爆出去，因為譯文比中文長
+   得多（「待收」→「Belum dikutip」、「訂單/回報/貼文」→「Pesanan /
+   laporan / siaran」）。表格已經是 width:100%，撐開它的是「最小內容
+   寬度」：
+
+     · 每格左右各 18px 內距 —— 九欄就先吃掉 320px，什麼都還沒放
+     · email 是一長串不能斷的字元，整格撐到 209px
+     · 第一欄 white-space:nowrap，訂單編號和日期被迫排成一行
+
+   所以是收內距、讓長字串可以斷、放開第一欄，不是把欄位藏起來。
+   資料一欄都沒有少。
+   ============================================================ */
+body.admin th,
+body.admin td{ padding:12px 11px }
+
+/* 長 email 與網址可以從中間斷行，不再獨占一整欄的寬度 */
+body.admin td{ overflow-wrap:anywhere }
+
+/* 表頭比內容長的時候就讓它折行，不要反過來把整欄撐開 */
+body.admin th{ white-space:normal; overflow-wrap:anywhere }
+
+/* 第一欄原本禁止換行，訂單編號＋日期只能排成一長條。
+   編號本身不該被拆開，但編號和它底下的日期可以分兩行。 */
+body.admin td:first-child{ white-space:normal }
+body.admin td:first-child > b{ white-space:nowrap }
+
+/* 徽章與標籤預設不換行 —— 在句子裡是對的，排在表格欄位裡就變成
+   「逾期 123 天」「Belum dikutip」把整欄撐開。表格裡讓它們折行。 */
+body.admin td [class*="badge-"],
+body.admin td .pill{ white-space:normal }

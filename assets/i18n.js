@@ -153,7 +153,10 @@ const I18N = {
          整份一起產出。不能讓逐句翻譯碰它 —— 字典裡剛好有的詞會被換掉、
          沒有的留著，結果是「甲方 · Platform」「Variety … 所在果園」
          這種半中半英的合約，比整份中文還糟。 */
-      if (el.closest('script,style,code,pre,.lang-menu,.lang-toggle,.logo,.foot-brand b,.doc-sheet')) return;
+      /* .side-avatar 放的是名字的第一個字，不是一個詞。
+         「平台管理員」的「平」剛好在字典裡（'平' → 'Flat'），
+         於是英文版的頭像變成 Flat、馬來文版變成 Rata。 */
+      if (el.closest('script,style,code,pre,.lang-menu,.lang-toggle,.logo,.foot-brand b,.doc-sheet,.side-avatar')) return;
       /* 整段替換是用 textContent 寫回去的，會把子元素整個抹掉。
          所以只要元素裡有「不是純文字」的東西，就不能整段處理：
 
@@ -219,7 +222,7 @@ const I18N = {
       acceptNode(n) {
         const p = n.parentElement;
         if (!p) return NodeFilter.FILTER_REJECT;
-        if (p.closest('script,style,code,pre,.lang-menu,.lang-toggle,.doc-sheet')) return NodeFilter.FILTER_REJECT;
+        if (p.closest('script,style,code,pre,.lang-menu,.lang-toggle,.doc-sheet,.side-avatar')) return NodeFilter.FILTER_REJECT;
         if (p.tagName === 'OPTION') return NodeFilter.FILTER_REJECT;
         for (let a = p; a; a = a.parentElement) if (handled.has(a)) return NodeFilter.FILTER_REJECT;
         return n.nodeValue.trim() ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT;

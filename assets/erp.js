@@ -97,6 +97,10 @@ Store.onReady((info) => {
     if (confirm('確定要清除本機的示範資料，回到初始狀態嗎？')) {
       Store.reset();
       renderAll();
+      /* 重設會把 users 一起換掉，側邊欄那格要重新對一次身分 ——
+         少了這行，重設之後自己的名字會變成「未登入」，
+         要重新整理才回來。 */
+      showMe();
     }
   });
 });
@@ -796,7 +800,12 @@ function showMe() {
 
   if (me) {
     nameEl.textContent = me.name || me.u;
-    roleEl.textContent = { admin:'平台管理員', farmer:'果農', buyer:'收購商' }[me.role] || me.role;
+    /* 用權限標籤（超級管理員／財務…）而不是角色（平台管理員）——
+       gateMenu() 稍後也會寫同一格，兩邊講法要一致，
+       否則按下重設之後這一格會從「超級管理員」跳成「平台管理員」。 */
+    roleEl.textContent = (typeof Perm !== 'undefined' && Perm.me())
+      ? Perm.roleLabel()
+      : ({ admin:'平台管理員', farmer:'果農', buyer:'收購商' }[me.role] || me.role);
     avEl.textContent = (me.name || me.u).trim().charAt(0).toUpperCase();
     setLabel('登出');
     outBtn.onclick = () => {
@@ -811,6 +820,11 @@ function showMe() {
     setLabel('登入');
     outBtn.onclick = () => { location.href = 'app.html?next=erp.html'; };
   }
+
+  /* i18n 會把元素第一次看到的中文記成「原文」，之後切語言都拿那份去
+     翻。這幾格是登入之後才被改寫的 —— 沒清掉快取的話，記到的原文還是
+     「訪客／未登入」，於是切成英文，自己的名字會變成 Not signed in。 */
+  if (typeof I18N !== 'undefined') [nameEl, roleEl, outBtn].forEach(el => I18N.refresh(el));
 }
 
 /* ============================================================
