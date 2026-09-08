@@ -485,7 +485,11 @@ function renderInvoices() {
     .filter(i => !want || (want === 'open' ? i.state !== 'paid' : i.state === want))
     .map(i => [
       `<b>${i.no}</b><span class="sub-line">${i.order}</span>`,
-      `${i.date}<span class="sub-line">到期 ${i.due}</span>`,
+      /* 用箭頭而不是「到期」兩個字：副標欄寬有上限（三欄一起算，
+         放寬就會把表格推出內容區），「到期 2026-03-22」剛好差幾 px
+         被截成「到期 2026-03-…」，看不到日子。箭頭在三種語言都一樣寬。
+         表頭本來就寫著「開立 / 到期」，讀得出來。 */
+      `${i.date}<span class="sub-line" title="到期 ${i.due}">→ ${i.due}</span>`,
       `${i.customer}<span class="sub-line" title="${i.email}">${i.email}</span>`,
       num(i.total), num(i.paid), num(i.owed),
       { n: i.overdueDays, html: i.state === 'paid'
@@ -519,7 +523,11 @@ function renderTrees() {
       const o = db.orders.find(x => x.treeId === t.id);
       const stat = { available:['開放認養','wait'], reserved:['保留中','wait'], adopted:['已認養','ok'] }[effective(t)];
       return [
-        `<b>${t.id}</b><span class="sub-line">${CROP_NAME[t.crop] || ''}</span>`,
+        /* 作物名在英文／馬來文比中文長（「Dabai 黑橄欖」→「Dabai
+           (Sarawak black olive)」），副標欄寬有上限就會被截。整站只有
+           Dabai 一種作物，這一格資訊量本來就低，不值得為它加寬整張表；
+           比照 Email 的做法補 title，滑鼠移上去看得到全名。 */
+        `<b>${t.id}</b><span class="sub-line" title="${CROP_NAME[t.crop] || ''}">${CROP_NAME[t.crop] || ''}</span>`,
         `${t.variety || '—'}<span class="sub-line">${qty(t.age)} 年生</span>`,
         num(t.kg,  n => qty(n) + ' kg'),
         num(t.price),
