@@ -86,7 +86,8 @@ const GOOGLE_CLIENT_ID = '908132991198-s1ls4f6hkl9q1sac3r5t2setfkn9elf1.apps.goo
    其他同事不用寫在這裡：他們照常用 Google 登入（會自動開一個果農帳號），
    再由你在後台的「帳號與權限」指派角色就好。 */
 const SUPER_EMAILS = [
-  'idrawer1217@gmail.com',
+  'idrawer1217@gmail.com',      // 平時登入用的
+  'rootedfutures3@gmail.com',   // 組織帳號（Google Cloud 與 GitHub 都是它）
 ];
 
 /* ------------------------------------------------------------
