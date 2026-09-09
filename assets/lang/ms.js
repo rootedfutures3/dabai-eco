@@ -2449,4 +2449,10 @@ window.LANG_MS = {
   '第一次登入會自動建立帳號，角色由管理員指派。': 'Akaun anda dicipta pada log masuk pertama; pentadbir menetapkan peranan anda.',
   '登入後由管理員指派你的角色。': 'Pentadbir menetapkan peranan anda selepas anda log masuk.',
   'Google 登入還沒設定好 —— 到 Google Cloud 建一個 OAuth 用戶端，把 Client ID 填進 assets/config.js 的 GOOGLE_CLIENT_ID，並把 AUTH_MODE 改成 google。步驟見 GOOGLE-LOGIN.md。': 'Log masuk Google belum disediakan. Cipta klien OAuth dalam Google Cloud, masukkan Client ID ke dalam GOOGLE_CLIENT_ID di assets/config.js, dan tetapkan AUTH_MODE kepada google. Lihat GOOGLE-LOGIN.md.',
+  '第一次來？': 'Kali pertama di sini?',
+  '不用另外註冊 —— 按上面那顆按鈕就會用你的 Google 帳號建立。': 'Tiada pendaftaran berasingan — butang di atas akan membuka akaun anda daripada akaun Google anda.',
+  '用 Google 登入一次，帳號就建立好了': 'Log masuk dengan Google sekali, akaun anda pun terbuka',
+  '管理員在後台按「通過」放行': 'Pentadbir meluluskannya di pejabat belakang',
+  '放行之後再登入一次就進得來': 'Log masuk sekali lagi selepas diluluskan, anda boleh masuk',
+  '還沒被放行？把你的 Gmail 給團隊裡的管理員，請他到「帳號與權限」處理。': 'Belum diluluskan? Berikan alamat Gmail anda kepada pentadbir dalam pasukan dan minta mereka uruskannya di Akaun & Kebenaran.',
 };

@@ -2448,4 +2448,10 @@ window.LANG_EN = {
   '第一次登入會自動建立帳號，角色由管理員指派。': 'Your account is created on first sign-in; an administrator assigns your role.',
   '登入後由管理員指派你的角色。': 'An administrator assigns your role after you sign in.',
   'Google 登入還沒設定好 —— 到 Google Cloud 建一個 OAuth 用戶端，把 Client ID 填進 assets/config.js 的 GOOGLE_CLIENT_ID，並把 AUTH_MODE 改成 google。步驟見 GOOGLE-LOGIN.md。': 'Google sign-in is not set up yet. Create an OAuth client in Google Cloud, put the Client ID into GOOGLE_CLIENT_ID in assets/config.js, and set AUTH_MODE to google. See GOOGLE-LOGIN.md.',
+  '第一次來？': 'First time here?',
+  '不用另外註冊 —— 按上面那顆按鈕就會用你的 Google 帳號建立。': 'There is no separate sign-up — the button above creates your account from your Google account.',
+  '用 Google 登入一次，帳號就建立好了': 'Sign in with Google once and your account exists',
+  '管理員在後台按「通過」放行': 'An administrator approves it in the back office',
+  '放行之後再登入一次就進得來': 'Sign in again after approval and you are in',
+  '還沒被放行？把你的 Gmail 給團隊裡的管理員，請他到「帳號與權限」處理。': 'Not approved yet? Give your Gmail address to an administrator on the team and ask them to handle it under Users & Roles.',
 };
