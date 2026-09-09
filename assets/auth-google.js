@@ -61,11 +61,31 @@ const GAuth = {
     const db = Store.read();
     const found = (db.users || []).find(u =>
       String(u.email || '').trim().toLowerCase() === email);
-    if (found) return found;
+    if (found) {
+      /* 已經有帳號的話沿用它的角色 —— 除非它在 SUPER_EMAILS 名單上
+         卻還不是超管（例如先用 Google 登入建了果農帳號，之後才把
+         信箱加進名單）。那種情況直接補上去，不用再進後台改一次。 */
+      const supers0 = (typeof SUPER_EMAILS !== 'undefined' ? SUPER_EMAILS : [])
+        .map(e => String(e).trim().toLowerCase());
+      if (supers0.includes(email) && found.perm !== 'super') {
+        Store.setUserPerm(found.u, 'super');
+        return { ...found, perm: 'super' };
+      }
+      return found;
+    }
 
-    /* 第一次用 Google 進來的人，一律開成果農 —— 權限最小的那個。
+    /* config.js 的 SUPER_EMAILS 列出來的信箱，第一次登入就直接是超管。
+       這是為了解決一個很容易踩的順序問題：貼上 Client ID 之後密碼欄位
+       就不見了，如果那時候你的 Gmail 還沒對到任何管理員帳號，
+       用 Google 登入只會拿到果農權限 —— 而且沒有密碼可以進去改。
+       名單寫在專案裡、只有能推 code 的人改得動，和其他前端權限同一個信任層級。
+
+       不在名單上的人一律開成果農 —— 權限最小的那個。
        要升成管理員由超級管理員在「帳號與權限」指派，
        不讓登入的人自己決定自己是誰。 */
+    const supers = (typeof SUPER_EMAILS !== 'undefined' ? SUPER_EMAILS : [])
+      .map(e => String(e).trim().toLowerCase());
+    const isSuper = supers.includes(email);
     const base = email.split('@')[0].replace(/[^a-z0-9_]/gi, '').slice(0, 20).toLowerCase();
     let u = base || 'user';
     let i = 2;
@@ -74,8 +94,8 @@ const GAuth = {
     return Store.addUser({
       u,
       pass:  '',                       // 沒有密碼，登入完全靠 Google
-      role:  'farmer',
-      perm:  'farmer',
+      role:  isSuper ? 'admin'  : 'farmer',
+      perm:  isSuper ? 'super'  : 'farmer',
       name:  claim.name || email.split('@')[0],
       org:   '',
       phone: '',
