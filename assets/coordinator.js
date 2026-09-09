@@ -123,10 +123,34 @@ Store.onReady(() => {
   });
 
   /* ---- 回報送出 ---- */
-  document.getElementById('report-form').addEventListener('submit', e => {
+  document.getElementById('report-form').addEventListener('submit', async e => {
     e.preventDefault();
     const f = e.target;
+    const btn = f.querySelector('button[type="submit"]');
+    const files = [...document.getElementById('r-photo').files].slice(0, 6);
+
+    /* 照片先上傳，成功了才寫回報 —— 反過來的話，照片傳失敗會留下
+       一筆說有照片、卻點不開的紀錄。
+       離線時不傳：File 物件沒辦法存進佇列，等回到有訊號的地方
+       那些檔案早就不在了，所以離線的回報只留數量並說清楚。 */
+    let photoUrls = [];
+    if (files.length && navigator.onLine) {
+      const orig = btn ? btn.textContent : '';
+      try {
+        for (let i = 0; i < files.length; i++) {
+          if (btn) { btn.disabled = true; btn.textContent = `上傳照片 ${i + 1}/${files.length}…`; }
+          photoUrls.push(await Store.uploadPhoto(files[i], f.treeId.value));
+        }
+      } catch (err) {
+        if (btn) { btn.disabled = false; btn.textContent = orig; }
+        note(`⚠️ ${err.message}　回報還沒送出，你可以再按一次，或先拿掉照片送出文字部分。`, true);
+        return;
+      }
+      if (btn) { btn.disabled = false; btn.textContent = orig; }
+    }
+
     const report = {
+      photoUrls,
       at: stamp(),
       treeId: f.treeId.value,
       /* 果農自己回報時要標明是果農，後台才分得出來源 */
@@ -142,10 +166,13 @@ Store.onReady(() => {
       Store.addReport(report);
       /* 讓人知道兩邊是連動的 —— 這裡送出去，後台立刻看得到，
          而不是存在某個誰也看不到的地方。 */
-      note(`✅ ${report.treeId} 已儲存並同步 —— TANJU Portal 的「樹況回報」現在就看得到這一筆。`);
+      note(`✅ ${report.treeId} 已儲存並同步`
+        + (photoUrls.length ? `，${photoUrls.length} 張照片已上傳` : '')
+        + ' —— TANJU Portal 的「樹況回報」現在就看得到這一筆。');
     } else {
       queuePush(report);
-      note(`📥 目前離線，已存入本機佇列（${queueRead().length} 筆待同步）。回到有訊號的地方會自動送出。`);
+      note(`📥 目前離線，已存入本機佇列（${queueRead().length} 筆待同步）。回到有訊號的地方會自動送出。`
+        + (files.length ? '　照片沒辦法離線保留，回到有訊號的地方請重拍一次補上。' : ''));
     }
 
     f.reset();
@@ -168,7 +195,14 @@ function stamp() {
   const p = n => String(n).padStart(2, '0');
   return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
 }
-function note(msg) { document.getElementById('queue-note').textContent = msg; }
+/* bad=true 時標成錯誤（紅字）。送出失敗要看得出來是失敗，
+   不能跟「已儲存」長得一樣。 */
+function note(msg, bad) {
+  const el = document.getElementById('queue-note');
+  if (!el) return;
+  el.textContent = msg;
+  el.classList.toggle('is-bad', !!bad);
+}
 
 function queueRead() {
   try { return JSON.parse(localStorage.getItem(QUEUE_KEY) || '[]'); } catch (e) { return []; }

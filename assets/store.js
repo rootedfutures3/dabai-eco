@@ -352,6 +352,58 @@ const Store = {
     else push('settings', { key, value: String(value), note: '' });
   },
 
+  /* ---------- 照片 ---------- */
+  /**
+   * 上傳一張照片到 Supabase Storage，回傳公開網址。
+   *
+   * 上傳前先縮圖。手機直出動輒 4–5MB，果園那邊的訊號傳一張要好幾分鐘，
+   * 而回報要看的是「花況密不密、果子多大、葉子有沒有病斑」——
+   * 長邊 1600px 綽綽有餘。
+   */
+  async uploadPhoto(file, treeId) {
+    if (!SB.on) throw new Error('尚未連上雲端，照片沒有地方存。');
+    const blob = await Store._shrink(file);
+    const ext  = blob.type === 'image/png' ? 'png' : 'jpg';
+    /* 檔名帶亂數：桶是公開讀取的，猜不到就等於別人看不到。 */
+    const rand = Math.random().toString(36).slice(2, 10);
+    const path = `${String(treeId || 'unknown').toLowerCase()}/${Date.now()}-${rand}.${ext}`;
+
+    const r = await fetch(`${SB.url}/storage/v1/object/reports/${path}`, {
+      method: 'POST',
+      headers: {
+        apikey: SB.key,
+        Authorization: 'Bearer ' + (await SB.bearer() || SB.key),
+        'Content-Type': blob.type,
+        'x-upsert': 'false',
+      },
+      body: blob,
+    });
+    if (!r.ok) {
+      const t = await r.text().catch(() => '');
+      throw new Error(`照片上傳失敗（${r.status}）${t.slice(0, 120)}`);
+    }
+    return `${SB.url}/storage/v1/object/public/reports/${path}`;
+  },
+
+  /** 縮到長邊 1600px 以內、轉成 JPEG。畫不出來就原檔上傳。 */
+  async _shrink(file, max = 1600, quality = 0.82) {
+    if (!/^image\//.test(file.type)) return file;
+    try {
+      const bmp = await createImageBitmap(file);
+      const scale = Math.min(1, max / Math.max(bmp.width, bmp.height));
+      if (scale === 1 && file.size < 900 * 1024) return file;   // 本來就夠小
+      const w = Math.round(bmp.width * scale), h = Math.round(bmp.height * scale);
+      const cv = document.createElement('canvas');
+      cv.width = w; cv.height = h;
+      cv.getContext('2d').drawImage(bmp, 0, 0, w, h);
+      const out = await new Promise(res => cv.toBlob(res, 'image/jpeg', quality));
+      return out && out.size < file.size ? out : file;
+    } catch (e) {
+      console.warn('[照片] 縮圖失敗，改傳原檔', e.message);
+      return file;
+    }
+  },
+
   /* ---------- 備註 ---------- */
   /* 認養人是從訂單聚合出來的、拆帳是算出來的，兩者都沒有自己的資料表。
      備註全部塞在 settings 的一列 JSON 裡（key = memos），
@@ -571,10 +623,15 @@ const MAP = {
                  channel:r.channel, status:r.status, buyer:r.buyer }),
   },
   reports: {
+    /* photoUrls 是逗號分隔的網址。用一個 text 欄位而不是陣列，
+       是因為要跑的 SQL 少一點、舊資料也不會炸 —— 一筆最多 6 張，
+       不值得為它開一張關聯表。 */
     out: r => ({ at:r.at, tree_id:r.treeId, by_who:r.by, stage:r.stage,
-                 health:r.health, note:r.note, photos:r.photos }),
+                 health:r.health, note:r.note, photos:r.photos,
+                 photo_urls: (r.photoUrls || []).join(',') || null }),
     in:  r => ({ at:r.at, treeId:r.tree_id, by:r.by_who, stage:r.stage,
-                 health:r.health, note:r.note, photos:r.photos }),
+                 health:r.health, note:r.note, photos:r.photos,
+                 photoUrls: r.photo_urls ? String(r.photo_urls).split(',').filter(Boolean) : [] }),
   },
   leads: {
     out: l => ({ date:l.date, company:l.company, contact:l.contact, title:l.title,

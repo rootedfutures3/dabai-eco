@@ -815,11 +815,17 @@ function renderReports() {
   const rows = db.reports.map(r => [
     r.at, `<span class="pill">${r.treeId}</span>`, r.by, r.stage,
     `<span class="badge-${r.health === '良好' ? 'ok' : 'wait'}">${r.health}</span>`,
-    r.note, num(r.photos, n => qty(n) + ' 張'),
+    r.note,
+    /* 有網址就顯示縮圖，點開看原圖；只有數量沒網址的是舊資料
+       或離線補登的，照實說「無圖檔」而不是假裝有。 */
+    (r.photoUrls && r.photoUrls.length)
+      ? `<span class="rep-thumbs">${r.photoUrls.map((u, i) =>
+          `<a href="${u}" target="_blank" rel="noopener" title="第 ${i + 1} 張">
+             <img src="${u}" alt="樹況照片 ${i + 1}" loading="lazy"></a>`).join('')}</span>`
+      : (r.photos ? `<span class="dim">${qty(r.photos)} 張 · 無圖檔</span>` : '<span class="dim">—</span>'),
   ]);
   document.getElementById('t-reports').innerHTML = table([
-    '時間', 'Tree ID', '回報人', '生長階段', '樹況', '備註',
-    { h:'照片', num:true }], rows);
+    '時間', 'Tree ID', '回報人', '生長階段', '樹況', '備註', '照片'], rows);
 }
 
 /* ---------- 工資 ---------- */

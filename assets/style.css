@@ -3396,3 +3396,17 @@ th[data-dir="desc"] .sort-mark::before{content:"↓"}
   body.printing-wages #wage-sheet thead{display:table-header-group}
   body.printing-wages #wage-sheet tr{page-break-inside:avoid}
 }
+
+/* 回報照片的縮圖 */
+.rep-thumbs{display:flex;gap:6px;flex-wrap:wrap}
+.rep-thumbs img{
+  width:46px;height:46px;object-fit:cover;display:block;
+  border-radius:6px;border:1px solid var(--line);
+}
+.rep-thumbs a:hover img{border-color:var(--coffee)}
+.rep-thumbs a:focus-visible img{outline:2px solid var(--gold-deep);outline-offset:2px}
+@media(max-width:1240px), (pointer:coarse){
+  .rep-thumbs img{width:60px;height:60px}
+}
+/* 送出失敗的提示 */
+#queue-note.is-bad{color:var(--red);font-weight:600}
