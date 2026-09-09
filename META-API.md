@@ -127,7 +127,7 @@ instagram_manage_insights
 按下去會跳出 Facebook 的授權視窗。**真正會出錯的地方全在這裡。**
 
 - 會問你**要讓這個 App 用哪些粉專** ——
-  一定要勾到 ROOTED FUTURES（`61594043096404`）。
+  一定要勾到 Rootedfutures。
   漏勾的話 token 產得出來，但讀不到這個粉專的任何東西。
 - 接著問**允許這個 App 做什麼**，一排開關 ——
   **每一個都要開著**。關掉任何一個，那個權限不會出現在 token 裡，
@@ -142,9 +142,9 @@ token 出來之後，先在 Explorer 上面那個網址列打這三個，各按�
 
 | 打這個 | 應該看到 |
 |---|---|
-| `me/accounts` | 列出你的粉專，裡面有 `61594043096404` |
-| `61594043096404?fields=instagram_business_account` | 一個 `id`，代表 IG 有連上 |
-| `61594043096404/posts?fields=id,message,insights.metric(post_impressions_unique,post_clicks)` | 貼文清單，每篇底下有 `insights` |
+| `me/accounts` | 列出你的粉專，`id` 應該是 `1211431805397689` |
+| `1211431805397689?fields=instagram_business_account` | 一個 `id`，代表 IG 有連上 |
+| `1211431805397689/posts?fields=id,message,insights.metric(post_impressions_unique,post_clicks)` | 貼文清單，每篇底下有 `insights` |
 
 **第三個是關鍵**。它過了才代表 `read_insights` 真的在 token 裡。
 回 `(#200)` 或 `(#100)` 就是沒有 —— 回第 3 步重新勾、重新授權，
@@ -172,7 +172,7 @@ https://graph.facebook.com/v23.0/oauth/access_token?grant_type=fb_exchange_token
 https://graph.facebook.com/v23.0/me/accounts?access_token=第二步那串
 ```
 
-回來的清單裡找到 ROOTED FUTURES 那個粉專（`id` 應該是 `61594043096404`），
+回來的清單裡找到 Rootedfutures（`id` 是 `1211431805397689`），
 它底下的 `access_token` 就是**你要的那一把**。
 
 用長效使用者 token 換出來的粉專 token **不會過期**，
@@ -212,7 +212,7 @@ wrangler secret put TANJU_KEY
 wrangler deploy
 ```
 
-- `FB_PAGE_ID` → `61594043096404`
+- `FB_PAGE_ID` → `1211431805397689`（**不是**網址上的 `61594043096404`，見下面）
 - `FB_PAGE_TOKEN` → 第三步那把粉專 token
 - `TANJU_KEY` → 自己隨便打一串，用來擋路過的人
 - `IG_USER_ID` → **不用設**，後端自己查
@@ -255,11 +255,35 @@ const PUBLISH_KEY = '你剛剛設的 TANJU_KEY';
 | IG 那幾列的「點擊」永遠是「—」 | 正常。IG 的自然貼文 Meta 不給連結點擊，只給廣告 |
 | 黃色框寫「Meta 不給這些指標」 | Meta 改版把那個指標名字砍了。後端會自動略過，其他數字照常 |
 | 「這個粉專底下沒有綁 IG 商業帳號」 | 回第 1 節「IG 那邊的前提」 |
+| 黃色框寫「連讚與留言都讀不到」 | `pages_read_engagement` 有給，但沒涵蓋到這個粉專。回第 2 節重新授權，彈窗裡要勾到粉專 |
+| `Object with ID … does not exist` | `FB_PAGE_ID` 填成網址上的編號了，見上一節 |
 | 讀取失敗（401） | `PUBLISH_KEY` 和 Cloudflare 上的 `TANJU_KEY` 不一樣 |
 
 CTR 的算法：**只拿有點擊數的那幾篇，除它們自己的觸及**。
 不是拿 FB 的點擊去除 FB＋IG 的總觸及 —— 那個分母是錯的，
 會讓 CTR 看起來比實際低一大截。
+
+---
+
+## 粉專有兩個編號，別填錯
+
+這件事實測踩過，寫下來免得再踩：
+
+| 編號 | 哪裡看到 | 用途 |
+|---|---|---|
+| `1211431805397689` | `me/accounts` 回傳的 `id` | **Graph API 只認這個** |
+| `61594043096404` | 瀏覽器網址列 | 只能給人點，API 查不到 |
+
+新版粉專的網址是 `facebook.com/profile.php?id=61594043096404`，
+直覺會複製那一串去填 `FB_PAGE_ID`，然後得到
+
+```
+Object with ID '61594043096404' does not exist, cannot be loaded
+due to missing permissions, or does not support this operation
+```
+
+那句話會讓你以為是權限問題，跑去重弄 token —— 其實只是編號拿錯。
+`assets/config.js` 已經填好正確的那個了。
 
 ---
 

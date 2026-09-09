@@ -242,9 +242,15 @@ async function readInsights(env, limit) {
     } else if (v.ok === false) {
       out.notes.push(`${k}：成效指標一個都拿不到，多半是這把 token 少了 `
         + `read_insights（IG 是 instagram_manage_insights）。`
-        + `讚與留言不受影響。被拒絕的：${dropped}`);
+        + (v.thin ? '' : '讚與留言不受影響。')
+        + `被拒絕的：${dropped}`);
     } else if (dropped) {
       out.notes.push(`${k}：Meta 不認得這幾個指標名，已略過 —— ${dropped}`);
+    }
+    if (v.thin) {
+      out.notes.push(`${k}：連讚與留言都讀不到，只剩貼文本身。`
+        + `這把 token 的 pages_read_engagement 沒有涵蓋這個粉專 —— `
+        + `重新授權時要記得在彈窗裡勾到它。`);
     }
   }
   return out;
@@ -252,15 +258,13 @@ async function readInsights(env, limit) {
 
 /* ---------- Facebook 粉專貼文 ---------- */
 async function fbInsights(env, limit) {
-  const base = [
-    'id', 'message', 'created_time', 'permalink_url',
-    'shares',
-    'likes.summary(true).limit(0)',
-    'comments.summary(true).limit(0)',
-  ];
-
-  const { data, ok, dropped } = await withMetrics(
-    env, `${env.FB_PAGE_ID}/posts`, base, FB_METRICS, limit);
+  const { data, ok, dropped, thin } = await withMetrics(
+    env, `${env.FB_PAGE_ID}/posts`, [
+      ['id', 'message', 'created_time', 'permalink_url', 'shares',
+       'likes.summary(true).limit(0)', 'comments.summary(true).limit(0)'],
+      ['id', 'message', 'created_time', 'permalink_url'],
+      ['id', 'message', 'created_time'],
+    ], FB_METRICS, limit);
 
   const posts = (data.data || []).map(p => {
     const m = pickInsights(p);
@@ -280,17 +284,19 @@ async function fbInsights(env, limit) {
       clicks: m.post_clicks ?? null,
     };
   });
-  return { posts, meta: { ok, dropped, count: posts.length } };
+  return { posts, meta: { ok, dropped, thin, count: posts.length } };
 }
 
 /* ---------- Instagram 商業帳號 ---------- */
 async function igInsights(env, limit) {
   const ig = env.IG_USER_ID || await resolveIgUserId(env);
-  const base = ['id', 'caption', 'timestamp', 'permalink', 'media_type',
-                'like_count', 'comments_count'];
 
-  const { data, ok, dropped } = await withMetrics(
-    env, `${ig}/media`, base, IG_METRICS, limit);
+  const { data, ok, dropped, thin } = await withMetrics(
+    env, `${ig}/media`, [
+      ['id', 'caption', 'timestamp', 'permalink', 'media_type',
+       'like_count', 'comments_count'],
+      ['id', 'caption', 'timestamp', 'permalink'],
+    ], IG_METRICS, limit);
 
   const posts = (data.data || []).map(p => {
     const m = pickInsights(p);
@@ -310,7 +316,7 @@ async function igInsights(env, limit) {
       clicks: null,
     };
   });
-  return { posts, meta: { ok, dropped, igUserId: ig, count: posts.length } };
+  return { posts, meta: { ok, dropped, thin, igUserId: ig, count: posts.length } };
 }
 
 /** 粉專底下綁的 IG 商業帳號，用粉專 token 就查得到，不用手動填。 */
@@ -330,19 +336,33 @@ async function resolveIgUserId(env) {
    整個請求就會 400 —— 而且錯誤訊息不會講是哪一個。
    所以退而求其次：一個一個試，留下過關的，最後再送一次。
    只有按「更新成效」時才會跑，多幾次呼叫沒有關係。 */
-async function withMetrics(env, path, baseFields, metrics, limit) {
-  const call = ms => graph(env, path, {
+async function withMetrics(env, path, baseSets, metrics, limit) {
+  /* baseSets 是「由完整到最陽春」的欄位組。
+     實測過：權限不齊的時候，連 likes.summary 這種基本欄位都會被擋
+     （#10），而它一被擋，整批貼文就一起讀不到 ——
+     所以基本欄位也要能退，退到最後至少還看得到有哪幾篇貼文。 */
+  let base = baseSets[0], thin = false;
+
+  const call = (ms, fields = base) => graph(env, path, {
     limit,
     fields: ms.length
-      ? [...baseFields, `insights.metric(${ms.join(',')})`].join(',')
-      : baseFields.join(','),
+      ? [...fields, `insights.metric(${ms.join(',')})`].join(',')
+      : fields.join(','),
   });
 
   try {
-    return { data: await call(metrics), ok: true, dropped: [] };
+    return { data: await call(metrics), ok: true, dropped: [], thin };
   } catch (e) {
-    if (!metrics.length) throw e;
+    if (!metrics.length && baseSets.length === 1) throw e;
   }
+
+  /* 先確認基本欄位本身過不過得了。過不了就換下一組。 */
+  for (const set of baseSets) {
+    try { await call([], set); base = set; thin = set !== baseSets[0]; break; }
+    catch (e) { if (set === baseSets[baseSets.length - 1]) throw e; }
+  }
+
+  if (!metrics.length) return { data: await call([]), ok: true, dropped: [], thin };
 
   const good = [], dropped = [];
   for (const m of metrics) {
@@ -351,11 +371,11 @@ async function withMetrics(env, path, baseFields, metrics, limit) {
   }
 
   if (!good.length) {
-    /* 一個都拿不到：多半是還沒過 App Review。
-       貼文本身還是讀得到，讚跟留言照樣有數字。 */
-    return { data: await call([]), ok: false, dropped };
+    /* 一個都拿不到：多半是 token 少了 read_insights。
+       貼文本身還是讀得到。 */
+    return { data: await call([]), ok: false, dropped, thin };
   }
-  return { data: await call(good), ok: true, dropped };
+  return { data: await call(good), ok: true, dropped, thin };
 }
 
 /** insights 回來的形狀是陣列包陣列，攤平成 {指標名: 數字} */

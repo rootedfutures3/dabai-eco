@@ -114,7 +114,15 @@ const PUBLISH_KEY = '';
    ------------------------------------------------------------ */
 const SOCIAL_ACCOUNTS = {
   facebook: {
-    pageId: '61594043096404',
+    /* 注意這裡有兩個編號，是同一個粉專的兩種身分，很容易填錯：
+
+         1211431805397689  Graph API 認得的 Page ID ← 後端要用這個
+         61594043096404    網址上看到的公開編號   ← 只能給人點，API 查不到
+
+       新版粉專的網址列顯示的是後者，直覺會複製那一串填進來，
+       但拿去打 Graph API 會得到「Object with ID does not exist」。
+       正確的拿法：用粉專 token 打 me/accounts，回傳的 id 就是前者。 */
+    pageId: '1211431805397689',
     url: 'https://www.facebook.com/profile.php?id=61594043096404',
   },
   instagram: {
