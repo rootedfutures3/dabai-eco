@@ -2455,4 +2455,12 @@ window.LANG_MS = {
   '管理員在後台按「通過」放行': 'Pentadbir meluluskannya di pejabat belakang',
   '放行之後再登入一次就進得來': 'Log masuk sekali lagi selepas diluluskan, anda boleh masuk',
   '還沒被放行？把你的 Gmail 給團隊裡的管理員，請他到「帳號與權限」處理。': 'Belum diluluskan? Berikan alamat Gmail anda kepada pentadbir dalam pasukan dan minta mereka uruskannya di Akaun & Kebenaran.',
+  '複製文案': 'Salin kapsyen',
+  '一鍵發布': 'Terbitkan',
+  '複製並開啟': 'Salin dan buka',
+  '社群產文產圖': 'Kapsyen dan gambar',
+  '產生四個平台的文案與配圖': 'Jana kapsyen dan gambar untuk keempat-empatnya',
+  '產生中…': 'Menjana…',
+  '產圖並發布中…': 'Menjana gambar dan menerbitkan…',
+  '文案已複製、配圖已下載，發文視窗開好了': 'Kapsyen disalin, gambar dimuat turun, komposer dibuka',
 };

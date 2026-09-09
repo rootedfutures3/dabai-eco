@@ -2454,4 +2454,12 @@ window.LANG_EN = {
   '管理員在後台按「通過」放行': 'An administrator approves it in the back office',
   '放行之後再登入一次就進得來': 'Sign in again after approval and you are in',
   '還沒被放行？把你的 Gmail 給團隊裡的管理員，請他到「帳號與權限」處理。': 'Not approved yet? Give your Gmail address to an administrator on the team and ask them to handle it under Users & Roles.',
+  '複製文案': 'Copy caption',
+  '一鍵發布': 'Publish',
+  '複製並開啟': 'Copy and open',
+  '社群產文產圖': 'Posts and images',
+  '產生四個平台的文案與配圖': 'Write captions and images for all four',
+  '產生中…': 'Generating…',
+  '產圖並發布中…': 'Making the image and publishing…',
+  '文案已複製、配圖已下載，發文視窗開好了': 'Caption copied, image downloaded, composer opened',
 };

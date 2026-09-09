@@ -125,6 +125,22 @@ const HEALTH_TR = {
 };
 const trTerm = (map, v, lang) => (lang === 'zh' ? v : (map[v]?.[lang] || v));
 
+/* 資料值（果園名、果農名、地區）是用中文存在資料庫裡的。
+   套進英文或馬來文的句型就會變成「Orchard: Nanga Sepit 河谷果園」——
+   句子是英文，裡面卡一段中文。字典裡本來就有這些名字的翻譯，
+   要做的只是查一下。
+
+   為什麼不用 I18N.translate：它翻成「目前的介面語言」，
+   但這裡要的是「這篇貼文的語言」—— 介面開著中文時，
+   照樣要生得出完整的英文貼文。所以直接查那個語言的字典。 */
+function dv(v, lang) {
+  if (!v || lang === 'zh') return v;
+  const d = lang === 'en' ? window.LANG_EN
+          : lang === 'ms' ? window.LANG_MS : null;
+  if (!d) return v;
+  return d[String(v).trim()] ?? v;
+}
+
 function material(topic, id, lang) {
   const db = Store.read();
   const L = s => s[lang] || s.zh;
@@ -142,9 +158,9 @@ function material(topic, id, lang) {
       facts: {
         zh:[`果園：${t.orchard}（${t.area}）`, `果農：${t.farmer}`,
             `樹齡 ${t.age} 年 · 預估產量 ${t.kg} 公斤`, `認養金 RM ${t.price}`],
-        en:[`Orchard: ${t.orchard}, ${t.area}`, `Grower: ${t.farmer}`,
+        en:[`Orchard: ${dv(t.orchard, 'en')}, ${dv(t.area, 'en')}`, `Grower: ${dv(t.farmer, 'en')}`,
             `${t.age} years old · est. ${t.kg} kg`, `Adoption RM ${t.price}`],
-        ms:[`Dusun: ${t.orchard}, ${t.area}`, `Petani: ${t.farmer}`,
+        ms:[`Dusun: ${dv(t.orchard, 'ms')}, ${dv(t.area, 'ms')}`, `Petani: ${dv(t.farmer, 'ms')}`,
             `${t.age} tahun · anggaran ${t.kg} kg`, `Angkat RM ${t.price}`],
       }[lang],
       story: rpt
@@ -176,10 +192,10 @@ function material(topic, id, lang) {
         zh:[`作物：${crop}`, `果園：${t.orchard || '—'}`,
             `果農這一筆實拿 RM ${sp.farmer}（合約 RM ${sp.amount} 的 ${100 - sp.rate}%）`,
             `其中 RM ${sp.deposit} 在開花前就先撥`],
-        en:[`Crop: ${crop}`, `Orchard: ${t.orchard || '—'}`,
+        en:[`Crop: ${crop}`, `Orchard: ${dv(t.orchard, 'en') || '—'}`,
             `Grower receives RM ${sp.farmer} — ${100 - sp.rate}% of the RM ${sp.amount} contract`,
             `RM ${sp.deposit} of it lands before the tree even flowers`],
-        ms:[`Tanaman: ${crop}`, `Dusun: ${t.orchard || '—'}`,
+        ms:[`Tanaman: ${crop}`, `Dusun: ${dv(t.orchard, 'ms') || '—'}`,
             `Petani terima RM ${sp.farmer} — ${100 - sp.rate}% daripada kontrak RM ${sp.amount}`,
             `RM ${sp.deposit} sampai sebelum pokok berbunga`],
       }[lang],
@@ -577,13 +593,25 @@ function fillSubjects() {
    英文給企業與海外。所以每張卡片自己帶三份文案，點一下就換。 */
 const POST_LANGS = [['zh', '中文'], ['ms', 'Bahasa Melayu'], ['en', 'English']];
 
-/** 「對象」下拉目前選到的文字。印在配圖上，讓人看得出這篇在講哪一棵樹。 */
-function subjectLabel() {
-  const sel = document.getElementById('po-subject');
-  const t = sel && sel.selectedOptions[0] ? sel.selectedOptions[0].textContent : '';
-  /* 下拉裡是「DB-000004 · Nanga Sepit 河谷（Ak. Jelani 一家）」，
-     圖上只要前面那一段，果農名字放上去太擠。 */
-  return String(t).split('（')[0].trim();
+/* 印在配圖上的那行副標，讓人看得出這篇在講哪一棵樹。
+   不能直接抓下拉選單的文字 —— 那是介面語言，
+   但一張圖要配的是「這篇貼文的語言」，兩者不一定一樣。 */
+function subjectFor(topic, id, lang) {
+  if (topic === 'tree') {
+    const t = Store.treeList().find(x => x.id === id);
+    return t ? `${t.id} · ${dv(t.orchard, lang)}` : '';
+  }
+  if (topic === 'order') {
+    const o = (Store.read().orders || []).find(x => x.no === id);
+    return o ? `${o.treeId} · ${o.no}` : '';
+  }
+  if (topic === 'product') {
+    const p = PRODUCTS.find(x => x.id === id);
+    return p ? ({ zh:p.zh, en:p.en, ms:p.ms }[lang] || p.zh) : '';
+  }
+  return { zh:'砂拉越 Song · 一樹一碼',
+           en:'Song, Sarawak · one tree, one ID',
+           ms:'Song, Sarawak · satu pokok, satu ID' }[lang] || '';
 }
 
 function generate() {
@@ -601,12 +629,14 @@ function generate() {
   POSTS_DRAFT = {};
   wrap.innerHTML = Object.entries(CHANNELS).map(([key, ch]) => {
     // 每個平台各產三份
-    const texts = {};
+    const texts = {}, subjects = {};
     POST_LANGS.forEach(([code]) => {
       texts[code] = compose(key, material(topic, id, code), code, tone);
+      subjects[code] = subjectFor(topic, id, code);
     });
-    POSTS_DRAFT[key] = { texts, lang: first, topic, topicId: id, subject: subjectLabel(),
-                         get text() { return this.texts[this.lang]; } };
+    POSTS_DRAFT[key] = { texts, subjects, lang: first, topic, topicId: id,
+                         get text() { return this.texts[this.lang]; },
+                         get subject() { return this.subjects[this.lang]; } };
 
     const cur  = texts[first];
     const over = cur.length > ch.limit;
