@@ -568,25 +568,56 @@ async function onCardClick(e) {
 /* ============================================================
    成效指標
    ------------------------------------------------------------
-   觸及、互動、點擊、CTR 這些數字只有平台自己知道，要接上
-   Meta / YouTube 的 API 才拿得到。API 還在審核，所以這裡先把
-   欄位和版面做好，接上就自動有數字。
+   數字全部來自 Meta 的 Graph API，經過後端（金鑰不能放前端）。
+   這裡不做任何推估：後端沒給的欄位就顯示破折號。
+   成效數字是拿去對外講的東西 —— 看板上出現一個 3.2% 的 CTR，
+   隔天就可能被寫進提案書裡，所以寧可空著。
 
-   刻意不塞示範數字進去：成效數據是拿去對外講的東西，
-   看板上出現一個 3.2% 的 CTR，隔天就可能被寫進提案書裡。
-   沒有就顯示沒有。
+   Meta 的權限是分批到位的，所以會有一段時間只有一半的數字：
+     讚、留言、分享　→ 建好 App 就有
+     觸及、曝光、點擊 → 要 read_insights，且要過 App Review
    ============================================================ */
-const PERF_FIELDS = [
-  { k:'reach',       label:'觸及',   fmt:n => qtyN(n) },
-  { k:'impressions', label:'曝光',   fmt:n => qtyN(n) },
-  { k:'engagements', label:'互動',   fmt:n => qtyN(n) },
-  { k:'clicks',      label:'點擊',   fmt:n => qtyN(n) },
-];
 const qtyN = n => Number(n || 0).toLocaleString('en-MY');
+const dash = v => (v === null || v === undefined) ? '—' : qtyN(v);
 
-/** 有沒有任何一篇帶回成效數字。全部沒有就是還沒接上。 */
-function hasPerf(posts) {
-  return posts.some(p => PERF_FIELDS.some(f => Number(p[f.k]) > 0));
+/** 後端傳回來的整包成效，存在 settings 裡，換一台裝置也看得到 */
+function perfData() {
+  try { return JSON.parse(Store.setting('social_perf', '') || 'null'); }
+  catch (e) { return null; }
+}
+
+function perfEndpoint() {
+  return (typeof PUBLISH_ENDPOINT !== 'undefined' && PUBLISH_ENDPOINT) || '';
+}
+
+async function refreshPerf(btn) {
+  const ep = perfEndpoint();
+  const msg = document.getElementById('perf-msg');
+  const say = (t, bad) => { if (msg) { msg.textContent = t; msg.className = 'post-msg' + (bad ? ' bad' : ' ok'); } };
+
+  if (btn) btn.disabled = true;
+  say('讀取中…');
+  try {
+    const r = await fetch(ep, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'insights', limit: 24,
+        key: (typeof PUBLISH_KEY !== 'undefined' && PUBLISH_KEY) || '',
+      }),
+    });
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(d.error || `讀取失敗（${r.status}）`);
+
+    Store.saveSetting('social_perf', JSON.stringify(d));
+    renderPerf();
+    const n = (d.posts || []).length;
+    say(n ? `已更新 ${n} 篇的成效` : '連上了，但這兩個帳號還沒有貼文');
+  } catch (err) {
+    say('讀取失敗：' + err.message, true);
+  } finally {
+    if (btn) btn.disabled = false;
+  }
 }
 
 function renderPerf() {
@@ -594,44 +625,65 @@ function renderPerf() {
   const tbl = document.getElementById('t-perf');
   if (!box || !tbl) return;
 
-  const posts = (Store.read().posts || []).filter(p => p.status === '已發布');
-  const on = hasPerf(posts);
+  const ep = perfEndpoint();
+  const data = perfData();
+  const posts = (data && data.posts) || [];
 
-  if (!on) {
+  const bar = document.getElementById('perf-bar');
+  if (bar) bar.hidden = !ep;
+
+  if (!posts.length) {
     box.innerHTML = `
       <div class="perf-off">
         <b>尚未連接成效資料</b>
-        <span>觸及、互動、點擊與 CTR 由 Meta 與 YouTube 的 API 提供。
-              API 接上之後這裡會自動出現數字 —— 在那之前不顯示任何數值，
-              以免把估計值當成實際成效帶進提案。</span>
+        <span>${ep
+          ? '後端已設定。按上面的「更新成效」把 Meta 那邊的數字讀回來。'
+          : '觸及、互動、點擊由 Meta 的 Graph API 提供，要先架好後端（Page Access Token 不能放在前端）。設定步驟見 META-API.md。'}
+              在數字進來之前這裡不顯示任何數值，以免把估計值當成實際成效帶進提案。</span>
       </div>`;
     tbl.innerHTML = '';
+    renderPerfNotes(data);
     return;
   }
 
-  const sum = k => posts.reduce((s, p) => s + (Number(p[k]) || 0), 0);
-  const reach = sum('reach'), clicks = sum('clicks'), eng = sum('engagements');
-  const ctr = reach ? (clicks / reach * 100) : 0;
-  const er  = reach ? (eng / reach * 100) : 0;
+  const sum = (k, list = posts) =>
+    list.reduce((s, p) => s + (Number(p[k]) || 0), 0);
+
+  /* 點擊只有 Facebook 有 —— IG 的自然貼文 Meta 不給這個指標。
+     所以 CTR 只能拿「有點擊數的那幾篇」去除它們自己的觸及，
+     不能拿 FB 的點擊去除 FB＋IG 的觸及，那個分母是錯的。 */
+  const withClicks = posts.filter(p => p.clicks !== null && p.clicks !== undefined);
+  const reach = sum('reach'), eng = sum('engagements');
+  const clicks = withClicks.length ? sum('clicks', withClicks) : null;
+  const ctrBase = sum('reach', withClicks);
+  const ctr = (clicks !== null && ctrBase) ? (clicks / ctrBase * 100) : null;
+  const er  = reach ? (eng / reach * 100) : null;
+
+  const chans = [...new Set(posts.map(p => p.channel))]
+    .map(c => (CHANNELS[c] || {}).name || c).join('・');
 
   box.innerHTML = [
-    ['觸及', qtyN(reach), `${qtyN(posts.length)} 篇已發布`],
-    ['互動', qtyN(eng),   `互動率 ${er.toFixed(1)}%`],
-    ['點擊', qtyN(clicks), `CTR ${ctr.toFixed(2)}%`],
-    ['曝光', qtyN(sum('impressions')), '含重複曝光'],
+    ['觸及', dash(reach || null), `${qtyN(posts.length)} 篇 · ${chans}`],
+    ['互動', qtyN(eng), er === null ? '讚＋留言＋分享' : `互動率 ${er.toFixed(1)}%`],
+    ['點擊', dash(clicks), ctr === null ? '需要 read_insights 權限' : `CTR ${ctr.toFixed(2)}%`],
+    ['曝光', dash(sum('impressions') || null), '含重複曝光'],
   ].map(([k, v, sub]) =>
     `<div class="kpi-card"><span class="k">${k}</span><b>${v}</b><small>${sub}</small></div>`).join('');
 
-  const rows = [...posts].reverse().slice(0, 12).map(p => {
-    const r = Number(p.reach) || 0, c = Number(p.clicks) || 0;
+  const rows = posts.slice(0, 24).map(p => {
+    const r = Number(p.reach) || 0;
+    const c = (p.clicks === null || p.clicks === undefined) ? null : Number(p.clicks);
     return [
       p.at,
       `<span class="pill">${(CHANNELS[p.channel] || {}).name || p.channel}</span>`,
-      `<b>${(p.title || '—').slice(0, 30)}</b>`,
-      { n:r, html: qtyN(r) },
-      { n:Number(p.engagements) || 0, html: qtyN(p.engagements) },
-      { n:c, html: qtyN(c) },
-      { n:r ? c / r * 100 : 0, html: r ? (c / r * 100).toFixed(2) + '%' : '—' },
+      p.link
+        ? `<a href="${p.link}" target="_blank" rel="noopener"><b>${esc(p.title)}</b></a>`
+        : `<b>${esc(p.title)}</b>`,
+      { n: r, html: dash(p.reach) },
+      { n: Number(p.engagements) || 0, html: qtyN(p.engagements) },
+      { n: c === null ? -1 : c, html: dash(p.clicks) },
+      { n: (c !== null && r) ? c / r * 100 : -1,
+        html: (c !== null && r) ? (c / r * 100).toFixed(2) + '%' : '—' },
     ];
   });
   tbl.innerHTML = table([
@@ -641,6 +693,19 @@ function renderPerf() {
     { h:'點擊', num:true, sum:true },
     { h:'CTR',  num:true },
   ], rows);
+
+  renderPerfNotes(data);
+}
+
+/** 後端說了什麼就照登。空白的欄位要看得出是「還沒過審」還是「指標被砍」。 */
+function renderPerfNotes(data) {
+  const el = document.getElementById('perf-notes');
+  if (!el) return;
+  const notes = (data && data.notes) || [];
+  if (!notes.length) { el.hidden = true; el.innerHTML = ''; return; }
+  el.hidden = false;
+  el.innerHTML = `<b>Meta 回報</b><ul>${
+    notes.map(n => `<li>${esc(n)}</li>`).join('')}</ul>`;
 }
 
 function renderPostLog() {
@@ -805,6 +870,9 @@ function initCalendar() {
 
   gen.addEventListener('click', buildCalendar);
   document.getElementById('cal-csv').addEventListener('click', exportCalendarCsv);
+
+  const load = document.getElementById('perf-load');
+  if (load) load.addEventListener('click', () => refreshPerf(load));
   buildCalendar();
 }
 

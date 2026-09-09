@@ -1,8 +1,12 @@
 /**
- * TANJU 社群一鍵發文 —— 後端
+ * TANJU 社群後端 —— 一鍵發文 ＋ 讀成效
  * ============================================================
  * 這支程式是給 Cloudflare Workers 用的（免費方案就夠）。
  * 它存在的唯一理由：各平台的金鑰不能放在前端。
+ *
+ * 兩件事：
+ *   POST {channel, text}      → 發文
+ *   POST {action:'insights'}  → 把粉專與 IG 最近的貼文成效讀回來
  *
  * 為什麼不能放前端
  *   Facebook 的 Page Access Token 可以代你發文、刪文、讀私訊。
@@ -21,6 +25,9 @@
  *        wrangler secret put YT_CLIENT_SECRET
  *        wrangler secret put YT_REFRESH_TOKEN
  *        wrangler secret put TANJU_KEY     ← 自己隨便設一串，見下面「誰可以呼叫」
+ *      IG_USER_ID 可以不填 —— 後端會用粉專 token 自己查（resolveIgUserId）。
+ *      要讀成效的話，那把 FB_PAGE_TOKEN 必須帶 read_insights 權限。
+ *      Meta 淘汰 Graph 版本時：wrangler secret put GRAPH_VERSION
  *   5. wrangler deploy
  *   6. 把得到的網址填進 assets/config.js 的 PUBLISH_ENDPOINT
  *
@@ -33,6 +40,12 @@
  */
 
 const ALLOW_ORIGIN = 'https://rootedfutures3.github.io';
+
+/* Graph API 的版本。Meta 大約每兩年淘汰一個版本，被淘汰的那天
+   所有呼叫會一起停掉。真的發生時不用改程式 ——
+   wrangler secret put GRAPH_VERSION 填新的版本號就好。
+   不要拿掉版本號：不寫版本 Meta 會退回最舊的那一版。 */
+const graphVer = env => env.GRAPH_VERSION || 'v23.0';
 
 export default {
   async fetch(request, env) {
@@ -49,6 +62,15 @@ export default {
     // --- 擋住路人 ---
     if (env.TANJU_KEY && body.key !== env.TANJU_KEY) {
       return cors(json({ error: '沒有權限' }, 401));
+    }
+
+    /* 成效查詢走另一條路：它不發文，只讀數字 */
+    if (body.action === 'insights') {
+      try {
+        return cors(json(await readInsights(env, Number(body.limit) || 12)));
+      } catch (err) {
+        return cors(json({ error: String(err.message || err) }, 502));
+      }
     }
 
     const { channel, text, imageUrl } = body;
@@ -81,7 +103,7 @@ export default {
 async function postFacebook(env, text) {
   need(env, ['FB_PAGE_ID', 'FB_PAGE_TOKEN']);
   const r = await fetch(
-    `https://graph.facebook.com/v21.0/${env.FB_PAGE_ID}/feed`, {
+    `https://graph.facebook.com/${graphVer(env)}/${env.FB_PAGE_ID}/feed`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ message: text, access_token: env.FB_PAGE_TOKEN }),
@@ -101,7 +123,7 @@ async function postInstagram(env, text, imageUrl) {
   }
 
   const create = await fetch(
-    `https://graph.facebook.com/v21.0/${env.IG_USER_ID}/media`, {
+    `https://graph.facebook.com/${graphVer(env)}/${env.IG_USER_ID}/media`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -112,7 +134,7 @@ async function postInstagram(env, text, imageUrl) {
   if (!create.ok) throw new Error(fbError(c));
 
   const publish = await fetch(
-    `https://graph.facebook.com/v21.0/${env.IG_USER_ID}/media_publish`, {
+    `https://graph.facebook.com/${graphVer(env)}/${env.IG_USER_ID}/media_publish`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ creation_id: c.id, access_token: env.FB_PAGE_TOKEN }),
@@ -160,6 +182,215 @@ async function postYouTube(env, text) {
     throw new Error('YouTube：' + msg);
   }
   return { id: d.id, link: '' };
+}
+
+
+/* ============================================================
+   成效：把 Meta 那邊的真實數字讀回來
+   ------------------------------------------------------------
+   為什麼要經過這裡：讀成效跟發文用的是同一把 Page Access Token，
+   那把 token 也能代你發文、刪文、讀私訊。放進前端等於送人。
+
+   分成兩層，是因為 Meta 的權限不是一次到齊：
+
+     第一層　讚、留言、分享。這些是貼文本身的欄位，
+             pages_read_engagement 就拿得到，App 建好當天就有數字。
+
+     第二層　觸及、曝光、點擊。這些要 read_insights
+             （IG 是 instagram_manage_insights），而且要過 App Review。
+             審核還沒過的話，這一層會是空的 —— 空的就顯示沒有，
+             不會拿第一層的數字去推估，成效數字是要拿去對外講的。
+
+   欄位名稱 Meta 每隔一陣子會改一次（改版時砍掉舊的指標名）。
+   所以下面不是寫死一組名字硬打，而是先試全部，
+   被拒絕就一個一個試，留下能用的，並把被拒絕的原樣回報。
+   看板上那一欄空白時，你才知道是「還沒過審」還是「這個指標沒了」。
+   ============================================================ */
+
+/** 這一輪要試的指標。Meta 砍掉哪個就自動略過哪個。 */
+const FB_METRICS = ['post_impressions_unique', 'post_impressions', 'post_clicks'];
+const IG_METRICS = ['reach', 'views', 'impressions', 'saved', 'total_interactions'];
+
+async function readInsights(env, limit) {
+  const out = { at: new Date().toISOString(), posts: [], notes: [], sources: {} };
+
+  if (!env.FB_PAGE_TOKEN) {
+    throw new Error('後端還沒設定 FB_PAGE_TOKEN。用 wrangler secret put FB_PAGE_TOKEN 設定。');
+  }
+
+  /* 兩邊各自獨立：IG 掛了不該連帶讓 FB 的數字也看不到 */
+  const jobs = [];
+  if (env.FB_PAGE_ID) {
+    jobs.push(fbInsights(env, limit).then(
+      r => { out.posts.push(...r.posts); out.sources.facebook = r.meta; },
+      e => { out.sources.facebook = { ok:false, error:String(e.message || e) }; }));
+  }
+  jobs.push(igInsights(env, limit).then(
+    r => { out.posts.push(...r.posts); out.sources.instagram = r.meta; },
+    e => { out.sources.instagram = { ok:false, error:String(e.message || e) }; }));
+
+  await Promise.all(jobs);
+
+  out.posts.sort((a, b) => String(b.at).localeCompare(String(a.at)));
+  /* 空白的欄位要看得出原因。「整條線掛了」「權限不足」「指標被 Meta 砍了」
+     是三件不同的事，處理方式也不一樣。 */
+  for (const [k, v] of Object.entries(out.sources)) {
+    if (!v) continue;
+    const dropped = (v.dropped || []).join('、');
+    if (v.error) {
+      out.notes.push(`${k}：${v.error}`);
+    } else if (v.ok === false) {
+      out.notes.push(`${k}：成效指標一個都拿不到，多半是這把 token 少了 `
+        + `read_insights（IG 是 instagram_manage_insights）。`
+        + `讚與留言不受影響。被拒絕的：${dropped}`);
+    } else if (dropped) {
+      out.notes.push(`${k}：Meta 不認得這幾個指標名，已略過 —— ${dropped}`);
+    }
+  }
+  return out;
+}
+
+/* ---------- Facebook 粉專貼文 ---------- */
+async function fbInsights(env, limit) {
+  const base = [
+    'id', 'message', 'created_time', 'permalink_url',
+    'shares',
+    'likes.summary(true).limit(0)',
+    'comments.summary(true).limit(0)',
+  ];
+
+  const { data, ok, dropped } = await withMetrics(
+    env, `${env.FB_PAGE_ID}/posts`, base, FB_METRICS, limit);
+
+  const posts = (data.data || []).map(p => {
+    const m = pickInsights(p);
+    const likes = p.likes?.summary?.total_count || 0;
+    const cmts  = p.comments?.summary?.total_count || 0;
+    const shr   = p.shares?.count || 0;
+    return {
+      pid: p.id,
+      channel: 'facebook',
+      at: fmtTime(p.created_time),
+      title: firstLine(p.message),
+      link: p.permalink_url || '',
+      likes, comments: cmts, shares: shr,
+      engagements: likes + cmts + shr,
+      reach: m.post_impressions_unique ?? null,
+      impressions: m.post_impressions ?? null,
+      clicks: m.post_clicks ?? null,
+    };
+  });
+  return { posts, meta: { ok, dropped, count: posts.length } };
+}
+
+/* ---------- Instagram 商業帳號 ---------- */
+async function igInsights(env, limit) {
+  const ig = env.IG_USER_ID || await resolveIgUserId(env);
+  const base = ['id', 'caption', 'timestamp', 'permalink', 'media_type',
+                'like_count', 'comments_count'];
+
+  const { data, ok, dropped } = await withMetrics(
+    env, `${ig}/media`, base, IG_METRICS, limit);
+
+  const posts = (data.data || []).map(p => {
+    const m = pickInsights(p);
+    const likes = p.like_count || 0, cmts = p.comments_count || 0;
+    return {
+      pid: p.id,
+      channel: 'instagram',
+      at: fmtTime(p.timestamp),
+      title: firstLine(p.caption),
+      link: p.permalink || '',
+      likes, comments: cmts, shares: 0, saved: m.saved ?? null,
+      engagements: m.total_interactions ?? (likes + cmts),
+      reach: m.reach ?? null,
+      impressions: m.views ?? m.impressions ?? null,
+      /* IG 的自然貼文沒有「連結點擊」這個指標 —— 不是我們漏抓，
+         是 Meta 只給廣告。所以這裡一定是 null，前台顯示破折號。 */
+      clicks: null,
+    };
+  });
+  return { posts, meta: { ok, dropped, igUserId: ig, count: posts.length } };
+}
+
+/** 粉專底下綁的 IG 商業帳號，用粉專 token 就查得到，不用手動填。 */
+async function resolveIgUserId(env) {
+  need(env, ['FB_PAGE_ID']);
+  const d = await graph(env, env.FB_PAGE_ID, { fields: 'instagram_business_account' });
+  const id = d.instagram_business_account?.id;
+  if (!id) {
+    throw new Error('這個粉專底下沒有綁 Instagram 商業帳號。'
+      + '到 Meta Business Suite → 設定 → Instagram 帳號，把 IG 轉成商業帳號並連到粉專。');
+  }
+  return id;
+}
+
+/* ---------- 指標容錯 ----------
+   先把整組指標一起送。Meta 只要其中一個名字不認得，
+   整個請求就會 400 —— 而且錯誤訊息不會講是哪一個。
+   所以退而求其次：一個一個試，留下過關的，最後再送一次。
+   只有按「更新成效」時才會跑，多幾次呼叫沒有關係。 */
+async function withMetrics(env, path, baseFields, metrics, limit) {
+  const call = ms => graph(env, path, {
+    limit,
+    fields: ms.length
+      ? [...baseFields, `insights.metric(${ms.join(',')})`].join(',')
+      : baseFields.join(','),
+  });
+
+  try {
+    return { data: await call(metrics), ok: true, dropped: [] };
+  } catch (e) {
+    if (!metrics.length) throw e;
+  }
+
+  const good = [], dropped = [];
+  for (const m of metrics) {
+    try { await call([m]); good.push(m); }
+    catch (e) { dropped.push(m); }
+  }
+
+  if (!good.length) {
+    /* 一個都拿不到：多半是還沒過 App Review。
+       貼文本身還是讀得到，讚跟留言照樣有數字。 */
+    return { data: await call([]), ok: false, dropped };
+  }
+  return { data: await call(good), ok: true, dropped };
+}
+
+/** insights 回來的形狀是陣列包陣列，攤平成 {指標名: 數字} */
+function pickInsights(p) {
+  const out = {};
+  for (const row of p.insights?.data || []) {
+    const v = row.values?.[0]?.value;
+    if (typeof v === 'number') out[row.name] = v;
+  }
+  return out;
+}
+
+/* ---------- Graph 呼叫 ---------- */
+async function graph(env, path, params) {
+  const u = new URL(`https://graph.facebook.com/${graphVer(env)}/${path}`);
+  for (const [k, v] of Object.entries(params || {})) {
+    if (v !== undefined && v !== null && v !== '') u.searchParams.set(k, v);
+  }
+  u.searchParams.set('access_token', env.FB_PAGE_TOKEN);
+  const r = await fetch(u, { headers: { Accept: 'application/json' } });
+  const d = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(fbError(d));
+  return d;
+}
+
+function firstLine(s) {
+  return String(s || '').split('\n')[0].slice(0, 60) || '（沒有文字）';
+}
+
+/** Meta 給的是 ISO 時間，轉成後台其他地方用的格式 */
+function fmtTime(iso) {
+  if (!iso) return '';
+  const d = new Date(iso), z = n => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${z(d.getMonth() + 1)}-${z(d.getDate())} `
+       + `${z(d.getHours())}:${z(d.getMinutes())}`;
 }
 
 /* ---------- 小工具 ---------- */

@@ -3459,6 +3459,21 @@ th[data-dir="desc"] .sort-mark::before{content:"↓"}
 .perf-off b{font-size:1rem;color:var(--ink)}
 .perf-off span{font-size:.92rem;color:var(--ink-soft);line-height:1.65;max-width:64ch}
 
+/* Meta 回報：哪個指標拿不到、為什麼。空白的欄位要看得出原因 ——
+   「還沒過 App Review」和「這個指標被 Meta 砍了」是兩件事，
+   處理方式完全不同。 */
+.perf-notes{
+  margin:10px 0 4px;padding:12px 14px;
+  background:var(--almond-soft, #f7f1e6);
+  border-left:3px solid var(--gold-deep, #a8842c);
+  border-radius:6px;font-size:.88rem;color:var(--ink-soft);
+}
+.perf-notes b{display:block;margin-bottom:4px;color:var(--ink);font-size:.9rem}
+.perf-notes ul{margin:0;padding-left:18px}
+.perf-notes li{margin:2px 0;line-height:1.6}
+#perf-bar{align-items:center;gap:12px;margin:4px 0 12px}
+#perf-msg{margin:0}
+
 /* 「第一次來？」—— Google 登入沒有獨立的註冊按鈕，
    所以要明說「按同一顆就是註冊」，不然新人會一直找註冊在哪。 */
 .signup-note{
