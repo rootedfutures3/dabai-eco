@@ -1276,12 +1276,25 @@ html[lang="zh-Hant"] .logo-zh{display:inline}
 }
 
 /* --- 佣金比例設定 --- */
+/* 三個欄位加一顆按鈕。用 grid + subgrid 讓「標籤／輸入框／說明」
+   各自對齊成一列 —— 原本是 flex align-items:flex-end，只要有一格
+   多了說明文字就變高，對齊基準被它拉走，那一格的輸入框就浮起來。 */
 .rate-box{
   background:var(--snow);border:1px solid var(--line);border-radius:var(--radius);
   padding:22px 24px;margin-bottom:26px;
-  display:flex;flex-wrap:wrap;gap:18px;align-items:flex-end;
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));
+  grid-template-rows:auto auto auto;
+  gap:6px 18px;align-items:start;
 }
-.rate-box .fld{flex:1;min-width:190px}
+.rate-box .fld{
+  display:grid;grid-row:span 3;grid-template-rows:subgrid;
+  min-width:0;
+}
+/* 不支援 subgrid 的瀏覽器退回原本的直排，至少不會錯位 */
+@supports not (grid-template-rows: subgrid){
+  .rate-box .fld{grid-row:auto;grid-template-rows:auto auto auto}
+}
+.rate-box .fld small{align-self:start}
 .rate-box label{display:block;color:var(--ink-soft);font-size:.87rem;margin-bottom:6px}
 .rate-box input{
   width:100%;padding:11px 13px;font-size:1rem;
@@ -1289,7 +1302,7 @@ html[lang="zh-Hant"] .logo-zh{display:inline}
   background:var(--field-bg,#fff);color:var(--field-ink,var(--ink));
 }
 .rate-box input:focus{outline:2px solid var(--coffee);border-color:var(--coffee)}
-.rate-box .btn{flex:0 0 auto}
+.rate-box .btn{grid-row:2;align-self:start;justify-self:start;white-space:nowrap}
 .rate-explain{
   flex:1 0 100%;margin:2px 0 0;font-size:.95rem;
   color:var(--ink-soft);line-height:1.65;
@@ -3132,18 +3145,26 @@ body.admin td .pill{ white-space:normal }
   border-radius:var(--radius);padding:22px 24px;margin-bottom:8px;
 }
 .join-steps{counter-reset:js;list-style:none;margin:18px 0 0;padding:0;display:grid;gap:16px}
+/* 一列裡有三個格線項目：編號圓圈（::before）、標題、說明。
+   只給兩欄的話說明會被擠到下一列的左欄去 —— 所以圓圈明確跨兩列，
+   標題和說明各自指定在右欄。 */
 .join-steps li{
-  display:grid;grid-template-columns:30px 1fr;gap:14px;align-items:start;
+  display:grid;grid-template-columns:30px 1fr;
+  column-gap:14px;row-gap:3px;align-items:start;
 }
 .join-steps li::before{
   counter-increment:js;content:counter(js);
+  grid-column:1;grid-row:1 / span 2;
   width:30px;height:30px;border-radius:50%;
   background:var(--coffee);color:var(--almond);
   display:flex;align-items:center;justify-content:center;
   font-weight:700;font-size:.9rem;
 }
-.join-steps b{display:block;margin-bottom:3px}
-.join-steps span{display:block;color:var(--ink-soft);font-size:.94rem;line-height:1.6}
+.join-steps b{grid-column:2;grid-row:1}
+.join-steps span{
+  grid-column:2;grid-row:2;
+  color:var(--ink-soft);font-size:.94rem;line-height:1.6;
+}
 .join-note{
   margin:20px 0 0;padding-top:16px;border-top:1px solid var(--line);
   font-size:.9rem;color:var(--ink-soft);line-height:1.65;
@@ -3177,18 +3198,34 @@ body.admin td .pill{ white-space:normal }
   .memo{max-width:none;-webkit-line-clamp:4}
 }
 
-/* 表格排序 */
-.admin-body th[data-sort-idx]{cursor:pointer;user-select:none;position:relative}
-.admin-body th[data-sort-idx]:hover{color:var(--ink)}
-.admin-body th[data-sort-idx]:focus-visible{outline:2px solid var(--gold-deep);outline-offset:-2px}
-.sort-mark{
-  display:inline-block;width:0;height:0;margin-left:6px;vertical-align:middle;
-  border-left:4px solid transparent;border-right:4px solid transparent;
-  border-top:5px solid currentColor;opacity:.28;transition:.15s;
+/* 表格排序
+   ------------------------------------------------------------
+   沒排序時顯示上下兩個小箭頭 —— 那是「這一欄可以點」的通用暗示。
+   點了之後換成單一個方向明確的箭頭，並把整欄標起來，
+   免得看了半天不知道現在是照哪一欄、哪個方向排的。 */
+.admin-body th[data-sort-idx]{
+  cursor:pointer;user-select:none;white-space:nowrap;
+  transition:background .14s, color .14s;
 }
-th[data-dir="asc"] .sort-mark{transform:rotate(180deg);opacity:1}
-th[data-dir="desc"] .sort-mark{opacity:1}
-.admin-body th.sorted{color:var(--ink)}
+.admin-body th[data-sort-idx]:hover{background:rgba(54,36,23,.05);color:var(--ink)}
+.admin-body th[data-sort-idx]:focus-visible{outline:2px solid var(--gold-deep);outline-offset:-2px}
+
+.sort-mark{
+  display:inline-block;margin-left:7px;
+  font-size:.78em;line-height:1;opacity:.4;
+  font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+.sort-mark::before{content:"⇅"}
+.admin-body th[data-sort-idx]:hover .sort-mark{opacity:.75}
+
+/* 目前排序中的那一欄 */
+.admin-body th.sorted{
+  color:var(--ink);
+  box-shadow:inset 0 -3px 0 var(--gold-deep);
+}
+th.sorted .sort-mark{opacity:1;color:var(--gold-deep);font-weight:700}
+th[data-dir="asc"]  .sort-mark::before{content:"↑"}
+th[data-dir="desc"] .sort-mark::before{content:"↓"}
 
 /* 手機上的排序選單。桌機用點表頭，不需要它。 */
 .tbl-sort{display:none}
@@ -3206,4 +3243,28 @@ th[data-dir="desc"] .sort-mark{opacity:1}
     border:1px solid var(--line);background:var(--snow);
     font-family:inherit;font-size:.92rem;color:var(--ink);
   }
+}
+
+/* 可收合區塊。平常用不到、但需要時要找得到的東西放這裡 —— 
+   例如帳號綁定與排程表：設定好之後幾週才碰一次，
+   一直攤在頁面上只是把真正每天在用的功能往下推。 */
+.fold{border-top:1px solid var(--line);margin-top:26px}
+.fold > summary{
+  cursor:pointer;list-style:none;padding:16px 0 0;
+  display:flex;align-items:center;gap:10px;
+}
+.fold > summary::-webkit-details-marker{display:none}
+.fold > summary::after{
+  content:"＋";margin-left:auto;
+  color:var(--ink-soft);font-size:1.1rem;line-height:1;
+  width:30px;height:30px;border:1px solid var(--line);border-radius:50%;
+  display:flex;align-items:center;justify-content:center;transition:.16s;
+}
+.fold[open] > summary::after{content:"−";background:var(--cream-dim)}
+.fold > summary:hover::after{border-color:var(--coffee);color:var(--ink)}
+.fold > summary:focus-visible{outline:2px solid var(--gold-deep);outline-offset:3px}
+.fold > summary .sub-h{margin:0}
+.fold[open] > summary{margin-bottom:8px}
+@media(max-width:760px), (pointer:coarse){
+  .fold > summary{min-height:52px}
 }

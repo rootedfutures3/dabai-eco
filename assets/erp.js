@@ -10,9 +10,19 @@ Store.onReady((info) => {
   // 用總覽的月度卡片當「這頁是不是後台」的判斷。
   // （以前是看 #kpis，那個容器已經拆進三個視角了。）
   if (!document.getElementById('month-kpis')) return;
-  showDbStatus(info);
-  Perm.load();          // 自訂角色要先讀進來，renderAll 才畫得出角色欄位
-  renderAll();
+
+  /* 每一步都各自 try。
+     踩過的坑：mountPlatformSwitch 定義在 coordinator.js，後台沒載入它，
+     於是這個回呼在中途就 ReferenceError 中斷 —— 而所有按鈕的事件都註冊在
+     它後面，結果整個後台的編輯、發票、合約全部沒反應，畫面卻看起來正常。
+     一個開機步驟壞掉不該讓其他全部陪葬，錯誤留在 console 給人查。 */
+  const step = (name, fn) => {
+    try { fn(); } catch (e) { console.error(`[TANJU] 開機步驟「${name}」失敗`, e); }
+  };
+
+  step('資料庫狀態', () => showDbStatus(info));
+  step('權限',       () => Perm.load());
+  step('畫面',       renderAll);
 
   // 左側功能列
   document.getElementById('side-menu').addEventListener('click', e => {
@@ -22,7 +32,7 @@ Store.onReady((info) => {
     closeSide();          // 手機上點完就把抽屜收起來
   });
 
-  initOverviewSwitch();
+  step('總覽切換', initOverviewSwitch);
   document.getElementById('inv-filter')?.addEventListener('change', renderInvoices);
 
   // 手機：漢堡開關側邊欄
@@ -41,9 +51,9 @@ Store.onReady((info) => {
   const want = location.hash.replace('#', '');
   if (want && document.querySelector(`.side-item[data-tab="${want}"]`)) show(want);
 
-  showMe();
-  gateMenu();
-  mountPlatformSwitch(Perm.role());
+  step('使用者區塊', showMe);
+  step('選單權限',   gateMenu);
+  step('平台切換',   () => mountPlatformSwitch(Perm.role()));
 
   // 樹體資產篩選
   ['erp-crop', 'erp-status'].forEach(id =>
@@ -287,7 +297,6 @@ function renderAll() {
   draw('社群發文',   renderSocial);
   draw('營運總覽',   renderOverview);
   draw('帳號與權限', renderUsers);
-  initNewUser();
   initRoleEditor();
 }
 
@@ -506,6 +515,38 @@ function editOrder(no) {
   });
 }
 
+/* 備註儲存格。有寫過就顯示內容（滑鼠移上去看全文），沒寫過顯示一顆筆。
+   訂單與拆帳講的是同一筆交易，所以共用同一則備註 —— 在哪一頁寫都一樣。 */
+function memoCell(type, id) {
+  const t = Store.memo(type, id);
+  const esc = v => String(v).replace(/"/g, '&quot;');
+  return t
+    ? `<span class="memo" data-memo="${type}:${esc(id)}" title="${esc(t)}" role="button" tabindex="0">${t}</span>`
+    : `<button class="mini-btn memo-add" data-memo="${type}:${esc(id)}" title="加備註">✎</button>`;
+}
+
+/* 點備註就開編輯視窗。 */
+document.addEventListener('click', e => {
+  const el = e.target.closest('[data-memo]');
+  if (!el) return;
+  const [type, ...rest] = el.dataset.memo.split(':');
+  editMemo(type, rest.join(':'));
+});
+
+function editMemo(type, id) {
+  const label = { order:'訂單', customer:'認養人', tree:'樹體' }[type] || type;
+  openEditor({
+    title: `備註 · ${label} ${id}`,
+    sub: '給自己人看的memo：這筆的特殊狀況、談好的條件、要記得追的事。',
+    values: { note: Store.memo(type, id) },
+    fields: [{ k:'note', label:'備註', hint:'留空就是清掉' }],
+    onSave(v) {
+      Store.saveMemo(type, id, v.note);
+      renderOrders(); renderCommission(); renderCustomers();
+    },
+  });
+}
+
 /* ---------- 訂單 ---------- */
 function renderOrders() {
   const db = Store.read();
@@ -520,13 +561,14 @@ function renderOrders() {
     num(o.amount), num(o.paid), num(o.amount - o.paid),
     `${o.channel || '—'}<span class="sub-line">`
       + `<span class="badge-${o.status === '已付全額' ? 'ok' : 'wait'}">${o.status}</span></span>`,
+    memoCell('order', o.no),
   ]);
   document.getElementById('t-orders').innerHTML = table([
     '訂單 / 日期', 'Tree ID', '認養人 / Email',
     { h:'合約金額', num:true, sum:true },
     { h:'已收',     num:true, sum:true },
     { h:'待收',     num:true, sum:true },
-    '付款 / 狀態'], rows);
+    '付款 / 狀態', '備註'], rows);
 }
 
 
@@ -837,6 +879,7 @@ function renderCommission() {
       num(s.paidOut),
       { n: s.pending, html: done ? '<span class="badge-ok">已結清</span>'
                                  : `<span class="badge-wait">${money(s.pending)}</span>` },
+      memoCell('order', o.no),
       (done ? '—' : `<button class="mini-btn" data-payout="${o.no}">撥款</button>`)
         + editBtn('order-edit', o.no),
     ];
@@ -848,7 +891,7 @@ function renderCommission() {
     { h:`果農應得 ${fmt(100 - rate)}%`, num:true, sum:true },
     { h:'已撥', num:true, sum:true },
     { h:'待撥', num:true, sum:true },
-    ''], rows);
+    '備註', ''], rows);
 
   /* 撥款紀錄 */
   const pays = [...(db.payouts || [])].reverse().map(p => [
@@ -1324,30 +1367,9 @@ function drawMonthTable(months) {
    ============================================================ */
 
 function renderUsers() {
-  const el = document.getElementById('t-perms');
-  if (!el) return;
-
-  /* 權限矩陣：橫軸是角色，縱軸是能做的事。
-     果農與收購商是前台身分，不進這張表；自訂角色會自動接在後面。 */
-  const ACTIONS = ALL_PERMS;
-  const ROLES = Object.keys(PERMS).filter(k => !['farmer', 'buyer'].includes(k));
-
-  const has = (role, action) => {
-    const list = PERMS[role].can;
-    if (list.includes(action)) return true;
-    if (action.startsWith('view.') && list.includes('view.all')) return true;
-    if (action.startsWith('view.') && list.includes('edit.' + action.slice(5))) return true;
-    return false;
-  };
-
-  el.innerHTML = table(
-    ['可以做的事', ...ROLES.map(r => PERMS[r].label + (PERMS[r].custom ? ' ✎' : ''))],
-    ACTIONS.map(([a, label]) => [
-      label,
-      ...ROLES.map(r => has(r, a)
-        ? '<span class="yes" title="可以">✓</span>'
-        : '<span class="no" title="不行">—</span>'),
-    ]));
+  // 權限矩陣（#t-perms）已從版面拿掉 —— 一個角色一欄，太佔寬度。
+  // 現在用帳號清單當「這頁在不在」的判斷。
+  if (!document.getElementById('t-users')) return;
 
   /* 帳號清單。只有具 edit.users 的人看得到下拉選單，其他人看到純文字。 */
   const editable = Perm.can('edit.users');
@@ -1429,8 +1451,43 @@ function renderUsers() {
   document.querySelectorAll('[data-user-edit]').forEach(b =>
     b.addEventListener('click', () => {
       const u = (Store.read().users || []).find(x => x.u === b.dataset.userEdit);
-      if (u) userFormMode(u);
+      if (u) editUser(u);
     }));
+}
+
+/**
+ * 編輯一個帳號。
+ * 帳號代號是主鍵不給改；密碼欄位也沒有了 —— 改用 Google 登入之後
+ * 密碼不在我們手上，這裡能改的是聯絡資料與前台身分。
+ * ERP 權限用清單上的下拉選單改，不放進這個視窗，免得兩個地方都能改。
+ */
+function editUser(u) {
+  openEditor({
+    title: `編輯帳號 ${u.u}`,
+    sub: '帳號代號是主鍵，不開放修改。ERP 權限請用清單上的下拉選單改。',
+    values: u,
+    fields: [
+      { k:'name',  label:'姓名' },
+      { k:'email', label:'Email', type:'email',
+        hint:'Google 登入是靠這個對到人，改錯他就進不來了' },
+      { k:'org',   label:'單位' },
+      { k:'phone', label:'電話' },
+      { k:'area',  label:'地區' },
+      { k:'role',  label:'前台身分', type:'select',
+        opts:[['farmer','果農'], ['buyer','收購商'], ['admin','管理']] },
+    ],
+    onSave(v) {
+      if (!v.name) return '姓名不能空白。';
+      const mail = String(v.email || '').trim().toLowerCase();
+      if (mail) {
+        const clash = (Store.read().users || []).find(x =>
+          x.u !== u.u && String(x.email || '').trim().toLowerCase() === mail);
+        if (clash) return `這個 Email 已經被「${clash.u}」用了。`;
+      }
+      Store.updateUser(u.u, { ...v, email: mail });
+      renderUsers();
+    },
+  });
 }
 
 /** 把目前角色沒有權限的功能頁從左側選單拿掉。 */
@@ -1470,160 +1527,6 @@ function gateMenu() {
    正式營運要改成後端雜湊（Supabase Auth 就有現成的）。
    ============================================================ */
 
-function initNewUser() {
-  const form = document.getElementById('new-user-form');
-  if (!form || form.dataset.bound) return;
-  form.dataset.bound = '1';
-
-  // 權限下拉：直接由 PERMS 產生，之後加角色不必再改這裡
-  const sel = document.getElementById('nu-perm');
-  fillPermOptions(sel, 'editor');             // 預設給最小的權限，不預設超管
-
-  const hint = document.getElementById('nu-perm-hint');
-  const showHint = () => {
-    const p = PERMS[sel.value];
-    // 每一項各自一個 <span>，i18n 才翻得到 ——
-    // 串成一整句再塞進去的話，那句合成字串不會在字典裡。
-    hint.innerHTML = p
-      ? '<span>可以：</span>' + p.can.map(a => `<span>${describeAction(a)}</span>`).join(' · ')
-      : '';
-    if (typeof I18N !== 'undefined') I18N.refresh(hint);
-  };
-  sel.addEventListener('change', () => { showHint(); syncRole(); });
-  showHint();
-
-  /* 前台身分跟著 ERP 權限走，但仍可手動改 —— 例如果農也可能兼溝通者 */
-  const roleSel = document.getElementById('nu-role');
-  const syncRole = () => {
-    const map = { farmer: 'farmer', buyer: 'buyer' };
-    roleSel.value = map[sel.value] || 'admin';
-  };
-  syncRole();
-
-  document.getElementById('nu-cancel').addEventListener('click', () => userFormMode(null));
-
-  form.addEventListener('submit', e => {
-    e.preventDefault();
-    const err = document.getElementById('nu-err');
-    const ok  = document.getElementById('nu-ok');
-    const fail = msg => {
-      err.textContent = msg; err.style.display = 'block'; ok.style.display = 'none';
-    };
-
-    if (!Perm.can('edit.users')) return fail('你的角色沒有管理帳號的權限。');
-
-    const val = id => document.getElementById(id).value.trim();
-    const editing = form.dataset.editing || '';
-    const u = editing || val('nu-user').toLowerCase();
-    const pass = val('nu-pass');
-
-    if (!editing) {
-      if (!/^[a-z0-9._-]{3,20}$/.test(u)) {
-        return fail('帳號請用 3–20 個英文小寫字母、數字或 . _ - ，不要有空白或中文。');
-      }
-      if (Store.userExists(u)) return fail(`帳號「${u}」已經有人用了，換一個。`);
-      if (pass.length < 4) return fail('臨時密碼至少 4 個字元。');
-    } else if (pass && pass.length < 4) {
-      // 編輯時密碼可以留空（代表不改），但真的填了就要夠長
-      return fail('臨時密碼至少 4 個字元。留空就不改密碼。');
-    }
-
-    if (!val('nu-name')) return fail('請填姓名。');
-
-    const email = val('nu-email');
-    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      return fail('Email 格式看起來不對，請再檢查一次。');
-    }
-    // 同一個 Email 給兩個帳號用，之後要靠 Email 找人就會分不出來
-    const clash = (Store.read().users || []).find(
-      x => email && x.email && x.email.toLowerCase() === email.toLowerCase() && x.u !== u);
-    if (clash) return fail(`這個 Email 已經是帳號「${clash.u}」在用了。`);
-
-    const perm = sel.value;
-    const me = Perm.me();
-    if (editing && me && me.u === editing && perm !== (me.perm || 'super')) {
-      return fail('不能改自己的權限，避免把自己鎖在門外。請另一位超級管理員幫忙改。');
-    }
-    if (perm === 'super' && (!editing || PERMS[perm]) &&
-        !confirm(`確定要把「${val('nu-name')}」設成超級管理員嗎？\n\n`
-               + '超級管理員可以改佣金比例、執行撥款，也能修改其他人的權限。')) return;
-
-    const data = {
-      perm,
-      role:  roleSel.value,
-      name:  val('nu-name'),
-      org:   val('nu-org')   || '',
-      phone: val('nu-phone') || '',
-      email: email || '',
-    };
-    data.area = val('nu-area') || '';
-
-    if (editing) {
-      Store.updateUser(editing, { ...data, pass });
-      ok.innerHTML = `✅ 已更新帳號 <b>${editing}</b>。`
-                   + (pass ? '密碼也一併改了，記得通知本人。' : '');
-    } else {
-      Store.addUser({ u, pass, ...data });
-      ok.innerHTML = `✅ 已建立帳號 <b>${u}</b>（${PERMS[perm].label}）。
-                      請把帳號與臨時密碼交給本人，並提醒他這是示範系統。`;
-    }
-
-    err.style.display = 'none';
-    ok.style.display = 'block';
-
-    userFormMode(null);
-    renderUsers();
-    renderKpis();
-    showMe();
-  });
-}
-
-/**
- * 切換表單的「新增」與「編輯」兩種狀態。
- * 傳 null 就回到新增模式並清空。
- */
-function userFormMode(user) {
-  const form = document.getElementById('new-user-form');
-  if (!form) return;
-  const $ = id => document.getElementById(id);
-
-  if (!user) {
-    delete form.dataset.editing;
-    form.reset();
-    $('nu-user').disabled = false;
-    $('nu-pass').required = true;
-    $('nu-pass-hint').hidden = true;
-    $('nu-cancel').hidden = true;
-    $('nu-heading').innerHTML = '新增帳號 <small>Add a User</small>';
-    $('nu-submit').textContent = '建立帳號';
-    $('nu-perm').value = 'editor';
-  } else {
-    form.dataset.editing = user.u;
-    $('nu-user').value = user.u;
-    $('nu-user').disabled = true;              // 帳號是主鍵，不給改
-    $('nu-pass').value = '';
-    $('nu-pass').required = false;
-    $('nu-pass-hint').hidden = false;
-    $('nu-name').value  = user.name  || '';
-    $('nu-org').value   = user.org   || '';
-    $('nu-email').value = user.email || '';
-    $('nu-phone').value = user.phone || '';
-    $('nu-area').value  = user.area  || '';
-    $('nu-perm').value  = user.perm || (user.role === 'admin' ? 'super' : user.role) || 'editor';
-    $('nu-role').value  = user.role || 'admin';
-    $('nu-cancel').hidden = false;
-    $('nu-heading').innerHTML = '編輯帳號 <small>Edit User</small>';
-    $('nu-submit').textContent = '儲存變更';
-    form.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-  }
-
-  $('nu-err').style.display = 'none';
-  $('nu-perm').dispatchEvent(new Event('change'));
-  if (typeof I18N !== 'undefined') I18N.refresh(document.getElementById('nu-heading'));
-}
-
-/** 把某個角色能做的事寫成一句話，讓選權限的人知道自己在給什麼。 */
-/** 權限下拉的選項。自訂角色也要出現，所以每次重繪都重建一次。 */
 function fillPermOptions(sel, keep) {
   const want = keep || sel.value;
   sel.innerHTML = Object.entries(PERMS)
@@ -1685,7 +1588,6 @@ function initRoleEditor() {
       drawRoles();
       renderUsers();
       gateMenu();
-      fillPermOptions(document.getElementById('nu-perm'));
     });
 
     document.getElementById('rl-reset').addEventListener('click', () => {
@@ -1718,7 +1620,6 @@ function initRoleEditor() {
         drawRoles();
         renderUsers();
         gateMenu();
-        fillPermOptions(document.getElementById('nu-perm'));
       }
     });
   }
@@ -1752,29 +1653,11 @@ const describeAction = a =>
  * 在帳號頁標明現在是哪一種登入模式。
  * 兩種模式的安全性差很多，畫面上不講清楚，很容易誤以為已經安全了。
  */
+/* 登入模式不再顯示在畫面上 —— 那條橫幅佔了帳號頁最上面一整塊，
+   而它講的事情每天看一次就夠了。狀態改寫進 console。 */
 function showAuthMode() {
-  const box = document.querySelector('[data-panel="users"] .demo-banner');
-  if (!box) return;
   const sb = typeof Auth  !== 'undefined' && Auth.on;
   const gi = typeof GAuth !== 'undefined' && GAuth.on;
-
-  box.innerHTML = sb
-    ? `🔐 <b>已啟用 Supabase Auth</b> ——
-       登入由 Supabase 驗證，讀寫資料庫時帶著有時效的 token，
-       <b>權限由資料庫的 RLS 政策強制執行</b>，不是只有前端把按鈕藏起來。
-       在這裡改角色會直接影響那個人在資料庫層能讀寫什麼。`
-    : gi
-    ? `🔐 <b>已啟用 Google 登入</b> ——
-       密碼不在我們手上，身分由 Google 驗證，這一頁也不再需要替別人開帳號。
-       <br><br>
-       要提醒的是：目前<b>沒有伺服器可以驗證 Google 發的憑證</b>，
-       所以這裡的角色是「決定看得到什麼」，擋不住刻意繞過的人。
-       等雲端資料庫接上 Supabase Auth，權限才會由資料庫那一層真的擋住。`
-    : `⚠️ <b>目前是示範模式（前端權限控制）</b> ——
-       它決定每個角色看得到哪些功能、按不按得到哪些按鈕，足以支撐日常分工，
-       但<b>擋不住懂技術的人</b>：任何人打開瀏覽器主控台都能改，
-       密碼也是明文存放的。`;
-
-  if (typeof I18N !== 'undefined') I18N.refresh(box);
+  console.info(`[TANJU] 登入模式：${sb ? 'Supabase Auth' : gi ? 'Google' : '示範（帳號密碼）'}`);
 }
 
