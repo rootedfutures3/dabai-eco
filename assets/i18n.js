@@ -258,12 +258,33 @@ const I18N = {
     try { localStorage.setItem(I18N_KEY, lang); } catch (e) {}
 
     this.apply(document.body);
+    this.dedupeHeadings(document.body);
     this.syncSwitch();
 
     /* 有些區塊的內容本身就是「用某個語言寫出來的」，不是可以逐句翻譯的
        介面文字 —— 例如社群排程表裡的文案預覽。那種要整段重新產生，
        所以換語言時發一個事件出去，由它們自己重畫。 */
     document.dispatchEvent(new CustomEvent('i18n:change', { detail: { lang } }));
+  },
+
+  /**
+   * 標題裡的 <small> 是給中文讀者的英文對照，例如
+   *   <h4>發文概況 <small>Publishing</small></h4>
+   * 介面切成英文之後主標題也變成 Publishing，於是畫面上出現
+   * 「PublishingPublishing」。這裡在翻譯完之後比一次：
+   * 副標題和主標題講的是同一件事就把它藏起來，
+   * 帶額外資訊的（例如「Orders & Unearned Revenue」）留著。
+   *
+   * 中文模式下一律還原 —— 那時候對照才有用。
+   */
+  dedupeHeadings(root) {
+    const norm = t => String(t || '').toLowerCase().replace(/[\s·&,.\-—/]+/g, '');
+    (root || document).querySelectorAll('.panel-h small, .sub-h small').forEach(sm => {
+      const h = sm.parentElement;
+      const main = [...h.childNodes]
+        .filter(n => n.nodeType === 3).map(n => n.textContent).join('').trim();
+      sm.hidden = this.lang !== 'zh' && !!main && norm(main) === norm(sm.textContent);
+    });
   },
 
   syncSwitch() {

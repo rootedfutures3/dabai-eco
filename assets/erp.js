@@ -1193,8 +1193,10 @@ function renderUsers() {
   const editable = Perm.can('edit.users');
   const meU = (Perm.me() || {}).u;
 
+  /* 欄位以 Email 為主 —— 改用 Google 登入之後，識別一個人的是他的
+     Gmail，不是我們給的帳號代號。代號降成第二行。 */
   document.getElementById('t-users').innerHTML = table(
-    ['帳號', '姓名', '單位', 'ERP 權限', '前台身分', 'Email', ''],
+    ['Email / 帳號', '姓名 / 單位', '登入方式', 'ERP 權限', '前台身分', ''],
     (Store.read().users || []).map(u => {
       const cur = u.perm || (u.role === 'admin' ? 'super' : u.role);
       const picker = editable
@@ -1203,13 +1205,23 @@ function renderUsers() {
                `<option value="${k}"${k === cur ? ' selected' : ''}>${v.label}${v.custom ? ' ✎' : ''}</option>`).join('')}
            </select>`
         : `<span class="pill">${(PERMS[cur] || {}).label || cur}</span>`;
+      /* 登入方式：via='google' 是自己用 Google 登入建立的；
+         其餘是示範資料留下來的帳號密碼帳號。 */
+      const viaGoogle = u.via === 'google';
+      const autoSuper = (typeof SUPER_EMAILS !== 'undefined' ? SUPER_EMAILS : [])
+        .map(e => String(e).trim().toLowerCase())
+        .includes(String(u.email || '').trim().toLowerCase());
+
       return [
-        `<b>${u.u}</b>${u.u === meU ? ' <span class="badge-ok">你</span>' : ''}`,
-        u.name || '—', u.org || '—', picker,
+        `${u.email ? `<a href="mailto:${u.email}">${u.email}</a>` : '<span class="dim">未填 Email</span>'}`
+          + `<span class="sub-line">${u.u}${u.u === meU ? ' · 你' : ''}</span>`,
+        `${u.name || '—'}<span class="sub-line">${u.org || ''}</span>`,
+        viaGoogle
+          ? '<span class="badge-ok">Google</span>'
+          : '<span class="badge-wait">帳號密碼</span>',
+        picker + (autoSuper
+          ? '<span class="sub-line" title="寫在 config.js 的 SUPER_EMAILS 裡">🔒 固定超管</span>' : ''),
         { admin:'管理', farmer:'果農', buyer:'收購商' }[u.role] || u.role,
-        u.email
-          ? `<a href="mailto:${u.email}">${u.email}</a>`
-          : '<span class="dim">未填</span>',
         editable ? `<button class="mini-btn" data-user-edit="${u.u}">編輯</button>` : '',
       ];
     }));
@@ -1551,57 +1563,26 @@ const describeAction = a =>
 function showAuthMode() {
   const box = document.querySelector('[data-panel="users"] .demo-banner');
   if (!box) return;
-  const on = typeof Auth !== 'undefined' && Auth.on;
+  const sb = typeof Auth  !== 'undefined' && Auth.on;
+  const gi = typeof GAuth !== 'undefined' && GAuth.on;
 
-  box.innerHTML = on
+  box.innerHTML = sb
     ? `🔐 <b>已啟用 Supabase Auth</b> ——
-       密碼由伺服器加鹽雜湊保管，前端拿不到；登入後帶著 JWT 讀寫資料庫，
+       登入由 Supabase 驗證，讀寫資料庫時帶著有時效的 token，
        <b>權限由資料庫的 RLS 政策強制執行</b>，不是只有前端把按鈕藏起來。
+       在這裡改角色會直接影響那個人在資料庫層能讀寫什麼。`
+    : gi
+    ? `🔐 <b>已啟用 Google 登入</b> ——
+       密碼不在我們手上，身分由 Google 驗證，這一頁也不再需要替別人開帳號。
        <br><br>
-       這裡改角色會直接影響那個人在資料庫層能讀寫什麼。
-       替別人開帳號需要 service_role 金鑰，那一把不能放在前端 ——
-       所以請對方自己到登入頁註冊，註冊完你再在這裡指派角色。`
+       要提醒的是：目前<b>沒有伺服器可以驗證 Google 發的憑證</b>，
+       所以這裡的角色是「決定看得到什麼」，擋不住刻意繞過的人。
+       等雲端資料庫接上 Supabase Auth，權限才會由資料庫那一層真的擋住。`
     : `⚠️ <b>目前是示範模式（前端權限控制）</b> ——
        它決定每個角色看得到哪些功能、按不按得到哪些按鈕，足以支撐日常分工，
        但<b>擋不住懂技術的人</b>：任何人打開瀏覽器主控台都能改，
-       密碼也是明文存放的。
-       <br><br>
-       <span>要換成真正的登入：先到 Supabase 的 SQL Editor 跑一次
-       supabase-setup-v3.sql，建立第一個管理員帳號，
-       再把 assets/config.js 的 AUTH_MODE 改成 supabase。</span>`;
+       密碼也是明文存放的。`;
 
-  box.style.borderLeftColor = on ? 'var(--gold)' : 'var(--red)';
   if (typeof I18N !== 'undefined') I18N.refresh(box);
 }
 
-/* ============================================================
-   平台切換
-   ------------------------------------------------------------
-   TANJU Portal 與溝通者平台是兩個獨立的系統，但同一個人
-   （管理端）常常兩邊都要看。不該為了換一邊而登出再登入 ——
-   session 本來就是共用的，只要換頁就好。
-
-   只有兩邊都進得去的角色才看得到這個切換器；
-   溝通者與果農看到的是單純的標題，不是一顆點了會被彈回來的按鈕。
-   ============================================================ */
-function mountPlatformSwitch(perm) {
-  const box = document.getElementById('plat-switch');
-  if (!box) return;
-
-  const canPortal = ['super', 'admin', 'finance', 'editor'].includes(perm);
-  if (!canPortal) { box.hidden = true; return; }
-  box.hidden = false;
-
-  const here = location.pathname.split('/').pop() || 'erp.html';
-  const tabs = [
-    ['erp.html', '📊', 'TANJU Portal'],
-    ['coordinator.html', '📍', '溝通者平台'],
-  ];
-
-  box.innerHTML = tabs.map(([href, icon, label]) => {
-    const on = here === href;
-    return on
-      ? `<span class="ps on"><span aria-hidden="true">${icon}</span>${label}</span>`
-      : `<a class="ps" href="${href}"><span aria-hidden="true">${icon}</span>${label}</a>`;
-  }).join('');
-}
