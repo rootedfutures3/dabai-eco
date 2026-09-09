@@ -10,8 +10,8 @@
    配圖：按平台各畫一張。版位不一樣，同一張圖丟四個地方
          一定有兩個被裁掉重點（見 makePostImage）。
 
-   送出：Facebook 和 Instagram 設定好後端就能一鍵發布；
-         小紅書和 YouTube 沒有公開的發文 API，走
+   送出：Facebook 和 Instagram 一鍵發布；
+         小紅書沒有公開的發文 API，走
          「複製文案 + 下載配圖 + 開啟發文視窗」，手動貼上。
 
    刻意不做的事：用無頭瀏覽器模擬登入去點「發布」。
@@ -51,17 +51,6 @@ const CHANNELS = {
     },
     open: () => acct('instagram').url || 'https://www.instagram.com/',
     hint: '手機用分享面板最快；桌機走 Business Suite（IG 網頁版不能發圖文）',
-  },
-  youtube: {
-    name: 'YouTube', icon: '▶️', limit: 5000,
-    composer() {
-      const id = acct('youtube').channelId;
-      return id
-        ? `https://studio.youtube.com/channel/${id}/posts`
-        : 'https://studio.youtube.com/';
-    },
-    open: () => acct('youtube').url || 'https://www.youtube.com/',
-    hint: '用於社群貼文或 Shorts 說明欄',
   },
   rednote: {
     name: '小紅書', icon: '📕', limit: 1000,
@@ -125,7 +114,10 @@ const HEALTH_TR = {
 };
 const trTerm = (map, v, lang) => (lang === 'zh' ? v : (map[v]?.[lang] || v));
 
-/* 資料值（果園名、果農名、地區）是用中文存在資料庫裡的。
+/* 名字不能叫 dv —— docs.js 已經有一個同名的全域，
+   兩個檔案在 erp.html 裡一起載入，重複宣告會讓整支 social.js 掛掉。
+
+   資料值（果園名、果農名、地區）是用中文存在資料庫裡的。
    套進英文或馬來文的句型就會變成「Orchard: Nanga Sepit 河谷果園」——
    句子是英文，裡面卡一段中文。字典裡本來就有這些名字的翻譯，
    要做的只是查一下。
@@ -133,7 +125,7 @@ const trTerm = (map, v, lang) => (lang === 'zh' ? v : (map[v]?.[lang] || v));
    為什麼不用 I18N.translate：它翻成「目前的介面語言」，
    但這裡要的是「這篇貼文的語言」—— 介面開著中文時，
    照樣要生得出完整的英文貼文。所以直接查那個語言的字典。 */
-function dv(v, lang) {
+function trData(v, lang) {
   if (!v || lang === 'zh') return v;
   const d = lang === 'en' ? window.LANG_EN
           : lang === 'ms' ? window.LANG_MS : null;
@@ -158,9 +150,9 @@ function material(topic, id, lang) {
       facts: {
         zh:[`果園：${t.orchard}（${t.area}）`, `果農：${t.farmer}`,
             `樹齡 ${t.age} 年 · 預估產量 ${t.kg} 公斤`, `認養金 RM ${t.price}`],
-        en:[`Orchard: ${dv(t.orchard, 'en')}, ${dv(t.area, 'en')}`, `Grower: ${dv(t.farmer, 'en')}`,
+        en:[`Orchard: ${trData(t.orchard, 'en')}, ${trData(t.area, 'en')}`, `Grower: ${trData(t.farmer, 'en')}`,
             `${t.age} years old · est. ${t.kg} kg`, `Adoption RM ${t.price}`],
-        ms:[`Dusun: ${dv(t.orchard, 'ms')}, ${dv(t.area, 'ms')}`, `Petani: ${dv(t.farmer, 'ms')}`,
+        ms:[`Dusun: ${trData(t.orchard, 'ms')}, ${trData(t.area, 'ms')}`, `Petani: ${trData(t.farmer, 'ms')}`,
             `${t.age} tahun · anggaran ${t.kg} kg`, `Angkat RM ${t.price}`],
       }[lang],
       story: rpt
@@ -192,10 +184,10 @@ function material(topic, id, lang) {
         zh:[`作物：${crop}`, `果園：${t.orchard || '—'}`,
             `果農這一筆實拿 RM ${sp.farmer}（合約 RM ${sp.amount} 的 ${100 - sp.rate}%）`,
             `其中 RM ${sp.deposit} 在開花前就先撥`],
-        en:[`Crop: ${crop}`, `Orchard: ${dv(t.orchard, 'en') || '—'}`,
+        en:[`Crop: ${crop}`, `Orchard: ${trData(t.orchard, 'en') || '—'}`,
             `Grower receives RM ${sp.farmer} — ${100 - sp.rate}% of the RM ${sp.amount} contract`,
             `RM ${sp.deposit} of it lands before the tree even flowers`],
-        ms:[`Tanaman: ${crop}`, `Dusun: ${dv(t.orchard, 'ms') || '—'}`,
+        ms:[`Tanaman: ${crop}`, `Dusun: ${trData(t.orchard, 'ms') || '—'}`,
             `Petani terima RM ${sp.farmer} — ${100 - sp.rate}% daripada kontrak RM ${sp.amount}`,
             `RM ${sp.deposit} sampai sebelum pokok berbunga`],
       }[lang],
@@ -247,7 +239,6 @@ function compose(channel, m, lang, tone) {
   if (tone === 'short') {
     const punch = m.facts[0];
     if (channel === 'rednote')  return `${m.headline}\n\n${punch}\n${m.story.split(/[。.!！]/)[0]}。\n\n${cta}${m.link}\n${tags}`;
-    if (channel === 'youtube')  return `${m.headline}\n\n${m.story}\n\n${m.link}`;
     return `${m.headline}\n\n${punch}\n\n${cta}${m.link}\n\n${tags}`;
   }
 
@@ -264,21 +255,13 @@ function compose(channel, m, lang, tone) {
       .replace('個人簡介連結', { zh:'個人簡介連結', en:'link in bio', ms:'pautan di bio' }[lang]);
   }
 
-  if (channel === 'youtube') {
-    return `${m.headline}\n\n${m.story}\n\n${bullets}\n\n${cta}${m.link}\n\n`
-         + { zh:'TANJU 是 ROOTED FUTURES 根築新局在砂拉越 Song 經營的果樹媒合平台。',
-             en:'TANJU is the orchard-matching platform run by ROOTED FUTURES in Song, Sarawak.',
-             ms:'TANJU ialah platform padanan dusun oleh ROOTED FUTURES di Song, Sarawak.' }[lang]
-         + `\n\n${tags}`;
-  }
-
   /* 小紅書：短標題 + 分行短句 + 標籤在最後 */
   return `${m.headline}\n\n${m.story}\n\n${bullets}\n\n${cta}${m.link}\n${tags}`;
 }
 
 /* ---------- 送出 ---------- */
 
-/** Facebook 與 Instagram 有發文 API；小紅書和 YouTube 沒有，只能手動貼。 */
+/** Facebook 與 Instagram 有發文 API；小紅書沒有，只能手動貼。 */
 const AUTO_OK = { facebook: true, instagram: true };
 
 function backend() {
@@ -376,7 +359,6 @@ const IMG_SPEC = {
   facebook:  { w:1200, h:630,  photo:'dabai-wide.jpg',   head:54, lines:2 },
   instagram: { w:1080, h:1080, photo:'dabai-square.jpg', head:62, lines:3 },
   rednote:   { w:1080, h:1440, photo:'dabai-tall.jpg',   head:66, lines:3 },
-  youtube:   { w:1280, h:720,  photo:'dabai-wide.jpg',   head:60, lines:2 },
 };
 
 const IMG_FONT = '"PingFang TC","Hiragino Sans TC","Noto Sans TC",'
@@ -428,7 +410,7 @@ function headlineOf(text) {
 
 /**
  * 畫一張配圖，回傳 Blob。
- * @param {string} channel  facebook / instagram / rednote / youtube
+ * @param {string} channel  facebook / instagram / rednote
  * @param {object} d        POSTS_DRAFT 裡那一份（要有 text 和 subject）
  */
 async function makePostImage(channel, d) {
@@ -599,7 +581,7 @@ const POST_LANGS = [['zh', '中文'], ['ms', 'Bahasa Melayu'], ['en', 'English']
 function subjectFor(topic, id, lang) {
   if (topic === 'tree') {
     const t = Store.treeList().find(x => x.id === id);
-    return t ? `${t.id} · ${dv(t.orchard, lang)}` : '';
+    return t ? `${t.id} · ${trData(t.orchard, lang)}` : '';
   }
   if (topic === 'order') {
     const o = (Store.read().orders || []).find(x => x.no === id);
@@ -730,6 +712,10 @@ async function onCardClick(e) {
 
   const post = {
     at: stamp(), channel: key, topic: d.topic, topicId: d.topicId, lang: d.lang,
+    /* 誰按的。一鍵發布會把東西送到公開的粉專上，
+       事後看到一篇不該發的，要查得出是誰 —— 這是責任歸屬。
+       存登入用的信箱：它唯一，而且改了顯示名稱也不會對不上。 */
+    by: (typeof Perm !== 'undefined' && Perm.me()?.u) || '',
     title: d.text.split('\n')[0].slice(0, 60),
     body: d.text, tags: (d.text.match(/#[^\s#]+/g) || []).join(' '),
     status: '草稿', link: '', scheduled: '',
@@ -754,6 +740,14 @@ async function onCardClick(e) {
   }
 }
 
+/** 把信箱換成看得懂的名字。帳號被刪掉了就顯示信箱本身 ——
+    紀錄是拿來查責任的，人不在了那一列也不能變成空白。 */
+function whoLabel(u) {
+  if (!u) return '—';
+  const m = (Store.read().users || []).find(x => x.u === u);
+  return m && m.name ? `${esc(m.name)}<small class="dim"> · ${esc(u)}</small>` : esc(u);
+}
+
 function renderPostLog() {
   const el = document.getElementById('t-posts');
   if (!el) return;
@@ -763,10 +757,11 @@ function renderPostLog() {
     `<span class="pill">${p.topicId || p.topic}</span>`,
     (p.lang || 'zh').toUpperCase(),
     esc((p.title || '').slice(0, 40)),
+    whoLabel(p.by),
     `<span class="badge-${p.status === '已發布' ? 'ok' : 'wait'}">${p.status || '草稿'}</span>`,
     p.link ? `<a href="${p.link}" target="_blank" rel="noopener">開啟</a>` : '—',
   ]);
-  el.innerHTML = table(['時間', '平台', '題材', '語言', '標題', '狀態', '連結'], rows);
+  el.innerHTML = table(['時間', '平台', '題材', '語言', '標題', '發布者', '狀態', '連結'], rows);
 }
 
 function stamp() {

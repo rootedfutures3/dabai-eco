@@ -20,9 +20,6 @@
  *   4. 設定金鑰（會存在 Cloudflare，不會進 git）：
  *        wrangler secret put FB_PAGE_ID
  *        wrangler secret put FB_PAGE_TOKEN
- *        wrangler secret put YT_CLIENT_ID
- *        wrangler secret put YT_CLIENT_SECRET
- *        wrangler secret put YT_REFRESH_TOKEN
  *        wrangler secret put TANJU_KEY     ← 自己隨便設一串，見下面「誰可以呼叫」
  *      IG_USER_ID 可以不填 —— 後端會用粉專 token 自己查（resolveIgUserId）。
  *      要讀成效的話，那把 FB_PAGE_TOKEN 必須帶 read_insights 權限。
@@ -80,7 +77,6 @@ export default {
       switch (channel) {
         case 'facebook':  result = await postFacebook(env, text, imageUrl); break;
         case 'instagram': result = await postInstagram(env, text, imageUrl); break;
-        case 'youtube':   result = await postYouTube(env, text); break;
         case 'rednote':
           return cors(json({
             error: '小紅書沒有公開的發文 API，只能用半自動方式（複製文案 + 開啟發文視窗）。',
@@ -178,47 +174,6 @@ async function postInstagram(env, text, imageUrl) {
 
   return { id: p.id, link };
 }
-
-/* ---------- YouTube ---------- */
-/* refresh token 換 access token，再打社群貼文的 API。
-   注意：社群貼文（community posts）目前只開放部分頻道，
-   拿到 403 多半是頻道還沒有這個資格，不是程式寫錯。 */
-async function postYouTube(env, text) {
-  need(env, ['YT_CLIENT_ID', 'YT_CLIENT_SECRET', 'YT_REFRESH_TOKEN']);
-
-  const tok = await fetch('https://oauth2.googleapis.com/token', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({
-      client_id: env.YT_CLIENT_ID,
-      client_secret: env.YT_CLIENT_SECRET,
-      refresh_token: env.YT_REFRESH_TOKEN,
-      grant_type: 'refresh_token',
-    }),
-  });
-  const t = await tok.json();
-  if (!tok.ok) throw new Error('換 YouTube token 失敗：' + (t.error_description || t.error));
-
-  const r = await fetch(
-    'https://www.googleapis.com/youtube/v3/activities?part=snippet,contentDetails', {
-      method: 'POST',
-      headers: {
-        Authorization: 'Bearer ' + t.access_token,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ snippet: { description: text } }),
-    });
-  const d = await r.json();
-  if (!r.ok) {
-    const msg = d.error?.message || '未知錯誤';
-    if (r.status === 403) {
-      throw new Error('YouTube 拒絕（403）：這個頻道可能還沒開放社群貼文功能。原訊息：' + msg);
-    }
-    throw new Error('YouTube：' + msg);
-  }
-  return { id: d.id, link: '' };
-}
-
 
 /* ============================================================
    成效：把 Meta 那邊的真實數字讀回來

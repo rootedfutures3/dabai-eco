@@ -22,6 +22,14 @@ if ! gh auth status >/dev/null 2>&1; then
   exit 1
 fi
 
+# 部署前擋一次全域名稱撞車。
+# 這種錯不會在任何一個檔案裡看起來有問題，要兩個檔案同時載入才會炸，
+# 而且炸的是「整支檔案」—— 症狀是整頁按鈕沒反應。踩過三次了。
+if command -v node >/dev/null; then
+  node "$(dirname "$0")/tools/check-globals.js" || {
+    echo "❌ 先把上面的名稱衝突解決，不然那一頁會整個壞掉。"; exit 1; }
+fi
+
 USER_NAME=$(gh api user --jq .login)
 echo "👤 GitHub 帳號：$USER_NAME"
 

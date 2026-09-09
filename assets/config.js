@@ -31,7 +31,6 @@ const CLOUD_ON = Boolean(SUPABASE_URL && SUPABASE_ANON_KEY);
 
    要做到真的一鍵自動發布，必須有一台伺服器保管各平台的授權金鑰：
      Facebook / Instagram → Meta Graph API 的 Page Access Token
-     YouTube              → OAuth 2.0 refresh token
      小紅書                → 目前沒有開放的發文 API
    這些金鑰不能放在前端，任何人打開原始碼都看得到。
    等你架好後端（Cloudflare Workers、Vercel Functions 都可以），
@@ -130,10 +129,6 @@ const SOCIAL_ACCOUNTS = {
     url: 'https://www.instagram.com/rootedfutures3/',
     /* IG Business Account ID 不用手動填 —— 後端會用粉專的 token
        自動去查（見 publish-worker.js 的 resolveIgUserId）。 */
-  },
-  youtube: {
-    channelId: 'UCzD_4IugardyBMMXo3MaqwQ',
-    url: 'https://www.youtube.com/channel/UCzD_4IugardyBMMXo3MaqwQ',
   },
   rednote:  { url: '' },
 };

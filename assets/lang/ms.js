@@ -2463,4 +2463,5 @@ window.LANG_MS = {
   '產生中…': 'Menjana…',
   '產圖並發布中…': 'Menjana gambar dan menerbitkan…',
   '文案已複製、配圖已下載，發文視窗開好了': 'Kapsyen disalin, gambar dimuat turun, komposer dibuka',
+  '發布者': 'Diterbitkan oleh',
 };

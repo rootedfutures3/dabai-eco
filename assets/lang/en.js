@@ -2462,4 +2462,5 @@ window.LANG_EN = {
   '產生中…': 'Generating…',
   '產圖並發布中…': 'Making the image and publishing…',
   '文案已複製、配圖已下載，發文視窗開好了': 'Caption copied, image downloaded, composer opened',
+  '發布者': 'Posted by',
 };

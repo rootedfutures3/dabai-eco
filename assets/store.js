@@ -672,10 +672,10 @@ const MAP = {
     /* id 交給資料庫的 bigserial 產生，所以 out 不送 id */
     out: p => ({ at:p.at, channel:p.channel, topic:p.topic, topic_id:p.topicId, lang:p.lang,
                  title:p.title, body:p.body, tags:p.tags, status:p.status,
-                 link:p.link, scheduled:p.scheduled }),
+                 link:p.link, scheduled:p.scheduled, by_user:p.by }),
     in:  r => ({ id:r.id, at:r.at, channel:r.channel, topic:r.topic, topicId:r.topic_id, lang:r.lang,
                  title:r.title, body:r.body, tags:r.tags, status:r.status,
-                 link:r.link, scheduled:r.scheduled }),
+                 link:r.link, scheduled:r.scheduled, by:r.by_user }),
   },
   wages: {
     out: w => ({ month:w.month, person:w.person, role:w.role,
