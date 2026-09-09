@@ -1,18 +1,22 @@
 /* ============================================================
-   社群一鍵發文（Social Composer）
+   社群產文產圖（Social Composer）
    ------------------------------------------------------------
    做什麼：從平台的真實資料（果樹、訂單、產品）生成四個平台各自
-   合適的文案，一鍵複製 + 開啟該平台的發文視窗，並把這筆貼文寫進
-   資料庫（Supabase 的 posts 表）。
+   合適的文案與配圖，並把這筆貼文寫進資料庫（Supabase 的 posts 表）。
 
-   為什麼不是全自動代發：
-     Facebook / Instagram 要 Meta Graph API 的 Page Access Token，
-     YouTube 要 OAuth 2.0 refresh token，兩者都必須放在伺服器上，
-     而且要通過平台的 App Review。小紅書沒有公開的發文 API。
-     這是靜態網站，沒有地方藏金鑰 —— 所以誠實做成「半自動」。
+   文案：一次產三種語言 —— 中文給華人社群、馬來文給在地、
+         英文給企業與海外。每張卡片自己帶三份，點一下就換。
 
-   之後要接真的自動發布：在 assets/config.js 設定 PUBLISH_ENDPOINT，
-   本檔會改走 POST 到那個網址（見 publish()）。
+   配圖：按平台各畫一張。版位不一樣，同一張圖丟四個地方
+         一定有兩個被裁掉重點（見 makePostImage）。
+
+   送出：Facebook 和 Instagram 設定好後端就能一鍵發布；
+         小紅書和 YouTube 沒有公開的發文 API，走
+         「複製文案 + 下載配圖 + 開啟發文視窗」，手動貼上。
+
+   刻意不做的事：用無頭瀏覽器模擬登入去點「發布」。
+   那違反平台條款（帳號會被停權），而且要把密碼存起來。
+   為了省兩下點擊冒這種險並不值得。
    ============================================================ */
 
 /** 取得已綁定的帳號設定（config.js）。沒設定就回空物件，不要炸掉。 */
@@ -256,23 +260,44 @@ function compose(channel, m, lang, tone) {
   return `${m.headline}\n\n${m.story}\n\n${bullets}\n\n${cta}${m.link}\n${tags}`;
 }
 
-/* ---------- 發布 ---------- */
+/* ---------- 送出 ---------- */
+
+/** Facebook 與 Instagram 有發文 API；小紅書和 YouTube 沒有，只能手動貼。 */
+const AUTO_OK = { facebook: true, instagram: true };
+
+function backend() {
+  return (typeof PUBLISH_ENDPOINT !== 'undefined' && PUBLISH_ENDPOINT) || '';
+}
+
+/** 這個平台現在能不能一鍵發布 */
+function canAuto(channel) {
+  return Boolean(backend() && AUTO_OK[channel]);
+}
 
 /**
- * 有設定 PUBLISH_ENDPOINT 就真的送去後端代發；
- * 沒有就走半自動：複製到剪貼簿 + 開啟該平台的發文視窗。
+ * 產圖 → 傳到 Supabase 拿一個公開網址 → 交給後端。
+ * Instagram 規定貼文一定要有圖，而且圖必須是「網路上抓得到」的網址 ——
+ * 瀏覽器裡剛畫好的那張是 blob，IG 的伺服器連不到，所以一定要先上傳。
  */
-async function publish(channel, text, post) {
-  const ep = (typeof PUBLISH_ENDPOINT !== 'undefined' && PUBLISH_ENDPOINT) || '';
-  if (ep) {
-    const r = await fetch(ep, {
+async function uploadPostImage(channel, d) {
+  const blob = await makePostImage(channel, d);
+  if (!blob) throw new Error('配圖產生失敗');
+  const file = new File([blob], `post-${channel}.jpg`, { type: 'image/jpeg' });
+  return await Store.uploadPhoto(file, 'social');
+}
+
+/**
+ * 有後端而且平台支援就真的代發；其餘走手動：
+ * 複製文案 + 下載配圖 + 開啟該平台的發文視窗。
+ */
+async function publish(channel, text, post, d) {
+  if (canAuto(channel)) {
+    const imageUrl = await uploadPostImage(channel, d);
+    const r = await fetch(backend(), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        channel, text,
-        /* IG 規定貼文一定要有圖，純文字發不了。
-           先用網站上那張 Dabai 照片當預設，之後有產品照再換。 */
-        imageUrl: postImage(post),
+        channel, text, imageUrl,
         topic: post.topic, topicId: post.topicId,
         key: (typeof PUBLISH_KEY !== 'undefined' && PUBLISH_KEY) || '',
       }),
@@ -286,79 +311,187 @@ async function publish(channel, text, post) {
     return { mode: 'auto', link: data.link || '' };
   }
 
-  /* 手機上先試原生分享 —— 圖片和文案一起交給 IG / FB 的 App，
-     比「複製再貼上」少一半步驟，也不會漏掉圖。 */
+  /* 手機上先試原生分享 —— 圖和文一起交給 App，比「複製再貼上」少一半步驟。 */
   if (canShareFiles()) {
     try {
-      await copy(text);                 // 先複製，分享面板沒帶到文字時還有得貼
-      return await shareNative(text);
+      await copy(text);
+      return await shareNative(channel, text, d);
     } catch (e) {
-      /* 使用者按取消也會走到這裡，不當成錯誤，退回原本的方式 */
+      /* 使用者按取消也會走到這裡，不當成錯誤，退回下面的做法 */
     }
   }
 
   await copy(text);
+  try { await downloadImage(channel, d); } catch (e) { /* 圖失敗不擋發文 */ }
   window.open(CHANNELS[channel].composer(), '_blank', 'noopener');
   return { mode: 'manual', link: '' };
 }
 
-/** 這篇貼文要配哪張圖。之後有產品照，改這裡就好。 */
-function postImage(post) {
-  const base = SITE + 'assets/img/photo/';
-  return base + 'dabai-square.jpg';
+/** 這台裝置能不能用原生分享面板送出圖片 */
+function canShareFiles() {
+  return typeof navigator !== 'undefined' && navigator.canShare && navigator.share;
+}
+
+/** 把配圖和文案交給系統的分享面板，使用者選 App 就送出 */
+async function shareNative(channel, text, d) {
+  const blob = await makePostImage(channel, d);
+  const file = new File([blob], `tanju-${channel}.jpg`, { type: 'image/jpeg' });
+  if (!navigator.canShare({ files: [file] })) throw new Error('這台裝置不能分享圖片');
+  await navigator.share({ files: [file], text });
+  return { mode: 'share', link: '' };
 }
 
 /* ============================================================
-   沒有 API 時的最快路徑
+   配圖產生器
    ------------------------------------------------------------
-   Meta 的 App Review 要跑幾天到兩週。在那之前，最接近「一鍵」的
-   合法做法是手機的原生分享 —— 把圖片和文案交給系統的分享面板，
-   使用者選 Instagram / Facebook，App 會自己帶入內容。
-   兩下就發完，而且完全不碰帳號密碼、不違反任何條款。
+   每個平台的版位不一樣，同一張圖丟四個地方一定有兩個被裁掉重點。
+   所以按平台各畫一張：底圖選對應比例的照片，上面壓文字。
 
-   刻意不做的事：用無頭瀏覽器模擬登入去點「發布」。
-   那違反 Meta 的服務條款（帳號會被停權），而且要把密碼存起來。
-   為了省兩下點擊冒這種險並不值得。
+   為什麼是 canvas 不是預先做好的圖：文案每次都不同，
+   圖上要有這次講的那棵樹的編號、果園、產品名 ——
+   預先做好的圖只能是通用的背景，那就等於沒有資訊。
+
+   照片和 logo 都是同源的，canvas 不會被污染，匯得出檔案。
    ============================================================ */
+const IMG_SPEC = {
+  facebook:  { w:1200, h:630,  photo:'dabai-wide.jpg'   },
+  instagram: { w:1080, h:1080, photo:'dabai-square.jpg' },
+  rednote:   { w:1080, h:1440, photo:'dabai-tall.jpg'   },
+  youtube:   { w:1280, h:720,  photo:'dabai-wide.jpg'   },
+};
 
-/** 這台裝置能不能用原生分享面板送出圖片 */
-function canShareFiles() {
-  return typeof navigator !== 'undefined'
-      && navigator.canShare
-      && navigator.share;
+const IMG_FONT = '"PingFang TC","Hiragino Sans TC","Noto Sans TC",'
+               + '"Microsoft JhengHei",system-ui,-apple-system,sans-serif';
+
+function loadImg(src) {
+  return new Promise((res, rej) => {
+    const im = new Image();
+    im.onload = () => res(im);
+    im.onerror = () => rej(new Error('圖片載入失敗：' + src));
+    im.src = src;
+  });
+}
+
+/** 等比例填滿，超出的裁掉（object-fit: cover 的 canvas 版） */
+function drawCover(ctx, im, w, h) {
+  const r = Math.max(w / im.width, h / im.height);
+  const dw = im.width * r, dh = im.height * r;
+  ctx.drawImage(im, (w - dw) / 2, (h - dh) / 2, dw, dh);
+}
+
+/** 中文沒有空格，不能用 split(' ') 斷行，只能逐字量寬度 */
+function wrapLines(ctx, text, maxW, maxLines) {
+  const lines = [];
+  let cur = '';
+  for (const ch of String(text)) {
+    if (ch === '\n') { lines.push(cur); cur = ''; if (lines.length >= maxLines) break; continue; }
+    const t = cur + ch;
+    if (ctx.measureText(t).width > maxW && cur) {
+      lines.push(cur); cur = ch;
+      if (lines.length >= maxLines) break;
+    } else { cur = t; }
+  }
+  if (cur && lines.length < maxLines) lines.push(cur);
+  if (lines.length === maxLines) {
+    /* 塞不下就在最後一行收尾，不要硬擠到出血 */
+    let last = lines[maxLines - 1];
+    while (last && ctx.measureText(last + '…').width > maxW) last = last.slice(0, -1);
+    if (ctx.measureText(String(text)).width > maxW * maxLines) lines[maxLines - 1] = last + '…';
+  }
+  return lines;
+}
+
+/** 文案第一行當標題。去掉標籤和開頭的符號，那些放在圖上很醜。 */
+function headlineOf(text) {
+  const first = String(text || '').split('\n').find(l => l.trim() && !l.trim().startsWith('#'));
+  return (first || 'Dabai').replace(/#[^\s#]+/g, '').replace(/^[\s·—\-–]+/, '').trim();
 }
 
 /**
- * 交給系統的分享面板。
- * 帶得動圖片就一起帶（IG 需要圖），帶不動就只送文字。
+ * 畫一張配圖，回傳 Blob。
+ * @param {string} channel  facebook / instagram / rednote / youtube
+ * @param {object} d        POSTS_DRAFT 裡那一份（要有 text 和 subject）
  */
-async function shareNative(text) {
-  const payload = { text };
+async function makePostImage(channel, d) {
+  const spec = IMG_SPEC[channel] || IMG_SPEC.instagram;
+  const { w, h } = spec;
+  const cv = document.createElement('canvas');
+  cv.width = w; cv.height = h;
+  const ctx = cv.getContext('2d');
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high';
 
+  /* 底圖。載不到就用品牌色鋪底，不要整個失敗 —— 沒有圖的貼文比醜的貼文糟。 */
   try {
-    const url = postImage({});
-    const res = await fetch(url);
-    if (res.ok) {
-      const blob = await res.blob();
-      const file = new File([blob], 'tanju-dabai.jpg', { type: blob.type || 'image/jpeg' });
-      if (navigator.canShare({ files: [file] })) payload.files = [file];
-    }
+    const im = await loadImg(`assets/img/photo/${spec.photo}`);
+    drawCover(ctx, im, w, h);
   } catch (e) {
-    /* 拿不到圖就只分享文字 —— 總比整個失敗好 */
+    ctx.fillStyle = '#2C1B24';
+    ctx.fillRect(0, 0, w, h);
   }
 
-  await navigator.share(payload);
-  return { mode: 'share' };
+  /* 下半部壓暗，文字才讀得到。照片本身很暗的地方也不會糊成一團。 */
+  const g = ctx.createLinearGradient(0, h * 0.34, 0, h);
+  g.addColorStop(0, 'rgba(18,10,16,0)');
+  g.addColorStop(0.45, 'rgba(18,10,16,.72)');
+  g.addColorStop(1, 'rgba(18,10,16,.94)');
+  ctx.fillStyle = g;
+  ctx.fillRect(0, h * 0.34, w, h * 0.66);
+
+  const pad = Math.round(w * 0.062);
+
+  /* logo 左上。原色不動。 */
+  try {
+    const lg = await loadImg('assets/img/logo.png');
+    const lh = Math.round(h * 0.085);
+    const lw = Math.round(lg.width / lg.height * lh);
+    ctx.drawImage(lg, pad, pad, lw, lh);
+    ctx.font = `500 ${Math.round(h * 0.038)}px ${IMG_FONT}`;
+    ctx.fillStyle = 'rgba(255,255,255,.94)';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('TANJU', pad + lw + Math.round(w * 0.018), pad + lh / 2);
+  } catch (e) { /* logo 沒載到就算了，不影響其他部分 */ }
+
+  let y = h - pad;
+
+  /* 網址收尾 */
+  ctx.textBaseline = 'alphabetic';
+  ctx.font = `400 ${Math.round(w * 0.026)}px ${IMG_FONT}`;
+  ctx.fillStyle = 'rgba(255,255,255,.66)';
+  ctx.fillText('rootedfutures3.github.io/dabai-eco', pad, y);
+  y -= Math.round(w * 0.062);
+
+  /* 副標：這次講的是哪一棵樹／哪個產品 */
+  const sub = (d && d.subject) ? String(d.subject) : '';
+  if (sub) {
+    ctx.font = `500 ${Math.round(w * 0.034)}px ${IMG_FONT}`;
+    ctx.fillStyle = '#E8C06A';
+    const one = wrapLines(ctx, sub, w - pad * 2, 1);
+    ctx.fillText(one[0] || '', pad, y);
+    y -= Math.round(w * 0.052);
+  }
+
+  /* 標題：文案的第一句 */
+  const size = Math.round(w * (channel === 'rednote' ? 0.062 : 0.058));
+  ctx.font = `500 ${size}px ${IMG_FONT}`;
+  ctx.fillStyle = '#FFFFFF';
+  const lines = wrapLines(ctx, headlineOf(d && d.text), w - pad * 2, 3);
+  const lh2 = Math.round(size * 1.32);
+  for (let i = lines.length - 1; i >= 0; i--) {
+    ctx.fillText(lines[i], pad, y);
+    y -= lh2;
+  }
+
+  return await new Promise(res => cv.toBlob(res, 'image/jpeg', 0.9));
 }
 
-/** 把圖片存成檔案，配合已複製的文案，桌機上用這個 */
-async function downloadImage() {
-  const url = postImage({});
-  const res = await fetch(url);
-  const blob = await res.blob();
+/** 產生並下載。檔名帶平台，四張才分得出來。 */
+async function downloadImage(channel, d) {
+  const blob = await makePostImage(channel, d);
+  if (!blob) throw new Error('圖片產生失敗');
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = 'tanju-dabai.jpg';
+  a.download = `tanju-${channel}-${Date.now()}.jpg`;
   document.body.appendChild(a);
   a.click();
   a.remove();
@@ -387,14 +520,11 @@ async function copy(text) {
 let POSTS_DRAFT = {};   // channel -> 目前顯示的文案
 
 function renderSocial() {
-  renderPerf();
   const wrap = document.getElementById('po-cards');
   if (!wrap) return;
 
   fillSubjects();
   renderPostLog();
-  renderConnections();
-  renderAccountBar();
   initCalendar();
 
   const topic = document.getElementById('po-topic');
@@ -433,6 +563,15 @@ function fillSubjects() {
    英文給企業與海外。所以每張卡片自己帶三份文案，點一下就換。 */
 const POST_LANGS = [['zh', '中文'], ['ms', 'Bahasa Melayu'], ['en', 'English']];
 
+/** 「對象」下拉目前選到的文字。印在配圖上，讓人看得出這篇在講哪一棵樹。 */
+function subjectLabel() {
+  const sel = document.getElementById('po-subject');
+  const t = sel && sel.selectedOptions[0] ? sel.selectedOptions[0].textContent : '';
+  /* 下拉裡是「DB-000004 · Nanga Sepit 河谷（Ak. Jelani 一家）」，
+     圖上只要前面那一段，果農名字放上去太擠。 */
+  return String(t).split('（')[0].trim();
+}
+
 function generate() {
   const topic = document.getElementById('po-topic').value;
   const id    = document.getElementById('po-subject').value;
@@ -452,7 +591,7 @@ function generate() {
     POST_LANGS.forEach(([code]) => {
       texts[code] = compose(key, material(topic, id, code), code, tone);
     });
-    POSTS_DRAFT[key] = { texts, lang: first, topic, topicId: id,
+    POSTS_DRAFT[key] = { texts, lang: first, topic, topicId: id, subject: subjectLabel(),
                          get text() { return this.texts[this.lang]; } };
 
     const cur  = texts[first];
@@ -473,7 +612,9 @@ function generate() {
         <div class="post-acts">
           <button class="mini-btn" data-act="copy">複製文案</button>
           <button class="mini-btn" data-act="image">下載配圖</button>
-          <button class="mini-btn primary" data-act="publish">一鍵發布</button>
+          ${canAuto(key)
+            ? `<button class="mini-btn primary" data-act="publish">一鍵發布</button>`
+            : `<button class="mini-btn primary" data-act="publish">複製並開啟</button>`}
           <span class="post-msg"></span>
         </div>
       </div>`;
@@ -532,8 +673,11 @@ async function onCardClick(e) {
   }
 
   if (btn.dataset.act === 'image') {
-    try { await downloadImage(); say('配圖已下載'); }
-    catch (e) { say('下載失敗：' + e.message, true); }
+    btn.disabled = true;
+    say('產生中…');
+    try { await downloadImage(key, d); say('配圖已下載'); }
+    catch (e) { say('產生失敗：' + e.message, true); }
+    finally { btn.disabled = false; }
     return;
   }
 
@@ -548,164 +692,22 @@ async function onCardClick(e) {
   };
 
   btn.disabled = true;
+  if (canAuto(key)) say('產圖並發布中…');
   try {
-    const r = await publish(key, d.text, post);
+    const r = await publish(key, d.text, post, d);
     post.status = { auto:'已發布', share:'已送出分享' }[r.mode] || '已複製 · 待貼上';
     post.link = r.link;
     Store.addPost(post);
     say({
-      auto:  '已透過後端發布',
+      auto:  '已發布',
       share: '已交給手機的分享面板，選 App 就送出',
-    }[r.mode] || '文案已複製，發文視窗已開啟');
+    }[r.mode] || '文案已複製、配圖已下載，發文視窗開好了');
     renderPostLog();
   } catch (err) {
     say('發布失敗：' + err.message, true);
   } finally {
     btn.disabled = false;
   }
-}
-
-/* ============================================================
-   成效指標
-   ------------------------------------------------------------
-   數字全部來自 Meta 的 Graph API，經過後端（金鑰不能放前端）。
-   這裡不做任何推估：後端沒給的欄位就顯示破折號。
-   成效數字是拿去對外講的東西 —— 看板上出現一個 3.2% 的 CTR，
-   隔天就可能被寫進提案書裡，所以寧可空著。
-
-   Meta 的權限是分批到位的，所以會有一段時間只有一半的數字：
-     讚、留言、分享　→ 建好 App 就有
-     觸及、曝光、點擊 → 要 read_insights，且要過 App Review
-   ============================================================ */
-const qtyN = n => Number(n || 0).toLocaleString('en-MY');
-const dash = v => (v === null || v === undefined) ? '—' : qtyN(v);
-
-/** 後端傳回來的整包成效，存在 settings 裡，換一台裝置也看得到 */
-function perfData() {
-  try { return JSON.parse(Store.setting('social_perf', '') || 'null'); }
-  catch (e) { return null; }
-}
-
-function perfEndpoint() {
-  return (typeof PUBLISH_ENDPOINT !== 'undefined' && PUBLISH_ENDPOINT) || '';
-}
-
-async function refreshPerf(btn) {
-  const ep = perfEndpoint();
-  const msg = document.getElementById('perf-msg');
-  const say = (t, bad) => { if (msg) { msg.textContent = t; msg.className = 'post-msg' + (bad ? ' bad' : ' ok'); } };
-
-  if (btn) btn.disabled = true;
-  say('讀取中…');
-  try {
-    const r = await fetch(ep, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        action: 'insights', limit: 24,
-        key: (typeof PUBLISH_KEY !== 'undefined' && PUBLISH_KEY) || '',
-      }),
-    });
-    const d = await r.json().catch(() => ({}));
-    if (!r.ok) throw new Error(d.error || `讀取失敗（${r.status}）`);
-
-    Store.saveSetting('social_perf', JSON.stringify(d));
-    renderPerf();
-    const n = (d.posts || []).length;
-    say(n ? `已更新 ${n} 篇的成效` : '連上了，但這兩個帳號還沒有貼文');
-  } catch (err) {
-    say('讀取失敗：' + err.message, true);
-  } finally {
-    if (btn) btn.disabled = false;
-  }
-}
-
-function renderPerf() {
-  const box = document.getElementById('perf-kpis');
-  const tbl = document.getElementById('t-perf');
-  if (!box || !tbl) return;
-
-  const ep = perfEndpoint();
-  const data = perfData();
-  const posts = (data && data.posts) || [];
-
-  const bar = document.getElementById('perf-bar');
-  if (bar) bar.hidden = !ep;
-
-  if (!posts.length) {
-    box.innerHTML = `
-      <div class="perf-off">
-        <b>尚未連接成效資料</b>
-        <span>${ep
-          ? '後端已設定。按上面的「更新成效」把 Meta 那邊的數字讀回來。'
-          : '觸及、互動、點擊由 Meta 的 Graph API 提供，要先架好後端（Page Access Token 不能放在前端）。設定步驟見 META-API.md。'}
-              在數字進來之前這裡不顯示任何數值，以免把估計值當成實際成效帶進提案。</span>
-      </div>`;
-    tbl.innerHTML = '';
-    renderPerfNotes(data);
-    return;
-  }
-
-  const sum = (k, list = posts) =>
-    list.reduce((s, p) => s + (Number(p[k]) || 0), 0);
-
-  /* 點擊只有 Facebook 有 —— IG 的自然貼文 Meta 不給這個指標。
-     所以 CTR 只能拿「有點擊數的那幾篇」去除它們自己的觸及，
-     不能拿 FB 的點擊去除 FB＋IG 的觸及，那個分母是錯的。 */
-  const withClicks = posts.filter(p => p.clicks !== null && p.clicks !== undefined);
-  const reach = sum('reach'), eng = sum('engagements');
-  const clicks = withClicks.length ? sum('clicks', withClicks) : null;
-  const ctrBase = sum('reach', withClicks);
-  const ctr = (clicks !== null && ctrBase) ? (clicks / ctrBase * 100) : null;
-  const er  = reach ? (eng / reach * 100) : null;
-
-  const chans = [...new Set(posts.map(p => p.channel))]
-    .map(c => (CHANNELS[c] || {}).name || c).join('・');
-
-  box.innerHTML = [
-    ['觸及', dash(reach || null), `${qtyN(posts.length)} 篇 · ${chans}`],
-    ['互動', qtyN(eng), er === null ? '讚＋留言＋分享' : `互動率 ${er.toFixed(1)}%`],
-    ['點擊', dash(clicks), ctr === null ? '需要 read_insights 權限' : `CTR ${ctr.toFixed(2)}%`],
-    ['曝光', dash(sum('impressions') || null), '含重複曝光'],
-  ].map(([k, v, sub]) =>
-    `<div class="kpi-card"><span class="k">${k}</span><b>${v}</b><small>${sub}</small></div>`).join('');
-
-  const rows = posts.slice(0, 24).map(p => {
-    const r = Number(p.reach) || 0;
-    const c = (p.clicks === null || p.clicks === undefined) ? null : Number(p.clicks);
-    return [
-      p.at,
-      `<span class="pill">${(CHANNELS[p.channel] || {}).name || p.channel}</span>`,
-      p.link
-        ? `<a href="${p.link}" target="_blank" rel="noopener"><b>${esc(p.title)}</b></a>`
-        : `<b>${esc(p.title)}</b>`,
-      { n: r, html: dash(p.reach) },
-      { n: Number(p.engagements) || 0, html: qtyN(p.engagements) },
-      { n: c === null ? -1 : c, html: dash(p.clicks) },
-      { n: (c !== null && r) ? c / r * 100 : -1,
-        html: (c !== null && r) ? (c / r * 100).toFixed(2) + '%' : '—' },
-    ];
-  });
-  tbl.innerHTML = table([
-    '時間', '平台', '標題',
-    { h:'觸及', num:true, sum:true },
-    { h:'互動', num:true, sum:true },
-    { h:'點擊', num:true, sum:true },
-    { h:'CTR',  num:true },
-  ], rows);
-
-  renderPerfNotes(data);
-}
-
-/** 後端說了什麼就照登。空白的欄位要看得出是「還沒過審」還是「指標被砍」。 */
-function renderPerfNotes(data) {
-  const el = document.getElementById('perf-notes');
-  if (!el) return;
-  const notes = (data && data.notes) || [];
-  if (!notes.length) { el.hidden = true; el.innerHTML = ''; return; }
-  el.hidden = false;
-  el.innerHTML = `<b>Meta 回報</b><ul>${
-    notes.map(n => `<li>${esc(n)}</li>`).join('')}</ul>`;
 }
 
 function renderPostLog() {
@@ -733,120 +735,6 @@ function esc(s) {
 }
 
 /* ============================================================
-   帳號綁定
-   ------------------------------------------------------------
-   這一區告訴你：每個平台現在能不能真的自動發文、還差什麼。
-
-   ⚠️ 這裡「不」收任何金鑰。
-      Facebook 的 Page Access Token、YouTube 的 refresh token —— 這些
-      東西一旦寫進前端，任何人打開原始碼就拿得到，等於把你的粉專
-      交給陌生人。它們必須放在伺服器的環境變數裡。
-
-      所以這一區只做兩件事：顯示狀態、告訴你下一步該做什麼。
-      真正的金鑰在你部署的後端（見 tools/publish-worker.js）。
-   ============================================================ */
-
-const CONN_STEPS = {
-  facebook: {
-    name: 'Facebook 粉絲專頁',
-    needs: [
-      '在 Meta for Developers 建立一個 App',
-      '把粉專加進 App，取得長效的 Page Access Token',
-      '申請 pages_manage_posts 權限並通過 App Review（幾天到兩週）',
-    ],
-    envs: ['FB_PAGE_ID', 'FB_PAGE_TOKEN'],
-    doc: 'https://developers.facebook.com/docs/pages-api/posts',
-  },
-  instagram: {
-    name: 'Instagram 商業帳號',
-    needs: [
-      'IG 帳號要轉成「商業帳號」並連到那個粉專',
-      '用同一個 Meta App 取得 IG Business Account ID',
-      '申請 instagram_content_publish 權限',
-      '注意：IG 發圖文一定要有圖片網址，純文字發不了',
-      'IG Business Account ID 不用手動找，後端會用粉專 token 自動查',
-    ],
-    envs: ['IG_USER_ID', 'FB_PAGE_TOKEN'],
-    doc: 'https://developers.facebook.com/docs/instagram-api/guides/content-publishing',
-  },
-  youtube: {
-    name: 'YouTube 社群貼文',
-    needs: [
-      '在 Google Cloud Console 建立 OAuth 用戶端',
-      '用你的頻道授權一次，換到 refresh token',
-      '社群貼文 API 目前只開放部分頻道，影片上傳則是公開的',
-    ],
-    envs: ['YT_CLIENT_ID', 'YT_CLIENT_SECRET', 'YT_REFRESH_TOKEN'],
-    doc: 'https://developers.google.com/youtube/v3/docs',
-  },
-  rednote: {
-    name: '小紅書',
-    needs: [
-      '目前沒有公開的發文 API',
-      '只能用「複製文案 + 開啟發文視窗」的半自動方式',
-      '若之後開放，補上 XHS_TOKEN 即可',
-    ],
-    envs: [],
-    doc: '',
-    manualOnly: true,
-  },
-};
-
-function renderConnections() {
-  const box = document.getElementById('conn-grid');
-  if (!box) return;
-
-  const ep = (typeof PUBLISH_ENDPOINT !== 'undefined' && PUBLISH_ENDPOINT) || '';
-  const acc = (typeof SOCIAL_ACCOUNTS !== 'undefined' && SOCIAL_ACCOUNTS) || {};
-  const note = document.getElementById('conn-note');
-
-  box.innerHTML = Object.entries(CONN_STEPS).map(([key, c]) => {
-    const ch = CHANNELS[key];
-    const a = acc[key] || {};
-    const state = c.manualOnly ? 'manual' : (ep ? 'ready' : 'pending');
-    const label = { ready:'後端已設定', pending:'審核中 · 先用半自動', manual:'只能半自動' }[state];
-
-    return `
-      <div class="conn ${state}">
-        <div class="conn-top">
-          <b>${ch.icon} ${c.name}</b>
-          <span class="conn-badge ${state}">${label}</span>
-        </div>
-        ${a.url
-          ? `<p class="conn-acct">已開好：
-               <a href="${a.url}" target="_blank" rel="noopener">
-                 ${a.handle ? '@' + a.handle : (a.pageId || a.channelId || '看帳號')}
-               </a></p>`
-          : '<p class="conn-acct dim">帳號尚未建立</p>'}
-        <ol class="conn-steps">
-          ${c.needs.map(n => `<li>${n}</li>`).join('')}
-        </ol>
-        ${c.envs.length
-          ? `<p class="conn-env">後端環境變數：${c.envs.map(e => `<code>${e}</code>`).join('　')}</p>`
-          : ''}
-        ${c.doc ? `<a class="conn-doc" href="${c.doc}" target="_blank" rel="noopener">官方文件 →</a>` : ''}
-      </div>`;
-  }).join('');
-
-  if (!note) return;                 // 說明文字已從版面上拿掉
-  note.innerHTML = ep
-    ? `目前的發布後端：<code>${ep}</code>。
-       按「一鍵發布」會把文案送到那裡，由後端拿著金鑰去呼叫各平台的 API。`
-    : `<b>API 還在審核，這段期間有兩條路：</b>
-       <br><br>
-       <b>① 手機上按「一鍵發布」</b> —— 會把配圖和文案一起交給手機的分享面板，
-       選 Instagram 或 Facebook，App 會自己帶入內容，兩下就發完。
-       這是沒有 API 時最快的合法做法。
-       <br><br>
-       <b>② 用 Meta Business Suite 排程</b> —— Meta 官方的免費工具，
-       不需要 API、不需要審核，可以一次排好一週的貼文，
-       同時發到粉專和 IG。下面的「排程表」可以匯出成 CSV 帶過去。
-       <br><br>
-       <span class="dim">關於「用程式自動登入去發文」：那違反 Meta 的服務條款，
-       帳號會被停權，而且要把密碼存起來。我們不做那個。</span>`;
-}
-
-/* ============================================================
    排程表
    ------------------------------------------------------------
    API 還在審核時最實際的做法：一次把一週的內容排好，
@@ -870,9 +758,6 @@ function initCalendar() {
 
   gen.addEventListener('click', buildCalendar);
   document.getElementById('cal-csv').addEventListener('click', exportCalendarCsv);
-
-  const load = document.getElementById('perf-load');
-  if (load) load.addEventListener('click', () => refreshPerf(load));
   buildCalendar();
 }
 
@@ -944,10 +829,13 @@ document.addEventListener('i18n:change', () => {
 function exportCalendarCsv() {
   if (!CAL_ROWS.length) return;
   const esc = v => `"${String(v).replace(/"/g, '""')}"`;
-  const head = ['Date', 'Time', 'Topic', 'Subject', 'Caption', 'Image URL'];
+  /* 排程表匯出的是文案，不是圖 —— 配圖要按平台各畫一張，
+     一個 CSV 欄位塞不下四張，也不該把一張通用圖硬套上去。
+     圖在下面的卡片上按平台各自下載。 */
+  const head = ['Date', 'Time', 'Topic', 'Subject', 'Caption'];
   const lines = [head.join(',')].concat(
     CAL_ROWS.map(r => [
-      r.date, r.time, r.topic, r.subject, r.text, postImage({}),
+      r.date, r.time, r.topic, r.subject, r.text,
     ].map(esc).join(',')));
 
   const blob = new Blob(['﻿' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8' });
@@ -967,27 +855,3 @@ function exportCalendarCsv() {
    或直接跳到那個帳號的發文視窗。
    不用再自己開分頁、找粉專、切帳號。
    ============================================================ */
-function renderAccountBar() {
-  const box = document.getElementById('acct-bar');
-  if (!box) return;
-
-  const rows = Object.entries(CHANNELS)
-    .map(([key, ch]) => ({ key, ch, a: acct(key) }))
-    .filter(r => r.a.url);          // 沒開帳號的就不佔位置
-
-  if (!rows.length) { box.hidden = true; return; }
-  box.hidden = false;
-
-  box.innerHTML = `
-    <span class="acct-label">已綁定的帳號</span>
-    ${rows.map(({ key, ch, a }) => `
-      <span class="acct">
-        <a class="acct-name" href="${a.url}" target="_blank" rel="noopener"
-           title="打開${ch.name}">
-          <span aria-hidden="true">${ch.icon}</span>
-          ${a.handle ? '@' + a.handle : ch.name}
-        </a>
-        <a class="acct-go" href="${ch.composer()}" target="_blank" rel="noopener"
-           title="到${ch.name}發文">發文 →</a>
-      </span>`).join('')}`;
-}
