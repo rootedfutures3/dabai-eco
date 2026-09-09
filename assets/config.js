@@ -76,7 +76,7 @@ const AUTH_MODE = 'google';
    長得像 1234567890-abcdefg.apps.googleusercontent.com
    這串是公開的，放在前端沒有問題 —— Google 是靠「授權的來源網域」
    來限制誰能用它，不是靠保密。 */
-const GOOGLE_CLIENT_ID = '';
+const GOOGLE_CLIENT_ID = '908132991198-s1ls4f6hkl9q1sac3r5t2setfkn9elf1.apps.googleusercontent.com';
 
 /* 哪些 Google 帳號一登入就是超級管理員。
    把你自己的 Gmail 放進來 —— 不然第一次用 Google 登入會拿到
