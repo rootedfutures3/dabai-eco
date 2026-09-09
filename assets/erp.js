@@ -295,6 +295,18 @@ document.addEventListener('i18n:change', () => {
   try { renderAll(); } catch (e) { console.error('[TANJU] 換語言重畫失敗', e); }
 });
 
+/* 使用者填的東西進到 HTML 之前一定要過這裡。
+   原本散在各處的 esc 只把雙引號換掉 —— 那擋得住屬性被撐開，
+   擋不住 <img onerror=…>。備註、回報內容、姓名這些欄位
+   任何人都能透過 REST API 寫入，寫進去的東西會在管理員的
+   瀏覽器裡執行，等於把整個後台交出去。 */
+const H = v => String(v ?? '').replace(/[&<>"']/g,
+  c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+
+/* 圖片與連結的網址：只放行 http/https。
+   javascript: 開頭的網址點下去就是執行程式碼。 */
+const safeUrl = u => /^https?:\/\//i.test(String(u || '')) ? String(u) : '';
+
 function renderAll() {
   /* 一個區塊出錯不該把整個後台畫不出來。
      這裡逐一呼叫並各自 try —— 缺一塊就只缺那一塊，其餘照畫，
@@ -535,10 +547,9 @@ function editOrder(no) {
    訂單與拆帳講的是同一筆交易，所以共用同一則備註 —— 在哪一頁寫都一樣。 */
 function memoCell(type, id) {
   const t = Store.memo(type, id);
-  const esc = v => String(v).replace(/"/g, '&quot;');
   return t
-    ? `<span class="memo" data-memo="${type}:${esc(id)}" title="${esc(t)}" role="button" tabindex="0">${t}</span>`
-    : `<button class="mini-btn memo-add" data-memo="${type}:${esc(id)}" title="加備註">✎</button>`;
+    ? `<span class="memo" data-memo="${H(type)}:${H(id)}" title="${H(t)}" role="button" tabindex="0">${H(t)}</span>`
+    : `<button class="mini-btn memo-add" data-memo="${H(type)}:${H(id)}" title="加備註">✎</button>`;
 }
 
 /* 點備註就開編輯視窗。 */
@@ -575,7 +586,7 @@ function renderOrders() {
   const rows = [...db.orders].reverse().map(o => [
     `<b>${o.no}</b><span class="sub-line">${o.date}</span>`,
     `<span class="pill">${o.treeId}</span>`,
-    `${o.customer}<span class="sub-line" title="${o.email || ''}">${o.email || ''}</span>`,
+    `${H(o.customer)}<span class="sub-line" title="${H(o.email || '')}">${H(o.email || '')}</span>`,
     num(o.amount), num(o.paid), num(o.amount - o.paid),
     `${o.channel || '—'}<span class="sub-line">`
       + `<span class="badge-${o.status === '已付全額' ? 'ok' : 'wait'}">${o.status}</span></span>`,
@@ -719,8 +730,8 @@ function renderTrees() {
         `${t.variety || '—'}<span class="sub-line">${qty(t.age)} 年生</span>`,
         num(t.kg,  n => qty(n) + ' kg'),
         num(t.price),
-        `${t.orchard || '—'}<span class="sub-line">${t.area || ''}</span>`,
-        t.farmer,
+        `${H(t.orchard || '—')}<span class="sub-line">${H(t.area || '')}</span>`,
+        H(t.farmer),
         `<span class="badge-${stat[1]}">${stat[0]}</span>`
           + `<span class="sub-line">${o ? o.no : '—'}</span>`,
         `<button class="mini-btn" data-contract="${t.id}">合約</button>`
@@ -753,7 +764,7 @@ function renderCustomers() {
   const b2c = [...map.values()].map(c => {
     const note = Store.customerNote(c.email);
     return [
-      `<b>${c.name}</b>`,
+      `<b>${H(c.name)}</b>`,
       /* 聯絡資料預設遮起來。開會投影、給人看螢幕的時候，
          認養人的 Email 和電話不該就這樣攤在畫面上。
          按眼睛才顯示，而且只顯示那一列。 */
@@ -767,7 +778,7 @@ function renderCustomers() {
       c.trees.map(t => `<span class="pill">${t}</span>`).join(' '),
       num(c.trees.length, n => qty(n) + ' 棵'), num(c.paid),
       note
-        ? `<span class="memo" title="${String(note).replace(/"/g, '&quot;')}">${note}</span>`
+        ? `<span class="memo" title="${H(note)}">${H(note)}</span>`
         : '<span class="dim">—</span>',
       `<button class="mini-btn" data-cust-note="${c.email}">備註</button>`
         + editBtn('cust-edit', c.email),
@@ -827,15 +838,15 @@ document.addEventListener('click', e => {
 function renderReports() {
   const db = Store.read();
   const rows = db.reports.map(r => [
-    r.at, `<span class="pill">${r.treeId}</span>`, r.by, r.stage,
-    `<span class="badge-${r.health === '良好' ? 'ok' : 'wait'}">${r.health}</span>`,
-    r.note,
+    r.at, `<span class="pill">${H(r.treeId)}</span>`, H(r.by), H(r.stage),
+    `<span class="badge-${r.health === '良好' ? 'ok' : 'wait'}">${H(r.health)}</span>`,
+    H(r.note),
     /* 有網址就顯示縮圖，點開看原圖；只有數量沒網址的是舊資料
        或離線補登的，照實說「無圖檔」而不是假裝有。 */
     (r.photoUrls && r.photoUrls.length)
-      ? `<span class="rep-thumbs">${r.photoUrls.map((u, i) =>
-          `<a href="${u}" target="_blank" rel="noopener" title="第 ${i + 1} 張">
-             <img src="${u}" alt="樹況照片 ${i + 1}" loading="lazy"></a>`).join('')}</span>`
+      ? `<span class="rep-thumbs">${r.photoUrls.map(safeUrl).filter(Boolean).map((u, i) =>
+          `<a href="${H(u)}" target="_blank" rel="noopener" title="第 ${i + 1} 張">
+             <img src="${H(u)}" alt="樹況照片 ${i + 1}" loading="lazy"></a>`).join('')}</span>`
       : (r.photos ? `<span class="dim">${qty(r.photos)} 張 · 無圖檔</span>` : '<span class="dim">—</span>'),
   ]);
   document.getElementById('t-reports').innerHTML = table([
@@ -848,8 +859,8 @@ function renderWages() {
   drawWageKpis(db.wages || []);
 
   const rows = db.wages.map(w => [
-    w.month, `<b>${w.person}</b>`, w.role,
-    num(w.base), num(w.bonus), num(w.base + w.bonus), `<span class="dim">${w.note}</span>`,
+    w.month, `<b>${H(w.person)}</b>`, H(w.role),
+    num(w.base), num(w.bonus), num(w.base + w.bonus), `<span class="dim">${H(w.note)}</span>`,
   ]);
   document.getElementById('t-wages').innerHTML = table([
     '月份', '對象', '身分',
@@ -1342,7 +1353,7 @@ function drawAR() {
       return {
         days,
         row: [
-          `<b>${o.no}</b>`, o.date, o.customer,
+          `<b>${H(o.no)}</b>`, o.date, H(o.customer),
           num(o.amount), num(o.paid), num(o.amount - o.paid),
           { n: days, html: `<span class="badge-${band === 'ok' ? 'ok' : 'wait'}">${qty(days)} 天</span>` },
         ],
@@ -1403,7 +1414,7 @@ function drawSocialOverview() {
 
   const postRows = [...posts].reverse().slice(0, 8).map(p => [
     p.at, `<span class="pill">${CH_NAME[p.channel] || p.channel}</span>`,
-    `<b>${p.title || '—'}</b>`,
+    `<b>${H(p.title || '—')}</b>`,
     `<span class="pill">${LANG_NAME[p.lang] || p.lang || '—'}</span>`,
     `<span class="badge-${p.status === '已發布' ? 'ok' : 'wait'}">${p.status}</span>`,
   ]);
@@ -1465,8 +1476,8 @@ function drawTreeOverview() {
   ], orchRows);
 
   const repRows = [...reports].reverse().slice(0, 8).map(r => [
-    r.at, `<span class="pill">${r.treeId}</span>`, r.by, r.stage,
-    `<span class="badge-${r.health === '良好' ? 'ok' : 'wait'}">${r.health}</span>`,
+    r.at, `<span class="pill">${H(r.treeId)}</span>`, H(r.by), H(r.stage),
+    `<span class="badge-${r.health === '良好' ? 'ok' : 'wait'}">${H(r.health)}</span>`,
   ]);
   const rEl = document.getElementById('t-ov-reports');
   if (rEl) rEl.innerHTML = table(['時間', 'Tree ID', '回報人', '生長階段', '樹況'], repRows);

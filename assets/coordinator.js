@@ -289,15 +289,20 @@ function renderMyReports() {
   const pend = queueRead();
   const box = document.getElementById('my-reports');
 
+  /* 回報內容是人打進去的，而且任何人都能透過 REST API 寫進資料庫。
+     不跳脫的話，寫進去的 <img onerror=…> 會在別人的瀏覽器裡執行。 */
+  const H = v => String(v ?? '').replace(/[&<>"']/g,
+    c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+
   const card = (r, pending) => `
     <div class="rep ${pending ? 'pending' : ''}">
       <div class="rep-top">
-        <span class="pill">${r.treeId}</span>
-        <span class="dim">${r.at}</span>
+        <span class="pill">${H(r.treeId)}</span>
+        <span class="dim">${H(r.at)}</span>
         ${pending ? '<span class="badge-wait">待同步</span>' : '<span class="badge-ok">已同步</span>'}
       </div>
-      <b>${r.stage} · ${r.health}</b>
-      <p>${r.note}</p>
+      <b>${H(r.stage)} · ${H(r.health)}</b>
+      <p>${H(r.note)}</p>
       ${r.photos ? `<span class="dim">📷 ${r.photos} 張照片</span>` : ''}
     </div>`;
 

@@ -171,7 +171,7 @@ function buildStaffLanding() {
   if (root) root.textContent = '後台';
 
   document.getElementById('view').innerHTML = `
-    <h3 class="panel-h">歡迎回來，${me.name || me.u} <small>${label}</small></h3>
+    <h3 class="panel-h">歡迎回來，${esc(me.name || me.u)} <small>${label}</small></h3>
     <p class="panel-note">
       你的權限是<b>${label}</b>。這一頁不放功能 —— 日常工作都在 TANJU Portal，
       挑一個要去的地方就好。
@@ -598,8 +598,8 @@ function vTrack(el) {
   el.innerHTML = `
     <h3 class="panel-h">樹況追蹤 <small>溝通者現場回報</small></h3>
     ${ids.length ? table(['時間', 'Tree ID', '回報人', '生長階段', '樹況', '備註', '照片'],
-      reports.map(r => [r.at, `<span class="pill">${r.treeId}</span>`, esc(r.by), r.stage,
-        `<span class="badge-${r.health === '良好' ? 'ok' : 'wait'}">${r.health}</span>`,
+      reports.map(r => [r.at, `<span class="pill">${esc(r.treeId)}</span>`, esc(r.by), esc(r.stage),
+        `<span class="badge-${r.health === '良好' ? 'ok' : 'wait'}">${esc(r.health)}</span>`,
         esc(r.note), r.photos + ' 張']))
       : '<div class="no-result">認養果樹後，這裡會顯示現場回報紀錄。</div>'}`;
 }
