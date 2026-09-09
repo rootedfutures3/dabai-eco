@@ -353,11 +353,14 @@ async function shareNative(channel, text, d) {
 
    照片和 logo 都是同源的，canvas 不會被污染，匯得出檔案。
    ============================================================ */
+/* 字級寫死在各平台，不用同一條公式換算 —— 橫幅只有 630 高，
+   套用直式的比例會讓字大到把照片整個蓋掉。每個版位本來就要各自調。
+   head 是標題字級，lines 是標題最多幾行。 */
 const IMG_SPEC = {
-  facebook:  { w:1200, h:630,  photo:'dabai-wide.jpg'   },
-  instagram: { w:1080, h:1080, photo:'dabai-square.jpg' },
-  rednote:   { w:1080, h:1440, photo:'dabai-tall.jpg'   },
-  youtube:   { w:1280, h:720,  photo:'dabai-wide.jpg'   },
+  facebook:  { w:1200, h:630,  photo:'dabai-wide.jpg',   head:54, lines:2 },
+  instagram: { w:1080, h:1080, photo:'dabai-square.jpg', head:62, lines:3 },
+  rednote:   { w:1080, h:1440, photo:'dabai-tall.jpg',   head:66, lines:3 },
+  youtube:   { w:1280, h:720,  photo:'dabai-wide.jpg',   head:60, lines:2 },
 };
 
 const IMG_FONT = '"PingFang TC","Hiragino Sans TC","Noto Sans TC",'
@@ -430,29 +433,27 @@ async function makePostImage(channel, d) {
     ctx.fillRect(0, 0, w, h);
   }
 
-  const pad  = Math.round(w * 0.062);
+  const pad  = Math.round(Math.min(w, h) * 0.075);
   const maxW = w - pad * 2;
 
-  /* 橫幅只有 630 高，三行標題會超出壓暗的範圍，白字就會落在亮照片上。
-     所以先量、再決定漸層要鋪多高 —— 不是先鋪固定高度再賭文字放得下。 */
-  const wide = h / w < 0.9;
-  const hSize = Math.round(w * (channel === 'rednote' ? 0.062 : 0.056));
-  const sSize = Math.round(w * 0.034);
-  const uSize = Math.round(w * 0.026);
-  const gapHS = Math.round(w * 0.075);   // 標題到副標
-  const gapSU = Math.round(w * 0.062);   // 副標到網址
+  const hSize = spec.head;
+  const sSize = Math.round(hSize * 0.60);
+  const uSize = Math.round(hSize * 0.46);
+  const gapHS = Math.round(hSize * 1.25);   // 標題到副標
+  const gapSU = Math.round(hSize * 1.00);   // 副標到網址
 
+  /* 先量文字、再決定漸層鋪多高。反過來做的話，橫幅上的標題會伸出
+     壓暗的範圍，白字就落在亮照片上 —— 我們自己那張的葉子就是淺色的。 */
   ctx.font = `500 ${hSize}px ${IMG_FONT}`;
-  const lines = wrapLines(ctx, headlineOf(d && d.text), maxW, wide ? 2 : 3);
+  const lines = wrapLines(ctx, headlineOf(d && d.text), maxW, spec.lines);
   const lineH = Math.round(hSize * 1.3);
   const sub = (d && d.subject) ? String(d.subject) : '';
 
   const yUrl  = h - pad;
   const ySub  = yUrl - gapSU;
-  const yHead = sub ? ySub - gapHS : yUrl - gapSU;
+  const yHead = sub ? ySub - gapHS : ySub;
   const textTop = yHead - (lines.length - 1) * lineH - hSize;
 
-  /* 漸層從文字最上緣再往上一段開始，讓它淡出而不是切一刀 */
   const gTop = Math.max(0, textTop - Math.round(h * 0.16));
   const g = ctx.createLinearGradient(0, gTop, 0, h);
   g.addColorStop(0, 'rgba(18,10,16,0)');
@@ -461,16 +462,20 @@ async function makePostImage(channel, d) {
   ctx.fillStyle = g;
   ctx.fillRect(0, gTop, w, h - gTop);
 
-  /* logo 左上。原色不動。 */
+  /* logo 左上。原色不動，只加一層陰影讓它在淺色照片上也看得見。 */
   try {
     const lg = await loadImg('assets/img/logo.png');
-    const lh = Math.round(h * (wide ? 0.13 : 0.085));
+    const lh = Math.round(Math.min(w, h) * 0.115);
     const lw = Math.round(lg.width / lg.height * lh);
+    ctx.save();
+    ctx.shadowColor = 'rgba(0,0,0,.55)';
+    ctx.shadowBlur = Math.round(lh * 0.35);
     ctx.drawImage(lg, pad, pad, lw, lh);
-    ctx.font = `500 ${Math.round(lh * 0.44)}px ${IMG_FONT}`;
-    ctx.fillStyle = 'rgba(255,255,255,.94)';
+    ctx.font = `500 ${Math.round(lh * 0.42)}px ${IMG_FONT}`;
+    ctx.fillStyle = '#FFFFFF';
     ctx.textBaseline = 'middle';
-    ctx.fillText('TANJU', pad + lw + Math.round(w * 0.016), pad + lh / 2);
+    ctx.fillText('TANJU', pad + lw + Math.round(lh * 0.22), pad + lh / 2);
+    ctx.restore();
   } catch (e) { /* logo 沒載到就算了，不影響其他部分 */ }
 
   ctx.textBaseline = 'alphabetic';
