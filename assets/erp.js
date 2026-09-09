@@ -1261,8 +1261,10 @@ function drawGoals(boxId, keys) {
     /* 這兩句要在組的時候就翻。交給事後掃 DOM 的話，
        裡面的「{n} 天」會先被換成 days，整句就再也對不上字典了。 */
     const note  = state === 'hit'
-      ? tw('超出 {a}').replace('{a}', g.fmt(now - target))
-      : tw('還差 {a}，剩 {b} 天').replace('{a}', g.fmt(gap)).replace('{b}', qty(left));
+      /* fmt 產生的是「10 筆」「RM 300.00」這種帶單位的字串，
+         單位本身也要翻，不然會變成「10 筆 to go」。 */
+      ? tw('超出 {a}').replace('{a}', tw(g.fmt(now - target)))
+      : tw('還差 {a}，剩 {b} 天').replace('{a}', tw(g.fmt(gap))).replace('{b}', qty(left));
 
     return `
       <div class="goal g-${state}">
