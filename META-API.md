@@ -299,12 +299,48 @@ https://graph.facebook.com/v23.0/debug_token?input_token=粉專那串&access_tok
 
 ## 3 · 放進 Cloudflare
 
-`tools/wrangler.toml` 已經寫好了，所以不用 `wrangler init`，
-也不用選任何選項。
+Cloudflare Workers 是一台「只在被呼叫時才醒來」的小伺服器。
+我們只需要它做一件事：保管 token。免費方案每天十萬次請求，
+我們一天發不到十篇，永遠用不完。
+
+### 3.1 · 申請帳號
+
+1. 開 <https://dash.cloudflare.com/sign-up>
+2. 填 Email 和密碼 → Sign up
+3. 去信箱收驗證信，點裡面的連結
+
+> **不需要買網域，也不需要把網域轉過去。** 註冊流程可能會一直問你
+> 要加哪個網站 —— 全部跳過就好。Workers 會自己給你一個
+> `.workers.dev` 的網址。
+
+### 3.2 · 決定你的子網域
+
+1. 登入後左邊選 **Workers & Pages**
+2. 第一次進來會要你取一個子網域，例如打 `rootedfutures`
+3. 之後所有 Worker 的網址都會長成
+   `https://<worker 名字>.rootedfutures.workers.dev`
+
+這串取了就跟著帳號走，想清楚再按。
+
+### 3.3 · 裝 wrangler 並登入
+
+wrangler 是 Cloudflare 的命令列工具，用來把程式送上去。
+它要 Node.js（`node --version` 有東西就代表有裝）。
 
 ```bash
 npm i -g wrangler
 wrangler login
+```
+
+`wrangler login` 會開瀏覽器問你要不要授權，按 **Allow**。
+看到 `Successfully logged in` 就好了。
+
+### 3.4 · 送上去
+
+`tools/wrangler.toml` 已經寫好了，所以不用 `wrangler init`，
+也不用選任何選項。
+
+```bash
 cd tools
 wrangler secret put FB_PAGE_ID        # 貼 1211431805397689
 wrangler secret put FB_PAGE_TOKEN < ../.meta-token.txt
@@ -312,50 +348,77 @@ wrangler secret put TANJU_KEY         # 自己隨便打一串
 wrangler deploy
 ```
 
+- `wrangler secret put` 會停下來等你貼值，貼完按 Enter。
+  貼進去的東西存在 Cloudflare，不會進這個 repo。
 - `IG_USER_ID` → **不用設**，後端自己查
 - `GRAPH_VERSION` → **不用設**，Meta 哪天淘汰 v23 再設
 
-deploy 完會給你一個網址，像 `https://tanju-publish.你的帳號.workers.dev`。
-填進 `assets/config.js` 兩行：
+跑完最後會印出網址：
+
+```
+Deployed tanju-publish triggers
+  https://tanju-publish.rootedfutures.workers.dev
+```
+
+**那一行就是你要的網址。** 事後要找：Cloudflare 後台 →
+Workers & Pages → 點 `tanju-publish`。
+
+### 3.5 · 填回網站
+
+`assets/config.js` 兩行：
 
 ```js
-const PUBLISH_ENDPOINT = 'https://tanju-publish.你的帳號.workers.dev';
+const PUBLISH_ENDPOINT = 'https://tanju-publish.你的子網域.workers.dev';
 const PUBLISH_KEY = '你剛剛設的 TANJU_KEY';
 ```
 
-然後 `./deploy.sh`。最後把 `.meta-token.txt` 刪掉 —— Cloudflare 已經有一份。
+然後 `./deploy.sh`。後台的 Facebook 與 Instagram 兩張卡，
+按鈕會從「複製並開啟」變成「一鍵發布」。
+
+最後把 `.meta-token.txt` 刪掉 —— Cloudflare 已經有一份了。
 
 > `PUBLISH_KEY` 還是在前端，所以它只擋得住隨手掃網址的人，
 > 擋不住有心人。真正的做法是讓後端去驗登入者的身分 ——
 > 等 `AUTH_MODE` 換成 `'supabase'` 之後再改，
 > `publish-worker.js` 最後面寫了怎麼改。
 
+### 出錯的話
+
+| 訊息 | 意思 |
+|---|---|
+| `wrangler: command not found` | `npm i -g wrangler` 沒跑成功，或要重開終端機 |
+| `Authentication error` | `wrangler login` 過期了，再跑一次 |
+| `You need to register a workers.dev subdomain` | 回 3.2，去後台取子網域 |
+| `binding ... not found` | secret 少設了一個，`wrangler secret list` 看看有哪些 |
+| 前台按鈕還是「複製並開啟」 | `config.js` 沒填、或忘了跑 `./deploy.sh` |
+
 ## 4 · 驗收
 
-進後台 → 社群發文 → 拉到「成效」，會多一顆 **更新成效**。按下去。
+進後台 → **社群發文** → 選一棵樹 → **產生四個平台的文案與配圖**。
 
-順利的話：觸及、互動、點擊、CTR 四張卡有數字，下面列出最近 24 篇，
-每一篇點標題會直接開到那則貼文。
+Facebook 和 Instagram 那兩張卡，按鈕應該從「複製並開啟」變成
+**一鍵發布**。按下去會：產圖 → 傳到 Supabase 拿公開網址 →
+交給 Worker → Worker 用 token 發布 → 貼文連結寫進下面的發文紀錄。
 
-### 看得懂空白
+> 第一次先發一篇測試的，發完到粉專確認，不喜歡就去粉專刪掉。
+> 這裡沒有做「從後台刪貼文」—— 刪掉的東西救不回來，
+> 那種按鈕不該放在一個手指容易滑到的地方。
 
-這是刻意的設計 —— **後端沒給的欄位一律顯示破折號，不推估**。
-成效數字是要拿去對外講的，看板上出現一個 3.2% 的 CTR，
-隔天就可能被寫進提案書裡。所以寧可空著。
+小紅書和 YouTube 不會有一鍵發布。小紅書沒有公開的發文 API，
+YouTube 的社群貼文只開放部分頻道。那兩個就是
+「複製文案 + 下載配圖 + 開啟發文視窗」，手動貼。
+
+### 出錯對照
 
 | 你看到 | 意思 |
 |---|---|
-| 讚留言有數字，觸及全是「—」 | token 少了 `read_insights`。回第 2 節重拿 |
-| IG 那幾列的「點擊」永遠是「—」 | 正常。IG 的自然貼文 Meta 不給連結點擊，只給廣告 |
-| 黃色框寫「Meta 不給這些指標」 | Meta 改版把那個指標名字砍了。後端會自動略過，其他數字照常 |
-| 「這個粉專底下沒有綁 IG 商業帳號」 | 回第 1 節「IG 那邊的前提」 |
-| 黃色框寫「連讚與留言都讀不到」 | `pages_read_engagement` 有給，但沒涵蓋到這個粉專。回第 2 節重新授權，彈窗裡要勾到粉專 |
-| `Object with ID … does not exist` | `FB_PAGE_ID` 填成網址上的編號了，見上一節 |
-| 讀取失敗（401） | `PUBLISH_KEY` 和 Cloudflare 上的 `TANJU_KEY` 不一樣 |
-
-CTR 的算法：**只拿有點擊數的那幾篇，除它們自己的觸及**。
-不是拿 FB 的點擊去除 FB＋IG 的總觸及 —— 那個分母是錯的，
-會讓 CTR 看起來比實際低一大截。
+| 按鈕還是「複製並開啟」 | `PUBLISH_ENDPOINT` 沒填，或忘了 `./deploy.sh` |
+| 發布失敗（401）· 沒有權限 | `PUBLISH_KEY` 和 Cloudflare 的 `TANJU_KEY` 不一樣 |
+| `Meta API：… (#200)` | token 少了 `pages_manage_posts` 或 `instagram_content_publish`。回第 1 節加 use case、重新授權 |
+| `Object with ID … does not exist` | `FB_PAGE_ID` 填成網址上的編號了，見下一節 |
+| `這個粉專底下沒有綁 IG 商業帳號` | 回第 1 節「IG 那邊的前提」 |
+| `Instagram 一定要附圖片網址` | 配圖上傳失敗。多半是 Supabase 睡著了，開後台任一頁叫醒它再試 |
+| IG 發成功但發文紀錄沒有連結 | 正常，permalink 有時候要等幾秒才查得到。貼文本身沒問題 |
 
 ---
 
