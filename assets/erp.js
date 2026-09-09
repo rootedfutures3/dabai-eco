@@ -884,6 +884,13 @@ function renderCommission() {
         + editBtn('order-edit', o.no),
     ];
   });
+  /* 佣金與代撥的走勢。兩根柱子並排，一眼看得出平台實際留下多少、
+     又有多少是代收代付流過去給果農的。 */
+  trendChart(document.getElementById('comm-chart'),
+    recentMonths(12).map(monthStats),
+    [{ key:'revenue',     label:'平台佣金', cls:'t-1' },
+     { key:'passthrough', label:'代撥果農', cls:'t-2' }]);
+
   document.getElementById('t-commission').innerHTML = table([
     '訂單編號', 'Tree ID', '認養人',
     { h:'合約總額', num:true, sum:true },
@@ -1161,6 +1168,12 @@ const LANG_NAME = { zh:'中文', ms:'Bahasa Melayu', en:'English' };
 
 function drawSocialOverview() {
   const posts = Store.read().posts || [];
+
+  trendChart(document.getElementById('social-chart'),
+    recentMonths(12).map(monthStats),
+    [{ key:'posts', label:'貼文數', cls:'t-1' }],
+    n => qty(Math.round(n)) + ' 篇');
+
   const kpi = document.getElementById('social-kpis');
   if (kpi) {
     const done  = posts.filter(p => p.status === '已發布').length;
@@ -1203,6 +1216,12 @@ function drawSocialOverview() {
 /* ---------- 樹況視角 ---------- */
 function drawTreeOverview() {
   const db = Store.read();
+
+  trendChart(document.getElementById('tree-chart'),
+    recentMonths(12).map(monthStats),
+    [{ key:'reports', label:'現場回報', cls:'t-3' }],
+    n => qty(Math.round(n)) + ' 筆');
+
   const trees = Store.treeList();
   const adopted = trees.filter(t =>
     t.status === 'adopted' || db.orders.some(o => o.treeId === t.id));
@@ -1332,6 +1351,59 @@ function drawMonthChart(months) {
             y1="${PAD_T + plotH}" y2="${PAD_T + plotH}"/>
       ${bars}
     </svg>`;
+}
+
+/* ============================================================
+   共用的月度趨勢圖
+   ------------------------------------------------------------
+   財務、佣金、社群、樹況都要看「這幾個月的走勢」，圖長得一樣、
+   只有取哪幾個數字不同，所以做成一個函式餵不同的欄位。
+
+   用純 SVG 畫，不拉圖表函式庫 —— 沒有額外載入成本，
+   也不會有 CDN 連不上的問題（果園那邊的網路不一定穩）。
+   ============================================================ */
+function trendChart(box, months, series, fmt = money) {
+  if (!box) return;
+  if (!months.length) { box.innerHTML = '<p class="dim">還沒有資料。</p>'; return; }
+
+  const W = Math.max(660, months.length * 74);
+  const H = 210, PAD_B = 40, PAD_T = 16, PAD_L = 8;
+  const plotH = H - PAD_B - PAD_T;
+  const top = Math.max(1, ...months.flatMap(m => series.map(s => Math.abs(m[s.key]) || 0)));
+  const slot = (W - PAD_L * 2) / months.length;
+  const bw = Math.min(15, slot / (series.length + 2.2));
+  const y = v => PAD_T + plotH - (v / top) * plotH;
+
+  /* 三條參考線。沒有刻度的話柱子的高度讀不出數量級。 */
+  const grid = [0, .5, 1].map(f => `
+    <line class="g-line" x1="0" x2="${W}" y1="${(PAD_T + plotH * (1 - f)).toFixed(1)}"
+          y2="${(PAD_T + plotH * (1 - f)).toFixed(1)}"/>
+    <text class="g-lab" x="4" y="${(PAD_T + plotH * (1 - f) - 4).toFixed(1)}">${fmt(top * f)}</text>`).join('');
+
+  const bars = months.map((m, i) => {
+    const cx = PAD_L + slot * i + slot / 2;
+    const off0 = -((series.length - 1) * (bw + 2)) / 2;
+    return series.map((sp, k) => {
+      const v = Number(m[sp.key]) || 0;
+      const h = Math.max(Math.abs(v) / top * plotH, v === 0 ? 0 : 1.5);
+      return `<rect class="${sp.cls}" x="${(cx + off0 + k * (bw + 2) - bw / 2).toFixed(1)}"
+                    y="${y(Math.abs(v)).toFixed(1)}" width="${bw.toFixed(1)}"
+                    height="${h.toFixed(1)}" rx="2">
+                <title>${m.ym}｜${sp.label}：${fmt(v)}</title></rect>`;
+    }).join('')
+    + `<text class="x-lab" x="${cx.toFixed(1)}" y="${H - PAD_B + 17}" text-anchor="middle">${m.ym.slice(5)}</text>`
+    + (i === 0 || m.ym.slice(5) === '01'
+        ? `<text class="x-yr" x="${cx.toFixed(1)}" y="${H - PAD_B + 31}" text-anchor="middle">${m.ym.slice(0, 4)}</text>` : '');
+  }).join('');
+
+  box.innerHTML = `
+    <div class="chart-legend">
+      ${series.map(sp => `<span data-i18n-keep><i class="sw ${sp.cls}"></i>${sp.label}</span>`).join('')}
+    </div>
+    <div class="chart-scroll">
+      <svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img"
+           aria-label="逐月走勢">${grid}${bars}</svg>
+    </div>`;
 }
 
 function drawMonthTable(months) {

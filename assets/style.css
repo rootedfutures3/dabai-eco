@@ -3268,3 +3268,12 @@ th[data-dir="desc"] .sort-mark::before{content:"↓"}
 @media(max-width:760px), (pointer:coarse){
   .fold > summary{min-height:52px}
 }
+
+/* 共用趨勢圖的配色。同一個 class 同時給圖例色塊和柱子用，
+   呼叫端只要指定一次，不必記兩套名字。 */
+.sw.t-1{background:var(--gold)}
+.sw.t-2{background:var(--taupe-deep)}
+.sw.t-3{background:#2E6B3E}
+.chart-scroll svg rect.t-1{fill:var(--gold)}
+.chart-scroll svg rect.t-2{fill:var(--taupe-deep)}
+.chart-scroll svg rect.t-3{fill:#2E6B3E}
