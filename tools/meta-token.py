@@ -31,11 +31,23 @@ import urllib.request
 GRAPH = 'v23.0'
 PAGE_ID = '1211431805397689'          # assets/config.js 的 SOCIAL_ACCOUNTS.facebook.pageId
 
+# 沒有這些就發不了文，缺了就停下來
 NEEDED = {
-    'pages_show_list':           '列出粉專',
+    'pages_show_list':           '列出粉專（拿粉專 token 的第一步）',
+    'pages_manage_posts':        '發文到粉專',
+}
+
+# 只發 Facebook 的話可以先不管；要發 IG 就一定要
+IG_NEEDED = {
+    'instagram_basic':           '讀 IG 帳號',
+    'instagram_content_publish': '發文到 IG',
+}
+
+# 有更好，沒有也能發文。後台的成效那一頁已經拿掉了，
+# 之後想看數字再回來補。
+NICE = {
     'pages_read_engagement':     '讀貼文、讚、留言',
     'read_insights':             '觸及、曝光、點擊',
-    'instagram_basic':           '讀 IG 貼文',
     'instagram_manage_insights': 'IG 的觸及',
 }
 
@@ -96,13 +108,29 @@ def main():
     if err:
         die(f'查不到 token 資訊：{err}')
     scopes = set(d.get('data', {}).get('scopes', []))
-    missing = [k for k in NEEDED if k not in scopes]
+
+    print('  發文必要：')
     for k, why in NEEDED.items():
         print((OK if k in scopes else BAD) + f'{k:28} {why}')
+    print('  Instagram：')
+    for k, why in IG_NEEDED.items():
+        print((OK if k in scopes else WARN) + f'{k:28} {why}')
+    print('  有更好（沒有也能發文）：')
+    for k, why in NICE.items():
+        print((OK if k in scopes else WARN) + f'{k:28} {why}')
+
+    missing = [k for k in NEEDED if k not in scopes]
     if missing:
-        die('少了上面打叉的權限，接下去也是白做。\n'
-            '     回 Graph API Explorer，Permissions 把它們加進去，\n'
-            '     重新 Generate，授權彈窗裡每個開關都要開著。')
+        die('少了發文必要的權限，接下去也是白做：' + '、'.join(missing) + '\n'
+            '     這兩個如果在 Graph API Explorer 的清單裡「找不到」，\n'
+            '     那不是你漏勾 —— 是 App 還沒加對應的 use case。\n'
+            '     Use cases → Add use case → 選跟經營粉專有關的那一個，\n'
+            '     加完點進去的 Permissions 分頁要看得到 pages_manage_posts。\n'
+            '     然後回 Explorer 重新 Generate（彈窗每個開關都要開著）。')
+
+    ig_missing = [k for k in IG_NEEDED if k not in scopes]
+    if ig_missing:
+        print(WARN + '缺 ' + '、'.join(ig_missing) + ' —— Facebook 發得出去，IG 發不出去。')
 
     # ---- 3 · 拿粉專 token ----
     print('\n3 · 粉專 token')
@@ -123,19 +151,22 @@ def main():
     print(OK + f'{page["name"]}（{page["id"]}）')
 
     # ---- 4 · 真的去讀一次成效 ----
-    print('\n4 · 實際讀一次（這關過了才算數）')
-    d, err = call(f'{PAGE_ID}/posts',
-                  fields='id,message,likes.summary(true).limit(0),'
-                         'insights.metric(post_impressions_unique,post_clicks)',
+    print('\n4 · 這把粉專 token 真的通不通')
+    d, err = call(PAGE_ID, fields='id,name', access_token=page_token)
+    if err:
+        die(f'連粉專本身都讀不到：{err}\n'
+            '     權限有給但讀不到，通常是授權彈窗裡沒有勾到這個粉專。')
+    print(OK + f'{d.get("name")} 讀得到')
+
+    d, err = call(f'{PAGE_ID}/posts', fields='id,created_time',
                   limit=3, access_token=page_token)
     if err:
-        die(f'讀不到：{err}\n'
-            '     權限有給但讀不到，通常是授權時沒有勾到這個粉專。')
-    posts = d.get('data', [])
-    got_insights = any(p.get('insights') for p in posts)
-    print(OK + f'讀到 {len(posts)} 篇貼文')
-    print((OK if got_insights else BAD) + ('成效數字有進來' if got_insights else
-          '貼文讀得到，但沒有成效數字 —— read_insights 沒有真的生效'))
+        print(WARN + f'讀不到貼文清單（{err[:60]}）—— 不影響發文。')
+    else:
+        print(OK + f'現有 {len(d.get("data", []))} 篇貼文')
+
+    print('     真正的發文測試不在這裡做 —— 那會直接發到你的粉專上。')
+    print('     token 存好之後，到後台按一次「一鍵發布」，再去粉專看。')
 
     # ---- 5 · IG ----
     print('\n5 · Instagram')

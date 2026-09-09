@@ -36,21 +36,28 @@ token 存在它的 secret 裡，前端只送「我要看成效」，把數字拿
 
 ### 需要哪些權限
 
-Graph API Explorer 產 token 的時候，這幾個都要勾。
-少勾一個，就少一整欄數字：
+目標是「在 Facebook 和 Instagram 一鍵發文」。讀跟寫是不同的權限，
+發文要的是寫。
+
+**發文必要 —— 少一個就發不出去：**
 
 | 權限 | 沒有它會怎樣 |
 |---|---|
-| `pages_show_list` | 列不出你有哪些粉專，連第一步都過不了 |
-| `pages_read_engagement` | 讀不到貼文內容、讚數、留言數 |
-| `read_insights` | **觸及、曝光、點擊整欄空白** |
-| `instagram_basic` | 讀不到 IG 的貼文 |
-| `instagram_manage_insights` | IG 的觸及空白 |
-| `pages_manage_posts` | 只有要「一鍵發文」才需要；只看數字可以不勾 |
-| `instagram_content_publish` | 同上，只發 IG 才需要 |
+| `pages_show_list` | 拿不到粉專 token，連第一步都過不了 |
+| `pages_manage_posts` | **Facebook 發不出去** |
+| `instagram_basic` | 讀不到 IG 帳號 |
+| `instagram_content_publish` | **Instagram 發不出去** |
 
-> 只想先看數字、暫時不自動發文的話，後面兩個可以不勾。
-> 權限勾越少，之後送審越好過。
+**有更好，沒有也能發文：**
+
+| 權限 | 給你什麼 |
+|---|---|
+| `pages_read_engagement` | 讀得到現有貼文與讚、留言數 |
+| `read_insights` | 觸及、曝光、點擊 |
+| `instagram_manage_insights` | IG 的觸及 |
+
+> 後台的成效那一頁已經拿掉了，所以下面三個現在沒有用途 ——
+> 之後想看數字再回來補，不影響發文。
 
 ---
 
