@@ -329,6 +329,30 @@ const Store = {
     else push('settings', { key, value: String(value), note: '' });
   },
 
+  /* ---------- 客戶備註 ---------- */
+  /* 認養人是從訂單聚合出來的，沒有自己的資料表。備註全部塞在
+     settings 的一列 JSON 裡（key = customer_notes），用 Email 當索引 ——
+     這樣不必改資料表結構，而且跟其他設定一起同步到雲端。
+     筆數是幾十到幾百，一列 JSON 綽綽有餘。 */
+  customerNotes() {
+    try { return JSON.parse(Store.setting('customer_notes', '{}')) || {}; }
+    catch (e) { return {}; }
+  },
+
+  customerNote(email) {
+    return Store.customerNotes()[String(email || '').trim().toLowerCase()] || '';
+  },
+
+  saveCustomerNote(email, text) {
+    const key = String(email || '').trim().toLowerCase();
+    if (!key) return false;
+    const all = Store.customerNotes();
+    const t = String(text || '').trim();
+    if (t) all[key] = t; else delete all[key];
+    Store.saveSetting('customer_notes', JSON.stringify(all));
+    return true;
+  },
+
   /* ---------- 佣金拆帳 ---------- */
 
   /**

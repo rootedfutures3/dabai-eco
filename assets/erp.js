@@ -85,6 +85,9 @@ Store.onReady((info) => {
 
   // 編輯（只有超管看得到按鈕，這裡再擋一次 —— 按鈕藏起來不算權限控制）
   document.addEventListener('click', e => {
+    const n = e.target.closest('[data-cust-note]');
+    if (n) return editCustomerNote(n.dataset.custNote);
+
     const b = e.target.closest('[data-tree-edit],[data-cust-edit],[data-lead-edit],[data-order-edit]');
     if (!b || !Perm.isSuper()) return;
     if (b.dataset.treeEdit)  editTree(b.dataset.treeEdit);
@@ -349,6 +352,20 @@ function editCustomer(email) {
   });
 }
 
+/** 認養人的備註。誰負責跟進、上次談到哪、他在意什麼 —— 寫下來就不會忘。
+    這一項不限超管：業務端誰接洽誰記，鎖起來反而沒人寫。 */
+function editCustomerNote(email) {
+  const db = Store.read();
+  const first = (db.orders || []).find(o => o.email === email);
+  openEditor({
+    title: `備註 · ${first ? first.customer : email}`,
+    sub: '給自己人看的memo：跟進狀況、偏好、要注意的事。認養人看不到。',
+    values: { note: Store.customerNote(email) },
+    fields: [{ k:'note', label:'備註', hint:'留空就是清掉' }],
+    onSave(v) { Store.saveCustomerNote(email, v.note); renderCustomers(); },
+  });
+}
+
 function editLead(id) {
   const l = (Store.read().leads || []).find(x => String(x.id) === String(id));
   if (!l) return;
@@ -562,16 +579,34 @@ function renderCustomers() {
     c.trees.push(o.treeId);
     c.paid += o.paid;
   });
-  const b2c = [...map.values()].map(c => [
-    `<b>${c.name}</b>`, `<span class="dim">${c.email}</span>`, c.phone,
-    c.trees.map(t => `<span class="pill">${t}</span>`).join(' '),
-    num(c.trees.length, n => qty(n) + ' 棵'), num(c.paid),
-    editBtn('cust-edit', c.email),
-  ]);
+  const b2c = [...map.values()].map(c => {
+    const note = Store.customerNote(c.email);
+    return [
+      `<b>${c.name}</b>`,
+      /* 聯絡資料預設遮起來。開會投影、給人看螢幕的時候，
+         認養人的 Email 和電話不該就這樣攤在畫面上。
+         按眼睛才顯示，而且只顯示那一列。 */
+      `<span class="mask" data-mask>
+         <span class="mask-hidden">${maskEmail(c.email)}<br>${maskPhone(c.phone)}</span>
+         <span class="mask-shown" hidden>
+           <a href="mailto:${c.email}">${c.email}</a><br>${c.phone || '—'}
+         </span>
+         <button class="eye" type="button" aria-label="顯示聯絡資料" title="顯示聯絡資料">👁</button>
+       </span>`,
+      c.trees.map(t => `<span class="pill">${t}</span>`).join(' '),
+      num(c.trees.length, n => qty(n) + ' 棵'), num(c.paid),
+      note
+        ? `<span class="memo" title="${String(note).replace(/"/g, '&quot;')}">${note}</span>`
+        : '<span class="dim">—</span>',
+      `<button class="mini-btn" data-cust-note="${c.email}">備註</button>`
+        + editBtn('cust-edit', c.email),
+    ];
+  });
   document.getElementById('t-b2c').innerHTML = table([
-    '認養人', 'Email', '電話', '認養樹',
+    '認養人', '聯絡方式', '認養樹',
     { h:'棵數',     num:true },
-    { h:'累計已付', num:true, sum:true }, ''], b2c);
+    { h:'累計已付', num:true, sum:true },
+    '備註', ''], b2c);
 
   const b2b = db.leads.map(l => [
     l.date, `<b>${l.company}</b>`, l.contact, `<span class="dim">${l.title}</span>`,
@@ -582,6 +617,40 @@ function renderCustomers() {
   document.getElementById('t-b2b').innerHTML = table(
     ['日期', '公司', '窗口', '職稱', 'Email', '需求', '預算', '階段', ''], b2b);
 }
+
+/* 遮一半的聯絡資料。留頭尾是為了還能認出「這是不是我要找的那個人」，
+   但看不出完整的信箱與號碼。 */
+function maskEmail(e) {
+  const v = String(e || '');
+  const at = v.indexOf('@');
+  if (at < 1) return '<span class="dim">—</span>';
+  const user = v.slice(0, at), dom = v.slice(at + 1);
+  const dot = dom.lastIndexOf('.');
+  return `${user[0]}${'•'.repeat(Math.max(user.length - 1, 2))}@`
+       + `${dom[0]}${'•'.repeat(Math.max((dot > 0 ? dot : dom.length) - 1, 2))}`
+       + `${dot > 0 ? dom.slice(dot) : ''}`;
+}
+
+function maskPhone(p) {
+  const v = String(p || '').trim();
+  if (!v) return '<span class="dim">—</span>';
+  return v.slice(0, 4) + ' ' + '•'.repeat(Math.max(v.replace(/\D/g, '').length - 4, 3));
+}
+
+/* 眼睛：只翻開被點的那一列，別的維持遮蔽。 */
+document.addEventListener('click', e => {
+  const btn = e.target.closest('.mask .eye');
+  if (!btn) return;
+  const box = btn.closest('.mask');
+  const hid = box.querySelector('.mask-hidden');
+  const shown = box.querySelector('.mask-shown');
+  const open = hid.hidden;                    // 目前是展開的嗎
+  hid.hidden = !open ? true : false;
+  shown.hidden = open;
+  btn.textContent = open ? '👁' : '🙈';
+  btn.setAttribute('aria-label', open ? '顯示聯絡資料' : '隱藏聯絡資料');
+  btn.title = btn.getAttribute('aria-label');
+});
 
 /* ---------- 樹況回報 ---------- */
 function renderReports() {
