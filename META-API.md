@@ -327,12 +327,17 @@ Cloudflare Workers 是一台「只在被呼叫時才醒來」的小伺服器。
 wrangler 是 Cloudflare 的命令列工具，用來把程式送上去。
 它要 Node.js（`node --version` 有東西就代表有裝）。
 
+**不用安裝** —— 用 `npx` 直接跑就好：
+
 ```bash
-npm i -g wrangler
-wrangler login
+npx wrangler login
 ```
 
-`wrangler login` 會開瀏覽器問你要不要授權，按 **Allow**。
+> `npm i -g wrangler` 也可以，但在 macOS 上通常要 `sudo`，
+> 而且之後版本更新要自己管。`npx` 每次抓當下的版本，沒有這些麻煩。
+> 下面所有指令都是 `npx wrangler ...`。
+
+會開瀏覽器問你要不要授權，按 **Allow**。
 看到 `Successfully logged in` 就好了。
 
 ### 3.4 · 送上去
@@ -342,10 +347,10 @@ wrangler login
 
 ```bash
 cd tools
-wrangler secret put FB_PAGE_ID        # 貼 1211431805397689
-wrangler secret put FB_PAGE_TOKEN < ../.meta-token.txt
-wrangler secret put TANJU_KEY         # 自己隨便打一串
-wrangler deploy
+npx wrangler secret put FB_PAGE_ID        # 貼 1211431805397689
+npx wrangler secret put FB_PAGE_TOKEN < ../.meta-token.txt
+npx wrangler secret put TANJU_KEY         # 自己隨便打一串
+npx wrangler deploy
 ```
 
 - `wrangler secret put` 會停下來等你貼值，貼完按 Enter。
@@ -386,10 +391,10 @@ const PUBLISH_KEY = '你剛剛設的 TANJU_KEY';
 
 | 訊息 | 意思 |
 |---|---|
-| `wrangler: command not found` | `npm i -g wrangler` 沒跑成功，或要重開終端機 |
-| `Authentication error` | `wrangler login` 過期了，再跑一次 |
+| `wrangler: command not found` | 指令前面要加 `npx` |
+| `Authentication error` | `npx wrangler login` 過期了，再跑一次 |
 | `You need to register a workers.dev subdomain` | 回 3.2，去後台取子網域 |
-| `binding ... not found` | secret 少設了一個，`wrangler secret list` 看看有哪些 |
+| `binding ... not found` | secret 少設了一個，`npx wrangler secret list` 看看有哪些 |
 | 前台按鈕還是「複製並開啟」 | `config.js` 沒填、或忘了跑 `./deploy.sh` |
 
 ## 4 · 驗收
