@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 260" role="img"
+     aria-labelledby="t d">
+  <title id="t">Dabai 剖面插畫</title>
+  <desc id="d">泡過熱水軟化後的 Dabai 剖面：薄果皮、乳黃綿密的果肉、中間一顆大果核。依實物比例繪製的插畫，非攝影。</desc>
+
+  <defs>
+    <radialGradient id="cskin" cx="36%" cy="30%" r="76%">
+      <stop offset="0%"  stop-color="#5B3A52"/>
+      <stop offset="45%" stop-color="#31203A"/>
+      <stop offset="100%" stop-color="#150D19"/>
+    </radialGradient>
+    <!-- 軟化後的果肉：乳黃偏綠，質地像酪梨 -->
+    <radialGradient id="flesh" cx="42%" cy="38%" r="72%">
+      <stop offset="0%"  stop-color="#F6EBC8"/>
+      <stop offset="55%" stop-color="#E4D3A0"/>
+      <stop offset="100%" stop-color="#C9B47C"/>
+    </radialGradient>
+    <radialGradient id="stone" cx="40%" cy="34%" r="72%">
+      <stop offset="0%"  stop-color="#9C7A4E"/>
+      <stop offset="100%" stop-color="#5E4426"/>
+    </radialGradient>
+  </defs>
+
+  <ellipse cx="180" cy="238" rx="120" ry="11" fill="#1D1B1B" opacity=".12"/>
+
+  <!-- 左：完整的一顆 -->
+  <g transform="translate(84 128)">
+    <ellipse rx="56" ry="74" fill="url(#cskin)"/>
+    <ellipse cx="-19" cy="-26" rx="18" ry="30" fill="#B98FA8" opacity=".16" transform="rotate(-18)"/>
+    <ellipse cy="-68" rx="15" ry="7.5" fill="#D89B33"/>
+  </g>
+
+  <!-- 右：剖半 -->
+  <g transform="translate(258 128)">
+    <!-- 果皮外緣 -->
+    <ellipse rx="56" ry="74" fill="url(#cskin)"/>
+    <!-- 果肉：留一圈薄薄的皮 -->
+    <ellipse rx="47" ry="65" fill="url(#flesh)"/>
+    <!-- 果核：Dabai 的核很大，佔掉果實不小的體積 -->
+    <ellipse rx="23" ry="38" fill="url(#stone)"/>
+    <!-- 核上的縱向紋路 -->
+    <path d="M0 -34 L0 34" stroke="#463317" stroke-width="2" opacity=".5"/>
+    <path d="M-11 -30 C -14 0, -14 8, -11 30" fill="none" stroke="#463317" stroke-width="1.5" opacity=".35"/>
+    <path d="M11 -30 C 14 0, 14 8, 11 30" fill="none" stroke="#463317" stroke-width="1.5" opacity=".35"/>
+    <ellipse cy="-68" rx="15" ry="7.5" fill="#D89B33"/>
+  </g>
+
+  <!-- 熱水的蒸氣：呼應「先泡 10 分鐘」那一步 -->
+  <g stroke="#C9B47C" stroke-width="3" stroke-linecap="round" fill="none" opacity=".45">
+    <path d="M176 60 C 170 48, 182 42, 176 30"/>
+    <path d="M198 52 C 192 42, 204 36, 198 26"/>
+  </g>
+</svg>

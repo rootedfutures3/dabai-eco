@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 300" role="img"
+     aria-labelledby="t d">
+  <title id="t">Dabai 果實插畫</title>
+  <desc id="d">一顆 Dabai：橢圓、果皮深紫近黑、蒂頭黃橘色。依實物比例與配色繪製的插畫，非攝影。</desc>
+
+  <defs>
+    <!-- 果皮：熟果是深紫近黑，向光面帶一點紫紅 -->
+    <radialGradient id="skin" cx="36%" cy="28%" r="78%">
+      <stop offset="0%"  stop-color="#5B3A52"/>
+      <stop offset="42%" stop-color="#33203A"/>
+      <stop offset="100%" stop-color="#150D1A"/>
+    </radialGradient>
+    <!-- 蒂頭那圈黃橘 -->
+    <radialGradient id="scar" cx="50%" cy="45%" r="60%">
+      <stop offset="0%"  stop-color="#F2C463"/>
+      <stop offset="60%" stop-color="#D89B33"/>
+      <stop offset="100%" stop-color="#A96F22"/>
+    </radialGradient>
+    <linearGradient id="leaf" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%"  stop-color="#4E7A45"/>
+      <stop offset="100%" stop-color="#2F5230"/>
+    </linearGradient>
+  </defs>
+
+  <!-- 落在檯面上的影子 -->
+  <ellipse cx="120" cy="272" rx="62" ry="12" fill="#1D1B1B" opacity=".14"/>
+
+  <!-- 葉片：Dabai 是羽狀複葉，這裡帶一片當構圖 -->
+  <path d="M120 78 C 92 46, 52 40, 34 52 C 52 92, 96 96, 120 78 Z" fill="url(#leaf)"/>
+  <path d="M120 78 C 96 66, 62 56, 34 52" fill="none" stroke="#8FB07E" stroke-width="2" opacity=".5"/>
+
+  <!-- 果身 -->
+  <ellipse cx="120" cy="168" rx="74" ry="96" fill="url(#skin)"/>
+
+  <!-- 表面的一道柔光，讓它讀起來是圓的而不是平的 -->
+  <ellipse cx="94" cy="126" rx="26" ry="42" fill="#B98FA8" opacity=".16"
+           transform="rotate(-18 94 126)"/>
+
+  <!-- 蒂頭：黃橘色的圓盤，是 Dabai 最好認的特徵 -->
+  <ellipse cx="120" cy="76" rx="21" ry="11" fill="url(#scar)"/>
+  <ellipse cx="120" cy="74" rx="9"  ry="4.5" fill="#8A5A1B" opacity=".55"/>
+
+  <!-- 果梗 -->
+  <path d="M120 70 C 120 58, 124 48, 132 40" fill="none"
+        stroke="#6B4A2A" stroke-width="6" stroke-linecap="round"/>
+</svg>

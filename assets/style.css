@@ -3277,3 +3277,30 @@ th[data-dir="desc"] .sort-mark::before{content:"↓"}
 .chart-scroll svg rect.t-1{fill:var(--gold)}
 .chart-scroll svg rect.t-2{fill:var(--taupe-deep)}
 .chart-scroll svg rect.t-3{fill:#2E6B3E}
+
+/* ============================================================
+   插畫
+   ------------------------------------------------------------
+   這些是畫的，不是拍的。網站整份的立場是「每一句主張都要說得出根據」，
+   所以插畫一律標明 —— 拿畫的東西冒充實拍，和誇大碳匯數據是同一種問題。
+   有真實照片的地方（.photo-credit）維持原樣，兩者不混用。
+   ============================================================ */
+.art{margin:0;display:flex;flex-direction:column;gap:10px}
+.art img{width:100%;height:auto;display:block}
+.art figcaption{
+  font-size:.88rem;color:var(--ink-soft);line-height:1.6;
+  display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;
+}
+.art-note{
+  flex:0 0 auto;font-size:.76rem;letter-spacing:.06em;
+  color:var(--taupe-deep);background:var(--cream-dim);
+  border:1px solid var(--line);border-radius:99px;padding:2px 9px;
+}
+/* 插畫本身是向量的，放大不會糊，但放大到兩倍多就變成一張佔版面的大圖，
+   把它旁邊的文字擠掉。按原圖尺寸給上限。 */
+.art-branch{margin-top:28px;max-width:420px}
+.art-wide{max-width:520px;margin:0 auto 34px}
+.art-inline{max-width:170px;margin:0 auto}
+@media(max-width:760px), (pointer:coarse){
+  .art-wide{margin-bottom:26px}
+}

@@ -124,7 +124,7 @@ const L = k => (D[k] || {})[docLang()] ?? (D[k] || {}).zh ?? '';
 const dv = v => (typeof I18N !== 'undefined' && v) ? I18N.translate(String(v)) : v;
 
 const ORG = {
-  name:  'ROOTED FUTURES 根築新局',
+  name:  'TANJU',
   sub:   'Social Enterprise · Song, Sarawak, Malaysia',
   email: 'hello@rootedfutures.example',
 };
