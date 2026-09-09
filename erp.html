@@ -5,20 +5,20 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>TANJU Portal（示範）</title>
 <meta name="robots" content="noindex">
-<link rel="icon" type="image/png" sizes="32x32" href="assets/img/favicon-32.png?v=312de56d">
-<link rel="stylesheet" href="assets/style.css?v=312de56d">
-<script src="assets/config.js?v=312de56d" defer></script>
-<script src="assets/perm.js?v=312de56d" defer></script>
-<script src="assets/auth-sb.js?v=312de56d" defer></script>
-<script src="assets/store.js?v=312de56d" defer></script>
-<script src="assets/site.js?v=312de56d" defer></script>
-<script src="assets/docs.js?v=312de56d" defer></script>
-<script src="assets/erp.js?v=312de56d" defer></script>
-<script src="assets/social.js?v=312de56d" defer></script>
-<script src="assets/lang/ms.js?v=312de56d" defer></script>
-<script src="assets/lang/en.js?v=312de56d" defer></script>
-<script src="assets/lang/iba.js?v=312de56d" defer></script>
-<script src="assets/i18n.js?v=312de56d" defer></script>
+<link rel="icon" type="image/png" sizes="32x32" href="assets/img/favicon-32.png?v=d20e190e">
+<link rel="stylesheet" href="assets/style.css?v=d20e190e">
+<script src="assets/config.js?v=d20e190e" defer></script>
+<script src="assets/perm.js?v=d20e190e" defer></script>
+<script src="assets/auth-sb.js?v=d20e190e" defer></script>
+<script src="assets/store.js?v=d20e190e" defer></script>
+<script src="assets/site.js?v=d20e190e" defer></script>
+<script src="assets/docs.js?v=d20e190e" defer></script>
+<script src="assets/erp.js?v=d20e190e" defer></script>
+<script src="assets/social.js?v=d20e190e" defer></script>
+<script src="assets/lang/ms.js?v=d20e190e" defer></script>
+<script src="assets/lang/en.js?v=d20e190e" defer></script>
+<script src="assets/lang/iba.js?v=d20e190e" defer></script>
+<script src="assets/i18n.js?v=d20e190e" defer></script>
 </head>
 <body class="admin">
 
@@ -27,7 +27,7 @@
   <!-- ============ 左側功能列 ============ -->
   <aside class="side" id="side">
     <a class="side-brand" href="index.html">
-      <img src="assets/img/logo.png?v=312de56d" alt="" width="38" height="38">
+      <img src="assets/img/logo.png?v=d20e190e" alt="" width="38" height="38">
       <span><b>TANJU</b><i>ROOTED FUTURES</i></span>
     </a>
 
@@ -91,6 +91,33 @@
 
       <!-- 總覽拆成三個視角。一頁塞下財務、社群、樹況三種東西，
            哪一個都看不清楚；分開之後每一頁只回答一個問題。 -->
+      <details class="fold goals-set">
+        <summary><h4 class="sub-h">本月目標 <small>Monthly targets</small></h4></summary>
+        <p class="panel-note" style="margin-top:0">
+          設定之後，下面三個視角各自會顯示進度與「照這個速度來不來得及」。
+          留 0 就是不設目標，那一項不會出現進度條。
+        </p>
+        <div class="rate-box">
+          <div class="fld">
+            <label for="goal-revenue">平台收入（RM）</label>
+            <input id="goal-revenue" type="number" min="0" step="10">
+          </div>
+          <div class="fld">
+            <label for="goal-orders">認養訂單（筆）</label>
+            <input id="goal-orders" type="number" min="0" step="1">
+          </div>
+          <div class="fld">
+            <label for="goal-posts">社群貼文（篇）</label>
+            <input id="goal-posts" type="number" min="0" step="1">
+          </div>
+          <div class="fld">
+            <label for="goal-reports">現場回報（筆）</label>
+            <input id="goal-reports" type="number" min="0" step="1">
+          </div>
+          <button class="btn btn-gold" id="goal-save" type="button" data-perm-disable="edit.settings">儲存目標</button>
+        </div>
+      </details>
+
       <div class="ov-switch" id="ov-switch" role="tablist">
         <button class="ovs on" data-ov="finance" role="tab" aria-selected="true">財務</button>
         <button class="ovs"    data-ov="social"  role="tab" aria-selected="false">社群</button>
@@ -99,6 +126,8 @@
 
       <!-- ── 財務 ── -->
       <section class="ov-view on" data-ov="finance">
+        <div class="goals" id="goals-finance"></div>
+
         <h4 class="sub-h">本月表現 <small>This Month</small></h4>
         <div class="big-kpis" id="month-kpis"></div>
 
@@ -124,6 +153,8 @@
 
       <!-- ── 社群 ── -->
       <section class="ov-view" data-ov="social">
+        <div class="goals" id="goals-social"></div>
+
         <h4 class="sub-h">發文概況 <small>Publishing</small></h4>
         <div class="kpi-row" id="social-kpis"></div>
 
@@ -139,6 +170,8 @@
 
       <!-- ── 樹況 ── -->
       <section class="ov-view" data-ov="trees">
+        <div class="goals" id="goals-trees"></div>
+
         <h4 class="sub-h">樹體概況 <small>Orchard</small></h4>
         <div class="kpi-row" id="tree-kpis"></div>
 
@@ -155,6 +188,29 @@
 
     <div class="tab-pane" data-panel="orders">
       <h3 class="panel-h">認養訂單與預付款 <small>Orders &amp; Unearned Revenue</small></h3>
+
+      <div class="kpi-row" id="order-kpis"></div>
+
+      <!-- 狀態對照。操作的人最常問的就是「已付訂金」和「已付全額」差在哪，
+           寫成一整段沒人會看，做成看得懂的對照卡比較實際。 -->
+      <div class="status-key">
+        <div>
+          <span class="badge-wait">已付訂金</span>
+          <b>收了一部分</b>
+          <span>認養人先付了訂金鎖住這棵樹，尾款還沒收。這筆會出現在「待收」和發票的逾期名單裡。</span>
+        </div>
+        <div>
+          <span class="badge-ok">已付全額</span>
+          <b>收齊了</b>
+          <span>合約金額全數收到，待收是 0。可以安排撥款給果農。</span>
+        </div>
+        <div>
+          <span class="badge-wait">待付款</span>
+          <b>還沒收到錢</b>
+          <span>訂單成立但一毛都還沒進來。超過 14 天會在發票頁標成逾期。</span>
+        </div>
+      </div>
+
       <div class="table-scroll"><table id="t-orders"></table></div>
     </div>
 
@@ -439,7 +495,15 @@
 
     <div class="tab-pane" data-panel="wages">
       <h3 class="panel-h">農民／摘果者／溝通者 收益紀錄 <small>Payouts</small></h3>
-      <div class="table-scroll"><table id="t-wages"></table></div>
+
+      <div class="kpi-row" id="wage-kpis"></div>
+
+      <div class="btn-row" style="margin-bottom:20px">
+        <button class="btn btn-outline" id="wage-print" type="button">列印 / 存成 PDF</button>
+        <button class="btn btn-outline" id="wage-csv" type="button">匯出 CSV</button>
+      </div>
+
+      <div class="table-scroll" id="wage-sheet"><table id="t-wages"></table></div>
     </div>
 
     </div>
@@ -448,7 +512,7 @@
 
 <footer class="admin-foot">
   <div class="foot-grid">
-    <div class="foot-brand"><img src="assets/img/logo.png?v=312de56d" alt="TANJU · ROOTED FUTURES 根築新局" width="56" height="56"><div><b>TANJU</b><br>ROOTED FUTURES<span class="logo-zh"> 根築新局</span><br>Social Enterprise · Song, Sarawak</div></div>
+    <div class="foot-brand"><img src="assets/img/logo.png?v=d20e190e" alt="TANJU · ROOTED FUTURES 根築新局" width="56" height="56"><div><b>TANJU</b><br>ROOTED FUTURES<span class="logo-zh"> 根築新局</span><br>Social Enterprise · Song, Sarawak</div></div>
     <div class="foot-links">
       <a href="index.html">回前台</a>
       <a href="erp.html">TANJU Portal</a>

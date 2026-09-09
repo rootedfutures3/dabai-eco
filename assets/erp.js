@@ -33,6 +33,8 @@ Store.onReady((info) => {
   });
 
   step('總覽切換', initOverviewSwitch);
+  step('本月目標', initGoals);
+  step('工資工具', initWageTools);
   document.getElementById('inv-filter')?.addEventListener('change', renderInvoices);
 
   // 手機：漢堡開關側邊欄
@@ -550,6 +552,8 @@ function editMemo(type, id) {
 /* ---------- 訂單 ---------- */
 function renderOrders() {
   const db = Store.read();
+  drawOrderKpis(db.orders || []);
+
   /* 欄位刻意併過：訂單編號和日期是同一件事、姓名和 Email 是同一個人、
      付款方式和狀態都在講這筆錢收到哪了。11 欄併成 8 欄之後表格才塞得進
      內容區 —— 併之前自然寬度 1425px、容器只有 1127px，右邊兩欄被切掉，
@@ -656,6 +660,26 @@ function renderInvoices() {
     { h:'已收',     num:true, sum:true },
     { h:'未收',     num:true, sum:true },
     '狀態', ''], rows);
+}
+
+/** 訂單頁上方的數字。收款率是「已收 ÷ 合約總額」—— 一眼看得出有多少錢
+    是簽了但還沒進帳的。 */
+function drawOrderKpis(orders) {
+  const box = document.getElementById('order-kpis');
+  if (!box) return;
+  const contract = orders.reduce((s, o) => s + (Number(o.amount) || 0), 0);
+  const paid     = orders.reduce((s, o) => s + (Number(o.paid) || 0), 0);
+  const owed     = contract - paid;
+  const rate     = contract ? Math.round(paid / contract * 100) : 0;
+  const full     = orders.filter(o => (Number(o.amount) || 0) - (Number(o.paid) || 0) <= 0.005).length;
+
+  box.innerHTML = [
+    ['認養訂單', qty(orders.length) + ' 筆', `已收齊 ${qty(full)} 筆`],
+    ['合約總額', money(contract), '已簽訂的全部金額'],
+    ['已收',     money(paid),     `收款率 ${rate}%`],
+    ['待收',     money(owed),     owed > 0.005 ? '尚未進帳' : '全部收齊'],
+  ].map(([k, v, sub]) =>
+    `<div class="kpi-card"><span class="k">${k}</span><b>${v}</b><small>${sub}</small></div>`).join('');
 }
 
 /* ---------- 樹體資產 ---------- */
@@ -801,6 +825,8 @@ function renderReports() {
 /* ---------- 工資 ---------- */
 function renderWages() {
   const db = Store.read();
+  drawWageKpis(db.wages || []);
+
   const rows = db.wages.map(w => [
     w.month, `<b>${w.person}</b>`, w.role,
     num(w.base), num(w.bonus), num(w.base + w.bonus), `<span class="dim">${w.note}</span>`,
@@ -811,6 +837,59 @@ function renderWages() {
     { h:'分潤／獎金', num:true, sum:true },
     { h:'合計',      num:true, sum:true },
     '備註'], rows);
+}
+
+/** 工資頁上方的數字。 */
+function drawWageKpis(wages) {
+  const box = document.getElementById('wage-kpis');
+  if (!box) return;
+  const base  = wages.reduce((s, w) => s + (Number(w.base) || 0), 0);
+  const bonus = wages.reduce((s, w) => s + (Number(w.bonus) || 0), 0);
+  const people = new Set(wages.map(w => w.person)).size;
+  box.innerHTML = [
+    ['發放筆數', qty(wages.length) + ' 筆', `${qty(people)} 個對象`],
+    ['基本',     money(base),  '工資與津貼'],
+    ['分潤／獎金', money(bonus), '依產出計'],
+    ['合計',     money(base + bonus), '實際發出去的錢'],
+  ].map(([k, v, sub]) =>
+    `<div class="kpi-card"><span class="k">${k}</span><b>${v}</b><small>${sub}</small></div>`).join('');
+}
+
+/* 列印：只留這張表，加一行抬頭與日期，簽收時看得出是哪一份。 */
+function initWageTools() {
+  const btn = document.getElementById('wage-print');
+  if (!btn || btn.dataset.bound) return;
+  btn.dataset.bound = '1';
+
+  btn.addEventListener('click', () => {
+    document.body.classList.add('printing-wages');
+    const head = document.createElement('div');
+    head.className = 'print-head';
+    head.innerHTML = `<b>TANJU · 收益與工資</b>`
+      + `<span>列印於 ${new Date().toISOString().slice(0, 10)}</span>`;
+    document.getElementById('wage-sheet').prepend(head);
+    window.print();
+    /* 印完（或取消）之後把加上去的東西收掉。afterprint 在部分瀏覽器
+       不會觸發，所以也掛一個保險的 timeout。 */
+    const clean = () => { head.remove(); document.body.classList.remove('printing-wages'); };
+    window.addEventListener('afterprint', clean, { once: true });
+    setTimeout(clean, 3000);
+  });
+
+  document.getElementById('wage-csv')?.addEventListener('click', () => {
+    const rows = (Store.read().wages || []).map(w =>
+      [w.month, w.person, w.role, w.base, w.bonus,
+       (Number(w.base) || 0) + (Number(w.bonus) || 0), w.note || '']);
+    const csv = ['月份,對象,身分,基本,分潤獎金,合計,備註',
+      ...rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(','))].join('\n');
+    /* BOM 不能省 —— 沒有的話 Excel 開中文會變亂碼 */
+    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `TANJU-收益與工資-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+  });
 }
 
 /* ============================================================
@@ -1110,6 +1189,100 @@ function renderOverview() {
   drawAR();
   drawSocialOverview();
   drawTreeOverview();
+  drawGoals('goals-finance', ['revenue', 'orders']);
+  drawGoals('goals-social',  ['posts']);
+  drawGoals('goals-trees',   ['reports']);
+}
+
+/* ============================================================
+   本月目標
+   ------------------------------------------------------------
+   「督促與提醒」的重點不是顯示達成率，而是回答一個問題：
+   照現在這個速度，月底來不來得及？
+
+   所以每一條進度都拿「已經過了幾天」當基準線比：
+   月中做到 50% 是準時，做到 20% 是落後 —— 光看 20% 看不出這件事。
+   ============================================================ */
+const GOALS = [
+  { key:'revenue', label:'平台收入', get:m => m.revenue, fmt:money },
+  { key:'orders',  label:'認養訂單', get:m => m.orders,  fmt:n => qty(Math.round(n)) + ' 筆' },
+  { key:'posts',   label:'社群貼文', get:m => m.posts,   fmt:n => qty(Math.round(n)) + ' 篇' },
+  { key:'reports', label:'現場回報', get:m => m.reports, fmt:n => qty(Math.round(n)) + ' 筆' },
+];
+
+/** 這個月過了幾成。用來判斷進度是超前還是落後。 */
+function monthElapsed() {
+  const now = new Date();
+  const days = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+  return { pct: now.getDate() / days, left: days - now.getDate() };
+}
+
+function drawGoals(boxId, keys) {
+  const box = document.getElementById(boxId);
+  if (!box) return;
+
+  const cur = monthStats(new Date().toISOString().slice(0, 7));
+  const { pct: elapsed, left } = monthElapsed();
+
+  const rows = keys.map(k => {
+    const g = GOALS.find(x => x.key === k);
+    const target = Store.settingNum('goal_' + k, 0);
+    if (!target) return '';                       // 沒設目標就不佔版面
+
+    const now  = g.get(cur) || 0;
+    const done = Math.min(now / target, 1);
+    const gap  = Math.max(target - now, 0);
+
+    /* 三種狀態：達標、跟得上、落後。
+       「跟得上」的判準是進度不落後於時間 —— 月底才衝刺往往來不及。 */
+    const state = now >= target ? 'hit' : (done >= elapsed ? 'ok' : 'behind');
+    const word  = { hit:'已達標', ok:'進度正常', behind:'落後' }[state];
+    const note  = state === 'hit'
+      ? `超出 ${g.fmt(now - target)}`
+      : `還差 ${g.fmt(gap)}，剩 ${qty(left)} 天`;
+
+    return `
+      <div class="goal g-${state}">
+        <div class="goal-top">
+          <b>${g.label}</b>
+          <span class="goal-state">${word}</span>
+        </div>
+        <div class="goal-bar" role="img"
+             aria-label="${g.label} 達成 ${Math.round(done * 100)}%">
+          <i style="width:${(done * 100).toFixed(1)}%"></i>
+          <u style="left:${(elapsed * 100).toFixed(1)}%" title="今天在這裡"></u>
+        </div>
+        <div class="goal-foot">
+          <span>${g.fmt(now)} / ${g.fmt(target)}</span>
+          <span class="goal-note">${note}</span>
+        </div>
+      </div>`;
+  }).join('');
+
+  box.innerHTML = rows;
+  box.hidden = !rows;
+}
+
+/** 目標設定的讀寫。 */
+function initGoals() {
+  const save = document.getElementById('goal-save');
+  if (!save) return;
+  GOALS.forEach(g => {
+    const el = document.getElementById('goal-' + g.key);
+    if (el) el.value = Store.settingNum('goal_' + g.key, 0);
+  });
+  save.addEventListener('click', () => {
+    if (!Perm.can('edit.settings')) return;
+    GOALS.forEach(g => {
+      const el = document.getElementById('goal-' + g.key);
+      if (!el) return;
+      const n = Math.max(0, parseFloat(el.value) || 0);
+      Store.saveSetting('goal_' + g.key, n);
+    });
+    renderOverview();
+    save.textContent = '已儲存';
+    setTimeout(() => { save.textContent = '儲存目標'; }, 1500);
+  });
 }
 
 /** 總覽的三個視角：財務／社群／樹況。一次只顯示一個。 */

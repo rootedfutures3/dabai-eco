@@ -3304,3 +3304,95 @@ th[data-dir="desc"] .sort-mark::before{content:"↓"}
 @media(max-width:760px), (pointer:coarse){
   .art-wide{margin-bottom:26px}
 }
+
+/* 狀態對照卡。三種付款狀態各一格，操作的人不必去問「這兩個差在哪」。 */
+.status-key{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(min(260px,100%),1fr));
+  gap:1px;background:var(--line);border:1px solid var(--line);
+  border-radius:var(--radius);overflow:hidden;margin:0 0 26px;
+}
+.status-key > div{
+  background:var(--snow);padding:15px 18px;
+  display:grid;grid-template-columns:auto 1fr;gap:4px 10px;align-items:start;
+}
+.status-key > div > span:first-child{grid-row:1 / span 2;align-self:center}
+.status-key b{font-size:.98rem}
+.status-key > div > span:last-child{
+  grid-column:2;color:var(--ink-soft);font-size:.89rem;line-height:1.55;
+}
+
+/* ============================================================
+   本月目標
+   ------------------------------------------------------------
+   進度條上那一條豎線是「今天走到哪」。有它才看得出來
+   40% 到底是超前還是落後 —— 光看百分比是判斷不了的。
+   ============================================================ */
+.goals{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(min(280px,100%),1fr));
+  gap:14px;margin:0 0 26px;
+}
+.goals:empty{display:none}
+.goal{
+  background:var(--snow);border:1px solid var(--line);
+  border-left:3px solid var(--taupe);
+  border-radius:var(--radius);padding:15px 18px;
+}
+.goal-top{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
+.goal-top b{font-size:1rem}
+.goal-state{
+  font-size:.78rem;font-weight:700;letter-spacing:.04em;
+  padding:2px 10px;border-radius:99px;white-space:nowrap;
+}
+.goal-bar{
+  position:relative;height:9px;margin:11px 0 9px;
+  background:var(--almond-soft);border-radius:99px;overflow:hidden;
+}
+.goal-bar i{display:block;height:100%;border-radius:99px;transition:width .4s ease}
+/* 今天的位置。overflow:hidden 會裁掉，所以豎線畫在條子裡面 */
+.goal-bar u{
+  position:absolute;top:-3px;bottom:-3px;width:2px;
+  background:var(--ink);opacity:.45;text-decoration:none;
+}
+.goal-foot{
+  display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;
+  font-size:.88rem;color:var(--ink-soft);font-variant-numeric:tabular-nums;
+}
+.goal-note{font-weight:600}
+
+.g-hit{border-left-color:#2E6B3E}
+.g-hit .goal-state{background:#E0EADE;color:#2E6B3E}
+.g-hit .goal-bar i{background:#2E6B3E}
+.g-hit .goal-note{color:#2E6B3E}
+
+.g-ok{border-left-color:var(--gold-deep)}
+.g-ok .goal-state{background:var(--almond-soft);color:var(--gold-deep)}
+.g-ok .goal-bar i{background:var(--gold-deep)}
+
+.g-behind{border-left-color:var(--red)}
+.g-behind .goal-state{background:rgba(148,44,44,.12);color:var(--red)}
+.g-behind .goal-bar i{background:var(--red)}
+.g-behind .goal-note{color:var(--red)}
+
+.goals-set .rate-box{margin-bottom:8px}
+
+/* 列印工資表：只留表格本身，其餘全部收掉。 */
+.print-head{display:none}
+@media print{
+  body.printing-wages *{visibility:hidden}
+  body.printing-wages #wage-sheet,
+  body.printing-wages #wage-sheet *{visibility:visible}
+  body.printing-wages #wage-sheet{
+    position:absolute;left:0;top:0;width:100%;overflow:visible;
+  }
+  body.printing-wages .print-head{
+    display:flex;justify-content:space-between;align-items:baseline;
+    padding-bottom:10px;margin-bottom:14px;border-bottom:2px solid #000;
+  }
+  body.printing-wages .print-head b{font-size:1.1rem}
+  body.printing-wages .print-head span{font-size:.85rem;color:#555}
+  /* 列印時不需要排序選單，也不要卡片式排版 */
+  body.printing-wages .tbl-sort{display:none}
+  body.printing-wages #wage-sheet table{min-width:0}
+  body.printing-wages #wage-sheet thead{display:table-header-group}
+  body.printing-wages #wage-sheet tr{page-break-inside:avoid}
+}
