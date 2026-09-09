@@ -88,12 +88,69 @@ Graph API Explorer 直接給你的那把，**一小時就過期**。
 
 ### 第一步 · 拿使用者 token
 
-1. 開 <https://developers.facebook.com/tools/explorer/>
-2. 右上角 **Meta App** 選你剛開的那個
-3. **User or Page** 選 `User token`
-4. **Permissions** 把上面表格裡要的權限全部加進去
-5. 按 **Generate Access Token**，照著授權
-6. 複製那一串（這是短效的，等一下要換掉）
+開 <https://developers.facebook.com/tools/explorer/>。
+所有東西都在**右邊那一欄**，由上往下填。
+
+> Meta 每隔一陣子會改這個畫面的排版和字樣，
+> 下面照功能講，你的畫面字可能不完全一樣，位置大致相同。
+
+**1 · Meta App**（最上面的下拉）
+選你剛開的那個 App。選錯就白做 —— 產出來的 token 綁在 App 上。
+
+**2 · User or Page**
+選 **User Token**（使用者權杖）。
+
+> 這裡也看得到 Page Access Token 的選項，會很想直接選。
+> 但那樣拿到的粉專 token 跟著使用者 token 的壽命走，一樣一小時死。
+> 順序不能顛倒：先拿使用者 token → 換長效 → 再換粉專 token。
+
+**3 · Permissions**（權限）
+按 **Add a Permission** / 權限搜尋框，一個一個加：
+
+```
+pages_show_list
+pages_read_engagement
+read_insights
+instagram_basic
+instagram_manage_insights
+```
+
+要一鍵發文再加 `pages_manage_posts`、`instagram_content_publish`。
+
+> 有些權限旁邊會標「需要進階存取權」或灰掉點不下去 ——
+> 那是卡在企業驗證，不是你少按了什麼。App 後台首頁會有一條
+> 黃色提示講缺什麼。開發模式下、對你自己的粉專，
+> 標準存取權（Standard Access）就夠了。
+
+**4 · Generate Access Token**
+
+按下去會跳出 Facebook 的授權視窗。**真正會出錯的地方全在這裡。**
+
+- 會問你**要讓這個 App 用哪些粉專** ——
+  一定要勾到 ROOTED FUTURES（`61594043096404`）。
+  漏勾的話 token 產得出來，但讀不到這個粉專的任何東西。
+- 接著問**允許這個 App 做什麼**，一排開關 ——
+  **每一個都要開著**。關掉任何一個，那個權限不會出現在 token 裡，
+  而且不會報錯，只會在後台看到某一欄永遠空白。
+- 如果之前授權過，這個視窗可能只問新增的那幾項，
+  甚至直接跳過。跳過而權限又不對的話，到 Facebook →
+  設定與隱私 → 設定 → 商業整合，把這個 App 移除，再按一次 Generate。
+
+**5 · 當場驗，不要等到部署完才發現**
+
+token 出來之後，先在 Explorer 上面那個網址列打這三個，各按一次 Submit：
+
+| 打這個 | 應該看到 |
+|---|---|
+| `me/accounts` | 列出你的粉專，裡面有 `61594043096404` |
+| `61594043096404?fields=instagram_business_account` | 一個 `id`，代表 IG 有連上 |
+| `61594043096404/posts?fields=id,message,insights.metric(post_impressions_unique,post_clicks)` | 貼文清單，每篇底下有 `insights` |
+
+**第三個是關鍵**。它過了才代表 `read_insights` 真的在 token 裡。
+回 `(#200)` 或 `(#100)` 就是沒有 —— 回第 3 步重新勾、重新授權，
+不要往下做。
+
+**6 · 複製那一串**（短效的，一小時，等一下要換掉）
 
 ### 第二步 · 換成長效使用者 token
 
