@@ -76,7 +76,10 @@ Store.onReady(() => {
         .forEach(a => a.remove());
     }
 
-    mountPlatformSwitch(perm);
+    /* 這一步失敗不該把人擋在門外。踩過一次：函式定義在別的檔案、
+       這一頁沒載入，整個閘門就卡在「請先登入」，而使用者其實登入了。 */
+    try { mountPlatformSwitch(perm); }
+    catch (e) { console.error('[TANJU] 平台切換沒畫出來', e); }
 
     const roleEl = document.getElementById('who-role');
     if (roleEl) {

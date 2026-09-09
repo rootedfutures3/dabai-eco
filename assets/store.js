@@ -586,10 +586,20 @@ const MAP = {
     in:  r => ({ id:r.id, treeId:r.tree_id, from:r.from_who, to:r.to_who, at:r.at, text:r.text }),
   },
   users: {
+    /* approved / joined / via 是審核用的。
+       這三個一定要送上雲端 —— 「通過了沒有」只存在本機的話，
+       對方換一台裝置登入讀到的是雲端那份，你按幾次通過都沒用。
+       欄位要先跑 supabase-migrate-approval.sql 建起來。 */
     out: u => ({ u:u.u, pass:u.pass, role:u.role, perm:u.perm || null, name:u.name,
-                 org:u.org, phone:u.phone, email:u.email, area:u.area }),
+                 org:u.org, phone:u.phone, email:u.email, area:u.area,
+                 approved:u.approved === false ? false : true,
+                 joined:u.joined || null, via:u.via || null }),
+    /* 雲端沒有 approved（欄位還沒建）或是 null 時一律當已通過，
+       不然既有帳號會全部被鎖在外面。 */
     in:  r => ({ u:r.u, pass:r.pass, role:r.role, perm:r.perm, name:r.name,
-                 org:r.org, phone:r.phone, email:r.email, area:r.area }),
+                 org:r.org, phone:r.phone, email:r.email, area:r.area,
+                 approved: r.approved === false ? false : true,
+                 joined:r.joined, via:r.via }),
   },
   settings: {
     out: x => ({ key:x.key, value:x.value, note:x.note }),

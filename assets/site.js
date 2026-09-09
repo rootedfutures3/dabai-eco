@@ -585,3 +585,35 @@ function initTreeModal(grid) {
     if (e.key === 'Escape' && modal.classList.contains('open')) close();
   });
 }
+
+/* ============================================================
+   平台切換
+   ------------------------------------------------------------
+   TANJU Portal 與溝通者平台是兩個獨立的系統，但同一個人
+   （管理端）常常兩邊都要看。不該為了換一邊而登出再登入 ——
+   session 本來就是共用的，只要換頁就好。
+
+   只有兩邊都進得去的角色才看得到這個切換器；
+   溝通者與果農看到的是單純的標題，不是一顆點了會被彈回來的按鈕。
+   ============================================================ */
+function mountPlatformSwitch(perm) {
+  const box = document.getElementById('plat-switch');
+  if (!box) return;
+
+  const canPortal = ['super', 'admin', 'finance', 'editor'].includes(perm);
+  if (!canPortal) { box.hidden = true; return; }
+  box.hidden = false;
+
+  const here = location.pathname.split('/').pop() || 'erp.html';
+  const tabs = [
+    ['erp.html', '📊', 'TANJU Portal'],
+    ['coordinator.html', '📍', '溝通者平台'],
+  ];
+
+  box.innerHTML = tabs.map(([href, icon, label]) => {
+    const on = here === href;
+    return on
+      ? `<span class="ps on"><span aria-hidden="true">${icon}</span>${label}</span>`
+      : `<a class="ps" href="${href}"><span aria-hidden="true">${icon}</span>${label}</a>`;
+  }).join('');
+}
