@@ -1,0 +1,75 @@
+# ============================================================
+# 每天叫醒 Supabase
+# ------------------------------------------------------------
+# Supabase 免費專案閒置約七天就會自動暫停。暫停之後連 DNS 記錄
+# 都會收掉，網站讀不到雲端資料，會靜默退回瀏覽器的本機儲存 ——
+# 前台看起來一切正常，但每個人看到的都是自己那一份，
+# 溝通者在果園送出的回報也不會同步到任何地方。
+#
+# 這個排程每天打一次 REST API，讓專案一直算「有在用」。
+# 順便當監測用：連不上就讓這個 workflow 失敗，GitHub 會寄信給你。
+#
+# 網址與金鑰直接從 assets/config.js 讀，不另外抄一份 ——
+# 之後換專案只要改 config.js，這裡自動跟著走。
+# 那把是 publishable key，本來就設計成公開的，
+# 而且早就在 config.js 裡跟著網站一起發佈了。
+# ============================================================
+
+name: Keep Supabase awake
+
+on:
+  schedule:
+    # 每天 01:20 UTC ＝ 砂拉越時間早上 09:20。
+    # 挑一個不是整點的分鐘 —— GitHub 的排程在整點特別壅塞，容易被延後。
+    - cron: '20 1 * * *'
+  workflow_dispatch:        # 也可以到 Actions 頁面手動按一下
+
+permissions:
+  contents: read
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 從 config.js 讀出專案網址與金鑰
+        id: cfg
+        run: |
+          URL=$(grep -oE "SUPABASE_URL *= *'[^']+'" assets/config.js | sed "s/.*'\(.*\)'/\1/")
+          KEY=$(grep -oE "SUPABASE_ANON_KEY *= *'[^']+'" assets/config.js | sed "s/.*'\(.*\)'/\1/")
+          if [ -z "$URL" ] || [ -z "$KEY" ]; then
+            echo "::error::config.js 裡找不到 SUPABASE_URL 或 SUPABASE_ANON_KEY"
+            exit 1
+          fi
+          echo "url=$URL" >> "$GITHUB_OUTPUT"
+          echo "::add-mask::$KEY"
+          echo "key=$KEY" >> "$GITHUB_OUTPUT"
+          echo "目標：$URL"
+
+      - name: 打一次 REST API
+        env:
+          URL: ${{ steps.cfg.outputs.url }}
+          KEY: ${{ steps.cfg.outputs.key }}
+        run: |
+          # 專案剛從暫停狀態被喚醒時會先回 521／503，要給它時間起來。
+          # 每次間隔拉長，最多等大約四分鐘。
+          for attempt in 1 2 3 4 5 6; do
+            CODE=$(curl -s -o /tmp/body -w '%{http_code}' -m 30 \
+              "$URL/rest/v1/trees?select=id&limit=1" \
+              -H "apikey: $KEY" -H "Authorization: Bearer $KEY" || echo 000)
+
+            if [ "$CODE" = "200" ]; then
+              echo "✅ 第 $attempt 次就通了（HTTP 200）"
+              head -c 200 /tmp/body; echo
+              exit 0
+            fi
+
+            echo "第 $attempt 次：HTTP $CODE，等 ${attempt}0 秒再試"
+            head -c 300 /tmp/body 2>/dev/null | tr -d '\n' | cut -c1-300; echo
+            sleep "${attempt}0"
+          done
+
+          echo "::error::Supabase 連不上（最後一次 HTTP $CODE）。"
+          echo "::error::到 https://supabase.com/dashboard 看專案是不是又被暫停了。"
+          exit 1
