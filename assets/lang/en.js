@@ -2445,4 +2445,7 @@ window.LANG_EN = {
   '這 {n} 棵超過 {n} 天沒有回報了。點一下直接帶進下面的回報表單。': '{n} trees have gone more than {n} days without a report. Tap one to load it into the form below.',
   '歡迎回來，{a}': 'Welcome back, {a}',
   '{n} 張發票': '{n} invoices',
+  '第一次登入會自動建立帳號，角色由管理員指派。': 'Your account is created on first sign-in; an administrator assigns your role.',
+  '登入後由管理員指派你的角色。': 'An administrator assigns your role after you sign in.',
+  'Google 登入還沒設定好 —— 到 Google Cloud 建一個 OAuth 用戶端，把 Client ID 填進 assets/config.js 的 GOOGLE_CLIENT_ID，並把 AUTH_MODE 改成 google。步驟見 GOOGLE-LOGIN.md。': 'Google sign-in is not set up yet. Create an OAuth client in Google Cloud, put the Client ID into GOOGLE_CLIENT_ID in assets/config.js, and set AUTH_MODE to google. See GOOGLE-LOGIN.md.',
 };

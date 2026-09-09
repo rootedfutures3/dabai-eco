@@ -55,9 +55,28 @@ const PUBLISH_ENDPOINT = '';
    'demo'     —— 示範模式。帳號密碼是明文，存在瀏覽器裡，
                  權限只是前端把按鈕藏起來。適合展示流程，不能拿來營運。
 
+   'google'   —— 用 Google 帳號登入，不需要後端也不需要 Supabase。
+                 走 Google Identity Services：前端只拿得到 Client ID
+                 （它本來就是公開的，沒有 secret），Google 回一張簽好名的
+                 ID token，裡面有 Email 與姓名。
+
+                 老實說它擋不住懂技術的人：沒有伺服器就沒辦法驗證那張
+                 token 的簽章，所以這是「身分」不是「權限強制」。
+                 但比示範模式好 —— 我們這邊完全不保管密碼。
+                 等 Supabase 回來之後改成 'supabase'，權限才會由資料庫強制執行。
+
+                 設定：把 Google Cloud 的 Client ID 填進下面的
+                 GOOGLE_CLIENT_ID，然後把這一行改成 'google'。
+
    改這一行就會切換，登入頁上會清楚標示目前是哪一種。
    ------------------------------------------------------------ */
-const AUTH_MODE = 'demo';
+const AUTH_MODE = 'google';
+
+/* Google Identity Services 的 Client ID。
+   長得像 1234567890-abcdefg.apps.googleusercontent.com
+   這串是公開的，放在前端沒有問題 —— Google 是靠「授權的來源網域」
+   來限制誰能用它，不是靠保密。 */
+const GOOGLE_CLIENT_ID = '';
 
 /* ------------------------------------------------------------
    發布後端的通行碼

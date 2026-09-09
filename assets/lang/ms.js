@@ -2446,4 +2446,7 @@ window.LANG_MS = {
   '這 {n} 棵超過 {n} 天沒有回報了。點一下直接帶進下面的回報表單。': '{n} pokok telah lebih {n} hari tanpa laporan. Ketik satu untuk memuatkannya ke dalam borang di bawah.',
   '歡迎回來，{a}': 'Selamat kembali, {a}',
   '{n} 張發票': '{n} invois',
+  '第一次登入會自動建立帳號，角色由管理員指派。': 'Akaun anda dicipta pada log masuk pertama; pentadbir menetapkan peranan anda.',
+  '登入後由管理員指派你的角色。': 'Pentadbir menetapkan peranan anda selepas anda log masuk.',
+  'Google 登入還沒設定好 —— 到 Google Cloud 建一個 OAuth 用戶端，把 Client ID 填進 assets/config.js 的 GOOGLE_CLIENT_ID，並把 AUTH_MODE 改成 google。步驟見 GOOGLE-LOGIN.md。': 'Log masuk Google belum disediakan. Cipta klien OAuth dalam Google Cloud, masukkan Client ID ke dalam GOOGLE_CLIENT_ID di assets/config.js, dan tetapkan AUTH_MODE kepada google. Lihat GOOGLE-LOGIN.md.',
 };

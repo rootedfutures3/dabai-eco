@@ -179,24 +179,53 @@ function buildDrift() {
  * 示範模式維持原本的帳號密碼。
  */
 /** Google 按鈕與導回。導回帶的 token 在網址的 # 裡，要立刻收走。 */
+/**
+ * Google 登入。兩條路，看 config.js 選哪一種：
+ *
+ *   AUTH_MODE = 'google'    —— Google Identity Services，純前端，不需要後端。
+ *                              畫的是 Google 官方那顆按鈕。
+ *   AUTH_MODE = 'supabase'  —— 走 Supabase 代管的 OAuth，權限由資料庫強制執行。
+ *                              點自家按鈕，導去 Supabase 再回來。
+ *
+ * 兩個都沒設好的話，按鈕留著但按下去會說還缺什麼。
+ */
 function initGoogle() {
   const btn = document.getElementById('google-in');
   const err = document.getElementById('login-err');
   if (!btn) return;
 
-  const on = typeof Auth !== 'undefined' && Auth.on;
+  const sb = typeof Auth  !== 'undefined' && Auth.on;
+  const gi = typeof GAuth !== 'undefined' && GAuth.on;
 
-  // 從 Google 回來時，網址上會帶 token 或錯誤
-  if (on) {
+  /* ---- Google Identity Services ---- */
+  if (gi) {
+    const box = document.createElement('div');
+    box.id = 'gsi-btn';
+    btn.replaceWith(box);                       // 用 Google 官方按鈕取代自家那顆
+    GAuth.render(box,
+      user => handoff(user),
+      msg  => { if (err) err.textContent = msg; });
+
+    /* 換語言時 Google 按鈕的文字要跟著換 —— 它是 Google 畫的，
+       我們的 i18n 碰不到裡面，只能請它重畫一次。 */
+    document.addEventListener('i18n:change', () => {
+      GAuth.render(box, u => handoff(u), m => { if (err) err.textContent = m; });
+    });
+    return;
+  }
+
+  /* ---- Supabase OAuth ---- */
+  if (sb) {
     const back = Auth.captureRedirect();
     if (back && !back.ok && err) err.textContent = back.error || 'Google 登入沒有完成，請再試一次。';
   }
 
   btn.addEventListener('click', () => {
-    if (!on) {
+    if (!sb) {
       if (err) err.textContent =
-        'Google 登入還沒設定好 —— 需要先在 Supabase 開啟 Google provider，'
-        + '並把專案網址與 key 填進 assets/config.js。步驟見 GOOGLE-LOGIN.md。';
+        'Google 登入還沒設定好 —— 到 Google Cloud 建一個 OAuth 用戶端，'
+        + '把 Client ID 填進 assets/config.js 的 GOOGLE_CLIENT_ID，'
+        + '並把 AUTH_MODE 改成 google。步驟見 GOOGLE-LOGIN.md。';
       return;
     }
     const next = new URLSearchParams(location.search).get('next') || 'app.html';
@@ -205,7 +234,11 @@ function initGoogle() {
 }
 
 function applyAuthMode() {
-  const on = typeof Auth !== 'undefined' && Auth.on;
+  /* on 代表「密碼欄位該不該收起來」。Supabase 和 Google 兩種模式
+     我們這邊都不保管密碼，所以兩種都要收。 */
+  const sb = typeof Auth  !== 'undefined' && Auth.on;
+  const gi = typeof GAuth !== 'undefined' && GAuth.on;
+  const on = sb || gi;
   /* 有些元素（示範帳號提示、快速身分）已經拿掉了，
      這裡用安全存取，少了也不會整段停掉。 */
   const $ = id => document.getElementById(id) || { style:{}, dataset:{}, classList:{ toggle(){} } };
@@ -229,7 +262,9 @@ function applyAuthMode() {
   const gHint = $('google-hint');
   const orLine = $('or-line');
   if (on) {
-    if (gHint.style) gHint.textContent = '登入後由管理員指派你的角色。';
+    if (gHint.style) gHint.textContent = gi
+      ? '第一次登入會自動建立帳號，角色由管理員指派。'
+      : '登入後由管理員指派你的角色。';
     if (orLine.style) orLine.hidden = true;
     $('login-form').hidden = true;
     $('demo-cred').hidden = true;
@@ -332,7 +367,8 @@ function showAlreadySignedIn(username) {
 
   document.getElementById('switch-user').addEventListener('click', async () => {
     sessionStorage.removeItem(SESSION);
-    if (typeof Auth !== 'undefined' && Auth.on) await Auth.signOut();
+    if (typeof Auth  !== 'undefined' && Auth.on) await Auth.signOut();
+    if (typeof GAuth !== 'undefined' && GAuth.on) GAuth.signOut();
     location.reload();
   });
   document.getElementById('go-site').addEventListener('click', () => {
