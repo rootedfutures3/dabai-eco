@@ -34,7 +34,7 @@ token 存在它的 secret 裡，前端只送「我要看成效」，把數字拿
 - **Facebook Login for Business** —— 用來拿 token
 - **Instagram**（設定時選 *Instagram API setup with Facebook Login*）
 
-### 權限
+### 需要哪些權限
 
 Graph API Explorer 產 token 的時候，這幾個都要勾。
 少勾一個，就少一整欄數字：
@@ -51,6 +51,74 @@ Graph API Explorer 產 token 的時候，這幾個都要勾。
 
 > 只想先看數字、暫時不自動發文的話，後面兩個可以不勾。
 > 權限勾越少，之後送審越好過。
+
+---
+
+### 權限要先「解鎖」，才勾得到
+
+**這一步實際踩過，一定要先做。**
+
+新版 Meta 的權限是綁在 **use case** 上的，不是想勾就勾。
+App 沒有加對應的 use case，Graph API Explorer 的權限清單裡
+**根本不會出現那個權限** —— 不是你漏勾，是它沒被解鎖。
+
+實測狀況：一個掛滿廣告、目錄、名單、募款 use case 的 App，
+權限清單裡有 `ads_management`、`catalog_management`、
+`whatsapp_business_messaging`，卻連 `read_insights` 的影子都沒有。
+
+#### 先看現在缺什麼
+
+左邊側欄 → **Review → Permissions and features**，搜尋 `read_insights`。
+這一頁是所有權限的權威清單，會顯示它現在的狀態：
+
+| 看到 | 意思 |
+|---|---|
+| **Standard access**（可取用） | 加 use case 就有，**不用送審** |
+| **Advanced access needed** | 要送 App Review |
+| 找不到這個權限 | App 類型不支援，要改用別的方式（見下面 CSV） |
+
+> 開發模式下、對你自己管理的粉專，**Standard access 就夠了**。
+> Advanced access 是為了讀「別人的」粉專，我們用不到。
+
+#### 加 use case
+
+1. 左邊側欄 → **Use cases**
+2. 右上 **Add use case**
+3. 找**跟經營粉專有關**的那一個 —— 通常叫
+   **「Manage everything on your Page」**（管理粉絲專頁的所有內容）之類。
+   **不要**選廣告那幾個，它們不帶洞察權限。
+4. 加進去之後點它的 **Permissions** 分頁，確認清單裡有 `read_insights`
+
+   > Meta 改版很勤，標題可能不完全一樣。判斷標準只有一個：
+   > **點進去的 Permissions 分頁裡有沒有 `read_insights`**。有就是對的。
+
+5. IG 的觸及要另外一個 —— 找 Instagram 相關的 use case，
+   確認它的 Permissions 裡有 `instagram_manage_insights`。
+   （只有 `instagram_basic` 是不夠的，那只能讀貼文，讀不到數字。）
+
+#### 加完要重新授權
+
+use case 加好之後，舊 token **不會自動長出新權限**，要重跑一次：
+
+1. 回 Graph API Explorer
+2. Permissions 現在應該找得到 `read_insights` 了，勾起來
+3. **Generate Access Token**
+
+彈窗如果沒有重新問你 —— 因為之前授權過 —— 到
+Facebook → 設定與隱私 → 設定 → **商業整合** → 把這個 App 移除，
+再按一次 Generate。
+
+#### 驗
+
+```bash
+python3 tools/meta-token.py
+```
+
+五個權限全部打勾才算過。少哪個它會直接講。
+
+---
+
+---
 
 ### IG 那邊的前提
 
