@@ -182,8 +182,8 @@ function table(cols, rows) {
            <select data-sort-pick>
              <option value="">預設順序</option>
              ${spec.map((c, i) => c.h
-               ? `<option value="${i}:asc">${c.h} ↑</option>
-                  <option value="${i}:desc">${c.h} ↓</option>` : '').join('')}
+               ? `<option value="${i}:asc">${tw(c.h)} ↑</option>
+                  <option value="${i}:desc">${tw(c.h)} ↓</option>` : '').join('')}
            </select>
          </label>
        </caption>`
@@ -279,6 +279,20 @@ document.addEventListener('change', e => {
   if (!sel || !sel.value) return;
   const [idx, dir] = sel.value.split(':');
   sortTable(sel.closest('table'), Number(idx), dir);
+});
+
+/* 這一頁的字典翻譯是靠 i18n 事後掃 DOM 換掉文字，
+   但那只認得「整個節點就是那句話」。像排序選單的
+   「月份 ↑」是欄名跟箭頭黏在一起組出來的，查不到字典 ——
+   所以組的時候就要先把欄名翻好。 */
+const tw = s => (typeof I18N !== 'undefined' && s) ? I18N.translate(String(s)) : s;
+
+/* 換語言要整個重畫。
+   組字串時翻的那些（上面的 tw、金額格式、圖表標籤）
+   在 DOM 已經生成之後改不了，只能重來一次。 */
+document.addEventListener('i18n:change', () => {
+  if (!document.getElementById('month-kpis')) return;
+  try { renderAll(); } catch (e) { console.error('[TANJU] 換語言重畫失敗', e); }
 });
 
 function renderAll() {

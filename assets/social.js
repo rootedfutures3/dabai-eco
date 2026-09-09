@@ -231,32 +231,160 @@ function material(topic, id, lang) {
 }
 
 /** 把素材組裝成某個平台的文案。每個平台的節奏不一樣。 */
+/* ============================================================
+   語氣
+   ------------------------------------------------------------
+   同一棵樹、同一批事實，講法不一樣，接住的人就不一樣：
+   認養人要的是故事，企業採購要的是數字和稽核，
+   在地社群要的是「今天果園發生什麼事」。
+
+   每一種語氣改三件事：
+     hook   開頭第一句。社群平台只有前兩行會被看到，這句決定有沒有人點開。
+     lead   接在後面的是故事還是數字（story / facts / punch）
+     close  結尾。有些語氣需要一句收尾，有些不需要就留空。
+
+   三種語言各寫一份，不是機器轉的 —— 馬來文的社群語感跟中文不一樣，
+   直譯出來會像公文。
+   ============================================================ */
+const TONES = {
+  warm: {
+    label: { zh:'溫暖故事', en:'Warm story', ms:'Cerita hangat' },
+    lead: 'story',
+    hook: { zh:'這棵樹有名字，也有人在顧。',
+            en:'This tree has a number, and someone who looks after it.',
+            ms:'Pokok ini ada nombornya, dan ada orang yang menjaganya.' },
+    close: { zh:'認養一棵，收成整棵是你的。',
+             en:'Adopt one, and the whole harvest is yours.',
+             ms:'Angkat satu pokok, seluruh hasilnya milik anda.' },
+  },
+  data: {
+    label: { zh:'數據說服', en:'By the numbers', ms:'Ikut angka' },
+    lead: 'facts',
+    hook: { zh:'先看數字，再決定要不要相信我們。',
+            en:'Look at the numbers first, then decide whether to believe us.',
+            ms:'Lihat angka dahulu, kemudian tentukan sama ada mahu percaya.' },
+    close: { zh:'每一筆都建檔，可以查。',
+             en:'Every figure is logged and auditable.',
+             ms:'Setiap angka direkod dan boleh diaudit.' },
+  },
+  short: {
+    label: { zh:'短促吸睛', en:'Short and punchy', ms:'Pendek dan tajam' },
+    lead: 'punch',
+    hook: { zh:'一棵樹，一組編號。',
+            en:'One tree. One ID.',
+            ms:'Satu pokok. Satu nombor.' },
+    close: { zh:'', en:'', ms:'' },
+  },
+  field: {
+    label: { zh:'產地直擊', en:'From the orchard', ms:'Dari dusun' },
+    lead: 'story',
+    hook: { zh:'今天果園現場：',
+            en:'From the orchard today:',
+            ms:'Dari dusun hari ini:' },
+    close: { zh:'溝通者每次巡園都會回報，照片和樹況都留檔。',
+             en:'Every visit is reported back, with photos and condition on file.',
+             ms:'Setiap lawatan dilaporkan semula, dengan gambar dan keadaan pokok difailkan.' },
+  },
+  grower: {
+    label: { zh:'果農故事', en:'Meet the grower', ms:'Kenali petani' },
+    lead: 'story',
+    hook: { zh:'這筆錢會進到誰的口袋，我們寫得出來。',
+            en:'We can tell you exactly whose pocket this money goes into.',
+            ms:'Kami boleh beritahu dengan tepat wang ini masuk ke poket siapa.' },
+    close: { zh:'不是中盤商開價，是果農先拿到。',
+             en:'No middleman setting the price — the grower is paid first.',
+             ms:'Bukan orang tengah yang menetapkan harga — petani dibayar dahulu.' },
+  },
+  corporate: {
+    label: { zh:'企業提案', en:'For business buyers', ms:'Untuk pembeli korporat' },
+    lead: 'facts',
+    hook: { zh:'給正在找 ESG 敘事與穩定原料的採購窗口：',
+            en:'For procurement teams that need an ESG story and a stable supply:',
+            ms:'Untuk pasukan perolehan yang perlukan naratif ESG dan bekalan stabil:' },
+    close: { zh:'需要合約範本與稽核資料的話，直接聯絡我們。',
+             en:'Contract templates and audit records available on request.',
+             ms:'Templat kontrak dan rekod audit disediakan atas permintaan.' },
+  },
+  explain: {
+    label: { zh:'知識科普', en:'Explainer', ms:'Penerangan' },
+    lead: 'story',
+    hook: { zh:'很多人沒吃過 Dabai，先講清楚它是什麼。',
+            en:'Most people have never eaten Dabai. Here is what it actually is.',
+            ms:'Ramai belum pernah makan Dabai. Ini sebenarnya apa dia.' },
+    close: { zh:'吃法：60–70°C 的熱水泡 10 分鐘，果肉會軟得像酪梨。',
+             en:'How to eat it: soak in 60–70°C water for 10 minutes and the flesh softens like avocado.',
+             ms:'Cara makan: rendam dalam air 60–70°C selama 10 minit, isinya lembut seperti avokado.' },
+  },
+  season: {
+    label: { zh:'產季限定', en:'In season now', ms:'Bermusim sekarang' },
+    lead: 'punch',
+    hook: { zh:'產季就這麼長，過了要等明年。',
+            en:'The season is this short. Miss it and it is next year.',
+            ms:'Musimnya sependek ini. Terlepas, tunggu tahun depan.' },
+    close: { zh:'想要的先講，我們照樹排。',
+             en:'Tell us early — we allocate tree by tree.',
+             ms:'Beritahu awal — kami agihkan pokok demi pokok.' },
+  },
+  green: {
+    label: { zh:'永續倡議', en:'Sustainability', ms:'Kelestarian' },
+    lead: 'facts',
+    hook: { zh:'果肉、果核、果皮，我們沒有一樣是丟掉的。',
+            en:'Flesh, seed, peel — none of it gets thrown away.',
+            ms:'Isi, biji, kulit — tiada satu pun dibuang.' },
+    close: { zh:'碳數字是我們自己算的，還沒有第三方驗證 —— 這點我們寫在網站上。',
+             en:'Our carbon figures are our own and not third-party verified. We say so on the site.',
+             ms:'Angka karbon kami dikira sendiri dan belum disahkan pihak ketiga. Kami nyatakannya di laman web.' },
+  },
+  ask: {
+    label: { zh:'提問互動', en:'Open a question', ms:'Buka soalan' },
+    lead: 'story',
+    hook: { zh:'如果你認養一棵樹，你最想知道它的什麼事？',
+            en:'If you adopted a tree, what would you most want to know about it?',
+            ms:'Jika anda mengangkat sebatang pokok, apa yang paling anda mahu tahu?' },
+    close: { zh:'留言告訴我們，下一次回報就寫進去。',
+             en:'Tell us in the comments and the next field report will cover it.',
+             ms:'Beritahu kami di ruangan komen — laporan seterusnya akan memuatkannya.' },
+  },
+};
+
 function compose(channel, m, lang, tone) {
+  const T = TONES[tone] || TONES.warm;
   const tags = TAGS[lang] || TAGS.zh;
   const bullets = m.facts.map(f => '· ' + f).join('\n');
   const cta = { zh:'看完整樹卡與果園檔案 → ', en:'See the full tree card → ', ms:'Lihat kad pokok penuh → ' }[lang];
 
-  if (tone === 'short') {
-    const punch = m.facts[0];
-    if (channel === 'rednote')  return `${m.headline}\n\n${punch}\n${m.story.split(/[。.!！]/)[0]}。\n\n${cta}${m.link}\n${tags}`;
-    return `${m.headline}\n\n${punch}\n\n${cta}${m.link}\n\n${tags}`;
-  }
+  const hook  = (T.hook[lang] || T.hook.zh || '').trim();
+  const close = (T.close && (T.close[lang] || '')).trim();
 
-  if (channel === 'facebook') {
-    const lead = tone === 'data'
-      ? m.facts.join(' ｜ ')
-      : m.story;
-    return `${m.headline}\n\n${lead}\n\n${bullets}\n\n${cta}${m.link}\n\n${tags}`;
-  }
+  /* lead 決定開頭之後先給什麼：
+       story 講故事、facts 攤數字、punch 只留最有力的那一條。
+     這是語氣真正改變文案的地方，不是只換一句開場白。 */
+  const lead = T.lead === 'facts' ? m.facts.join('　｜　')
+             : T.lead === 'punch' ? m.facts[0]
+             : m.story;
+
+  /* 空的段落不要留下空行 —— 有些語氣沒有結尾句 */
+  const join = (...parts) => parts.filter(x => x && String(x).trim()).join('\n\n');
 
   if (channel === 'instagram') {
-    /* IG 前兩行決定有沒有人點「更多」，所以故事放最前面 */
-    return `${m.story}\n\n${m.headline}\n${bullets}\n\n${cta}個人簡介連結\n.\n.\n${tags}`
-      .replace('個人簡介連結', { zh:'個人簡介連結', en:'link in bio', ms:'pautan di bio' }[lang]);
+    /* IG 只有前兩行會顯示，其餘要點「更多」。
+       所以鉤子和 lead 一定要在最前面，事實列表往後放。 */
+    const bio = { zh:'個人簡介連結', en:'link in bio', ms:'pautan di bio' }[lang];
+    return join(hook, lead, m.headline + '\n' + bullets, close,
+                cta + bio, '.\n.\n' + tags);
   }
 
-  /* 小紅書：短標題 + 分行短句 + 標籤在最後 */
-  return `${m.headline}\n\n${m.story}\n\n${bullets}\n\n${cta}${m.link}\n${tags}`;
+  if (channel === 'rednote') {
+    /* 小紅書：標題吃前 20 字，正文重點放前三行，標籤在最後 */
+    return join(m.headline, hook, lead,
+                T.lead === 'punch' ? '' : bullets,
+                close, cta + m.link, tags);
+  }
+
+  /* Facebook：標題、鉤子、主體、事實、收尾、連結、標籤 */
+  return join(m.headline, hook, lead,
+              T.lead === 'facts' ? '' : bullets,
+              close, cta + m.link, tags);
 }
 
 /* ---------- 送出 ---------- */
@@ -535,6 +663,7 @@ function renderSocial() {
   const wrap = document.getElementById('po-cards');
   if (!wrap) return;
 
+  fillTones();
   fillSubjects();
   renderPostLog();
   initCalendar();
@@ -546,6 +675,19 @@ function renderSocial() {
     document.getElementById('po-gen').addEventListener('click', generate);
     wrap.addEventListener('click', onCardClick);
   }
+}
+
+/* 語氣下拉由 TONES 產生，加一種語氣只要改 TONES，不用動 HTML。
+   標籤跟著介面語言走。 */
+function fillTones() {
+  const sel = document.getElementById('po-tone');
+  if (!sel || sel.dataset.filled) return;
+  sel.dataset.filled = '1';
+  const ui = (typeof I18N !== 'undefined' && I18N.lang) || 'zh';
+  const code = ui === 'en' ? 'en' : ui === 'ms' ? 'ms' : 'zh';
+  sel.innerHTML = Object.entries(TONES)
+    .map(([k, t]) => `<option value="${k}">${esc(t.label[code] || t.label.zh)}</option>`)
+    .join('');
 }
 
 /** 「對象」下拉的內容跟著「題材」變 */
