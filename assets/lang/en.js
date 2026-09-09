@@ -2532,4 +2532,9 @@ window.LANG_EN = {
   '拍照記錄（可多張，會存進雲端）': 'Photos (several allowed, saved to the cloud)',
   '少數幾個信箱寫在專案的 assets/config.js 的 SUPER_EMAILS 裡，登入就直接是超級管理員 —— 那是為了避免所有人都被鎖在門外時沒人救得回來，所以只由能改程式的人維護， 不開放在這一頁編輯。': 'A few addresses are listed in <code>SUPER_EMAILS</code> in <code>assets/config.js</code> and sign in as super admin directly. That exists so nobody can end up locked out with no way back in, which is why it is kept by whoever can edit the code and is not editable on this page.',
   '例如：B-07': 'e.g. B-07',
+  '插畫，非攝影': 'illustration, not a photograph',
+  '泡軟之後切開的樣子 —— 果肉綿密，中間是一顆大核。': 'Cut open after soaking — dense flesh around one large stone.',
+  '你認養的那棵樹會走過這四個階段，溝通者每次現場回報都會記下它現在在哪一段。': 'Your tree passes through these four stages, and every field report records which one it is in.',
+  '使用 Google 帳號登入': 'Sign in with Google',
+  '每棵樹拿到唯一編號（例如 DB-000001），從此它的每一次施肥、每一張照片、每一筆交易都掛在這個編號底下。': 'Every tree gets its own number (<b>DB-000001</b>, for example). From then on each feeding, each photograph and each transaction hangs off that number.',
 };

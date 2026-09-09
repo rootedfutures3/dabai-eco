@@ -2533,4 +2533,9 @@ window.LANG_MS = {
   '拍照記錄（可多張，會存進雲端）': 'Foto (boleh banyak, disimpan ke awan)',
   '少數幾個信箱寫在專案的 assets/config.js 的 SUPER_EMAILS 裡，登入就直接是超級管理員 —— 那是為了避免所有人都被鎖在門外時沒人救得回來，所以只由能改程式的人維護， 不開放在這一頁編輯。': 'Beberapa alamat disenaraikan dalam <code>SUPER_EMAILS</code> di <code>assets/config.js</code> dan log masuk terus sebagai super admin. Ia wujud supaya tiada siapa terkunci di luar tanpa jalan masuk, sebab itu ia dijaga oleh orang yang boleh mengubah kod dan tidak boleh disunting di halaman ini.',
   '例如：B-07': 'cth. B-07',
+  '插畫，非攝影': 'ilustrasi, bukan gambar foto',
+  '泡軟之後切開的樣子 —— 果肉綿密，中間是一顆大核。': 'Dibelah selepas direndam — isinya padat dengan satu biji besar di tengah.',
+  '你認養的那棵樹會走過這四個階段，溝通者每次現場回報都會記下它現在在哪一段。': 'Pokok yang anda angkat melalui empat peringkat ini, dan setiap laporan lapangan mencatat peringkat semasanya.',
+  '使用 Google 帳號登入': 'Log masuk dengan Google',
+  '每棵樹拿到唯一編號（例如 DB-000001），從此它的每一次施肥、每一張照片、每一筆交易都掛在這個編號底下。': 'Setiap pokok mendapat nombornya sendiri (contohnya <b>DB-000001</b>). Selepas itu setiap pembajaan, setiap gambar dan setiap transaksi tergantung pada nombor tersebut.',
 };
