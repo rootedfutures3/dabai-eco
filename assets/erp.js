@@ -1257,10 +1257,12 @@ function drawGoals(boxId, keys) {
     /* 三種狀態：達標、跟得上、落後。
        「跟得上」的判準是進度不落後於時間 —— 月底才衝刺往往來不及。 */
     const state = now >= target ? 'hit' : (done >= elapsed ? 'ok' : 'behind');
-    const word  = { hit:'已達標', ok:'進度正常', behind:'落後' }[state];
+    const word  = tw({ hit:'已達標', ok:'進度正常', behind:'落後' }[state]);
+    /* 這兩句要在組的時候就翻。交給事後掃 DOM 的話，
+       裡面的「{n} 天」會先被換成 days，整句就再也對不上字典了。 */
     const note  = state === 'hit'
-      ? `超出 ${g.fmt(now - target)}`
-      : `還差 ${g.fmt(gap)}，剩 ${qty(left)} 天`;
+      ? tw('超出 {a}').replace('{a}', g.fmt(now - target))
+      : tw('還差 {a}，剩 {b} 天').replace('{a}', g.fmt(gap)).replace('{b}', qty(left));
 
     return `
       <div class="goal g-${state}">
@@ -1519,7 +1521,7 @@ function drawMonthChart(months) {
       const yy = v >= 0 ? y(Math.abs(v)) : PAD_T + plotH;
       return `<rect class="${cls}" x="${(cx + off - bw / 2).toFixed(1)}" y="${yy.toFixed(1)}"
                     width="${bw.toFixed(1)}" height="${h.toFixed(1)}" rx="2">
-                <title>${m.ym}｜${label}：${money(v)}</title></rect>`;
+                <title>${m.ym}｜${tw(label)}：${money(v)}</title></rect>`;
     };
     return one(m.revenue, -bw - 2, 'b-rev', '收入')
          + one(m.cost, 0, 'b-cost', '支出')
@@ -1583,7 +1585,7 @@ function trendChart(box, months, series, fmt = money) {
       return `<rect class="${sp.cls}" x="${(cx + off0 + k * (bw + 2) - bw / 2).toFixed(1)}"
                     y="${y(Math.abs(v)).toFixed(1)}" width="${bw.toFixed(1)}"
                     height="${h.toFixed(1)}" rx="2">
-                <title>${m.ym}｜${sp.label}：${fmt(v)}</title></rect>`;
+                <title>${m.ym}｜${tw(sp.label)}：${fmt(v)}</title></rect>`;
     }).join('')
     + `<text class="x-lab" x="${cx.toFixed(1)}" y="${H - PAD_B + 17}" text-anchor="middle">${m.ym.slice(5)}</text>`
     + (i === 0 || m.ym.slice(5) === '01'
