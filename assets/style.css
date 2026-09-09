@@ -436,15 +436,50 @@ footer{background:var(--black);color:rgba(255,251,255,.62);padding:44px 24px;fon
 /* 認養方案 */
 .plan-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:24px}
 .plan{
+  position:relative;
   background:var(--snow);border-radius:var(--radius);padding:32px;
   box-shadow:0 6px 24px var(--shadow);display:flex;flex-direction:column;
   border:2px solid var(--line);transition:.25s;
 }
 .plan:hover{transform:translateY(-5px);box-shadow:0 14px 34px var(--shadow-lg)}
-.plan.featured{border-color:var(--coffee)}
+
+/* ------------------------------------------------------------
+   推薦方案
+   ------------------------------------------------------------
+   三張卡並排時，只換邊框顏色是看不出來的 —— 眼睛掃過去三張一樣重。
+   所以四件事一起做：整張抬高、金色描邊、底色帶一點暖、
+   徽章跨在上緣的邊框上。跨邊框那一下最有效，因為它打破了
+   「三張一樣的矩形」這個節奏。
+   ------------------------------------------------------------ */
+.plan.featured{
+  border-color:var(--gold-deep);
+  background:linear-gradient(180deg, var(--almond-soft) 0%, var(--snow) 42%);
+  box-shadow:0 14px 40px rgba(54,36,23,.16);
+  transform:translateY(-10px);
+  padding-top:40px;
+}
+.plan.featured:hover{transform:translateY(-15px);box-shadow:0 20px 48px rgba(54,36,23,.2)}
+.plan.featured h3{font-size:1.34rem}
+
 .plan-tag{
-  align-self:flex-start;background:var(--coffee);color:var(--almond);
-  font-size:.9rem;font-weight:700;padding:4px 12px;border-radius:99px;margin-bottom:14px;
+  position:absolute;top:0;left:50%;transform:translate(-50%,-50%);
+  background:var(--coffee);color:var(--almond);
+  font-size:.84rem;font-weight:700;letter-spacing:.06em;
+  padding:7px 20px;border-radius:99px;white-space:nowrap;
+  box-shadow:0 4px 14px rgba(54,36,23,.28);
+  display:inline-flex;align-items:center;gap:7px;
+}
+/* 徽章前面那顆點 —— 一點動靜，讓視線先落在這張 */
+.plan-tag::before{
+  content:"";width:6px;height:6px;border-radius:50%;
+  background:var(--almond);flex:0 0 auto;
+}
+
+/* 直排的時候不需要抬高（沒有並排就沒有高低對比），
+   但邊框、底色與徽章留著，還是看得出這張是推薦的。 */
+@media(max-width:900px){
+  .plan.featured{transform:none}
+  .plan.featured:hover{transform:translateY(-5px)}
 }
 .plan h3{font-size:1.22rem;margin-bottom:6px}
 .plan .scale{font-size:.9rem;color:var(--taupe-deep);font-weight:700;letter-spacing:.08em;margin-bottom:16px;display:block}
@@ -3423,3 +3458,33 @@ th[data-dir="desc"] .sort-mark::before{content:"↓"}
 }
 .perf-off b{font-size:1rem;color:var(--ink)}
 .perf-off span{font-size:.92rem;color:var(--ink-soft);line-height:1.65;max-width:64ch}
+
+/* 「第一次來？」—— Google 登入沒有獨立的註冊按鈕，
+   所以要明說「按同一顆就是註冊」，不然新人會一直找註冊在哪。 */
+.signup-note{
+  margin-top:16px;padding:16px 18px;
+  background:var(--cream-dim);border:1px solid var(--line);
+  border-radius:12px;
+}
+.signup-note b{display:block;font-size:.98rem;color:var(--ink);margin-bottom:4px}
+.signup-note > span{display:block;font-size:.9rem;color:var(--ink-soft);line-height:1.6}
+.signup-note ol{
+  counter-reset:su;list-style:none;margin:12px 0 0;padding:0;
+  display:grid;gap:8px;
+}
+.signup-note li{
+  counter-increment:su;
+  display:grid;grid-template-columns:22px 1fr;gap:10px;align-items:start;
+  font-size:.9rem;color:var(--ink-soft);line-height:1.55;
+}
+.signup-note li::before{
+  content:counter(su);
+  width:22px;height:22px;border-radius:50%;
+  background:var(--coffee);color:var(--almond);
+  display:flex;align-items:center;justify-content:center;
+  font-size:.76rem;font-weight:700;
+}
+.signup-ask{
+  margin-top:12px;padding-top:12px;border-top:1px solid var(--line);
+  font-size:.86rem;
+}

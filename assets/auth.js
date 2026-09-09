@@ -267,6 +267,11 @@ function applyAuthMode() {
 
      還沒接通之前不能直接把密碼登入拿掉，不然沒有人進得去後台，
      所以按鈕先擺著、寫清楚還要設定，等 config 一填好就自動換過去。 */
+  /* 這段只在 Google 模式有意義。示範模式本來就有註冊表單，
+     兩個都出現反而更混亂。 */
+  const su = $('signup-note');
+  if (su.style) su.hidden = !gi;
+
   const gBox  = $('google-box');
   const gHint = $('google-hint');
   const orLine = $('or-line');

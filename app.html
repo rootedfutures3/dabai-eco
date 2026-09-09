@@ -5,19 +5,19 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>登入｜TANJU 平台</title>
 <meta name="robots" content="noindex">
-<link rel="icon" type="image/png" sizes="32x32" href="assets/img/favicon-32.png?v=f1c4d8ed">
-<link rel="apple-touch-icon" href="assets/img/logo-180.png?v=f1c4d8ed">
-<link rel="stylesheet" href="assets/style.css?v=f1c4d8ed">
-<script src="assets/config.js?v=f1c4d8ed" defer></script>
-<script src="assets/auth-sb.js?v=f1c4d8ed" defer></script>
-<script src="assets/store.js?v=f1c4d8ed" defer></script>
-<script src="assets/site.js?v=f1c4d8ed" defer></script>
-<script src="assets/auth-google.js?v=f1c4d8ed" defer></script>
-<script src="assets/auth.js?v=f1c4d8ed" defer></script>
-<script src="assets/lang/ms.js?v=f1c4d8ed" defer></script>
-<script src="assets/lang/en.js?v=f1c4d8ed" defer></script>
-<script src="assets/lang/iba.js?v=f1c4d8ed" defer></script>
-<script src="assets/i18n.js?v=f1c4d8ed" defer></script>
+<link rel="icon" type="image/png" sizes="32x32" href="assets/img/favicon-32.png?v=c1cad31c">
+<link rel="apple-touch-icon" href="assets/img/logo-180.png?v=c1cad31c">
+<link rel="stylesheet" href="assets/style.css?v=c1cad31c">
+<script src="assets/config.js?v=c1cad31c" defer></script>
+<script src="assets/auth-sb.js?v=c1cad31c" defer></script>
+<script src="assets/store.js?v=c1cad31c" defer></script>
+<script src="assets/site.js?v=c1cad31c" defer></script>
+<script src="assets/auth-google.js?v=c1cad31c" defer></script>
+<script src="assets/auth.js?v=c1cad31c" defer></script>
+<script src="assets/lang/ms.js?v=c1cad31c" defer></script>
+<script src="assets/lang/en.js?v=c1cad31c" defer></script>
+<script src="assets/lang/iba.js?v=c1cad31c" defer></script>
+<script src="assets/i18n.js?v=c1cad31c" defer></script>
 </head>
 <body class="auth-page">
 
@@ -31,7 +31,7 @@
     <a class="auth-back" href="index.html">← 回官網</a>
 
     <div class="auth-brand-in">
-      <img src="assets/img/logo.png?v=f1c4d8ed" alt="ROOTED FUTURES" width="96" height="96">
+      <img src="assets/img/logo.png?v=c1cad31c" alt="ROOTED FUTURES" width="96" height="96">
       <h1>把根扎在原鄉，<br>讓收成有人接住</h1>
       <p>一樹一碼的果農 × 收購商媒合系統。<br>Song, Sarawak</p>
 
@@ -65,6 +65,21 @@
             <span>使用 Google 帳號登入</span>
           </button>
           <p class="fld-hint" id="google-hint"></p>
+
+          <!-- 用 Google 登入的話，「註冊」和「登入」是同一顆按鈕 ——
+               第一次按就會建立帳號。畫面上不講的話，新來的人會一直找
+               註冊在哪裡，找不到就以為自己不能用。 -->
+          <div class="signup-note" id="signup-note">
+            <b>第一次來？</b>
+            <span>不用另外註冊 —— 按上面那顆按鈕就會用你的 Google 帳號建立。</span>
+            <ol>
+              <li>用 Google 登入一次，帳號就建立好了</li>
+              <li>管理員在後台按「通過」放行</li>
+              <li>放行之後再登入一次就進得來</li>
+            </ol>
+            <span class="signup-ask">還沒被放行？把你的 Gmail 給團隊裡的管理員，請他到「帳號與權限」處理。</span>
+          </div>
+
           <div class="or-line" id="or-line"><span>或</span></div>
         </div>
 
@@ -154,7 +169,7 @@
 
 <!-- 登入成功的轉場 -->
 <div class="handoff" id="handoff" aria-hidden="true">
-  <img src="assets/img/logo.png?v=f1c4d8ed" alt="" width="88" height="88">
+  <img src="assets/img/logo.png?v=c1cad31c" alt="" width="88" height="88">
   <p id="handoff-text">正在進入平台…</p>
   <div class="handoff-bar"><i></i></div>
 </div>
