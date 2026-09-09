@@ -430,57 +430,66 @@ async function makePostImage(channel, d) {
     ctx.fillRect(0, 0, w, h);
   }
 
-  /* 下半部壓暗，文字才讀得到。照片本身很暗的地方也不會糊成一團。 */
-  const g = ctx.createLinearGradient(0, h * 0.34, 0, h);
-  g.addColorStop(0, 'rgba(18,10,16,0)');
-  g.addColorStop(0.45, 'rgba(18,10,16,.72)');
-  g.addColorStop(1, 'rgba(18,10,16,.94)');
-  ctx.fillStyle = g;
-  ctx.fillRect(0, h * 0.34, w, h * 0.66);
+  const pad  = Math.round(w * 0.062);
+  const maxW = w - pad * 2;
 
-  const pad = Math.round(w * 0.062);
+  /* 橫幅只有 630 高，三行標題會超出壓暗的範圍，白字就會落在亮照片上。
+     所以先量、再決定漸層要鋪多高 —— 不是先鋪固定高度再賭文字放得下。 */
+  const wide = h / w < 0.9;
+  const hSize = Math.round(w * (channel === 'rednote' ? 0.062 : 0.056));
+  const sSize = Math.round(w * 0.034);
+  const uSize = Math.round(w * 0.026);
+  const gapHS = Math.round(w * 0.075);   // 標題到副標
+  const gapSU = Math.round(w * 0.062);   // 副標到網址
+
+  ctx.font = `500 ${hSize}px ${IMG_FONT}`;
+  const lines = wrapLines(ctx, headlineOf(d && d.text), maxW, wide ? 2 : 3);
+  const lineH = Math.round(hSize * 1.3);
+  const sub = (d && d.subject) ? String(d.subject) : '';
+
+  const yUrl  = h - pad;
+  const ySub  = yUrl - gapSU;
+  const yHead = sub ? ySub - gapHS : yUrl - gapSU;
+  const textTop = yHead - (lines.length - 1) * lineH - hSize;
+
+  /* 漸層從文字最上緣再往上一段開始，讓它淡出而不是切一刀 */
+  const gTop = Math.max(0, textTop - Math.round(h * 0.16));
+  const g = ctx.createLinearGradient(0, gTop, 0, h);
+  g.addColorStop(0, 'rgba(18,10,16,0)');
+  g.addColorStop(0.42, 'rgba(18,10,16,.74)');
+  g.addColorStop(1, 'rgba(18,10,16,.95)');
+  ctx.fillStyle = g;
+  ctx.fillRect(0, gTop, w, h - gTop);
 
   /* logo 左上。原色不動。 */
   try {
     const lg = await loadImg('assets/img/logo.png');
-    const lh = Math.round(h * 0.085);
+    const lh = Math.round(h * (wide ? 0.13 : 0.085));
     const lw = Math.round(lg.width / lg.height * lh);
     ctx.drawImage(lg, pad, pad, lw, lh);
-    ctx.font = `500 ${Math.round(h * 0.038)}px ${IMG_FONT}`;
+    ctx.font = `500 ${Math.round(lh * 0.44)}px ${IMG_FONT}`;
     ctx.fillStyle = 'rgba(255,255,255,.94)';
     ctx.textBaseline = 'middle';
-    ctx.fillText('TANJU', pad + lw + Math.round(w * 0.018), pad + lh / 2);
+    ctx.fillText('TANJU', pad + lw + Math.round(w * 0.016), pad + lh / 2);
   } catch (e) { /* logo 沒載到就算了，不影響其他部分 */ }
 
-  let y = h - pad;
-
-  /* 網址收尾 */
   ctx.textBaseline = 'alphabetic';
-  ctx.font = `400 ${Math.round(w * 0.026)}px ${IMG_FONT}`;
+
+  ctx.font = `400 ${uSize}px ${IMG_FONT}`;
   ctx.fillStyle = 'rgba(255,255,255,.66)';
-  ctx.fillText('rootedfutures3.github.io/dabai-eco', pad, y);
-  y -= Math.round(w * 0.062);
+  ctx.fillText('rootedfutures3.github.io/dabai-eco', pad, yUrl);
 
-  /* 副標：這次講的是哪一棵樹／哪個產品 */
-  const sub = (d && d.subject) ? String(d.subject) : '';
   if (sub) {
-    ctx.font = `500 ${Math.round(w * 0.034)}px ${IMG_FONT}`;
+    ctx.font = `500 ${sSize}px ${IMG_FONT}`;
     ctx.fillStyle = '#E8C06A';
-    const one = wrapLines(ctx, sub, w - pad * 2, 1);
-    ctx.fillText(one[0] || '', pad, y);
-    y -= Math.round(w * 0.052);
+    ctx.fillText(wrapLines(ctx, sub, maxW, 1)[0] || '', pad, ySub);
   }
 
-  /* 標題：文案的第一句 */
-  const size = Math.round(w * (channel === 'rednote' ? 0.062 : 0.058));
-  ctx.font = `500 ${size}px ${IMG_FONT}`;
+  ctx.font = `500 ${hSize}px ${IMG_FONT}`;
   ctx.fillStyle = '#FFFFFF';
-  const lines = wrapLines(ctx, headlineOf(d && d.text), w - pad * 2, 3);
-  const lh2 = Math.round(size * 1.32);
-  for (let i = lines.length - 1; i >= 0; i--) {
-    ctx.fillText(lines[i], pad, y);
-    y -= lh2;
-  }
+  lines.forEach((ln, i) => {
+    ctx.fillText(ln, pad, yHead - (lines.length - 1 - i) * lineH);
+  });
 
   return await new Promise(res => cv.toBlob(res, 'image/jpeg', 0.9));
 }
