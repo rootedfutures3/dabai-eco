@@ -2530,4 +2530,5 @@ window.LANG_EN = {
   '溝通者要能現場回報、財務看得到金額與撥款、編輯只能改內容。 改完立刻生效，對方重新整理就看得到。': 'A coordinator files field reports, finance sees amounts and payouts, an editor only changes content. It takes effect at once — they just refresh.',
   '例如：花況密集，已完成第一次追肥。發現少量果實蠅。': 'e.g. Flowering is dense, first top dressing done. A few fruit flies about.',
   '拍照記錄（可多張，會存進雲端）': 'Photos (several allowed, saved to the cloud)',
+  '少數幾個信箱寫在專案的 assets/config.js 的 SUPER_EMAILS 裡，登入就直接是超級管理員 —— 那是為了避免所有人都被鎖在門外時沒人救得回來，所以只由能改程式的人維護， 不開放在這一頁編輯。': 'A few addresses are listed in <code>SUPER_EMAILS</code> in <code>assets/config.js</code> and sign in as super admin directly. That exists so nobody can end up locked out with no way back in, which is why it is kept by whoever can edit the code and is not editable on this page.',
 };

@@ -2531,4 +2531,5 @@ window.LANG_MS = {
   '溝通者要能現場回報、財務看得到金額與撥款、編輯只能改內容。 改完立刻生效，對方重新整理就看得到。': 'Penyelaras memfailkan laporan lapangan, kewangan melihat jumlah dan bayaran, editor hanya menukar kandungan. Ia berkuat kuasa serta-merta — mereka hanya perlu muat semula.',
   '例如：花況密集，已完成第一次追肥。發現少量果實蠅。': 'cth. Bunga lebat, pembajaan pertama selesai. Ada sedikit lalat buah.',
   '拍照記錄（可多張，會存進雲端）': 'Foto (boleh banyak, disimpan ke awan)',
+  '少數幾個信箱寫在專案的 assets/config.js 的 SUPER_EMAILS 裡，登入就直接是超級管理員 —— 那是為了避免所有人都被鎖在門外時沒人救得回來，所以只由能改程式的人維護， 不開放在這一頁編輯。': 'Beberapa alamat disenaraikan dalam <code>SUPER_EMAILS</code> di <code>assets/config.js</code> dan log masuk terus sebagai super admin. Ia wujud supaya tiada siapa terkunci di luar tanpa jalan masuk, sebab itu ia dijaga oleh orang yang boleh mengubah kod dan tidak boleh disunting di halaman ini.',
 };
