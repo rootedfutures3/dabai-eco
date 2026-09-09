@@ -86,6 +86,41 @@ TANJU 只讀自己的帳號，這一步可以先不做。
 Graph API Explorer 直接給你的那把，**一小時就過期**。
 拿它去設定，明天數字就沒了。要換成長效的，三步。
 
+### 一個指令做完（建議走這條）
+
+第一步到第三步我寫成一支程式了，順便幫你驗權限 ——
+不用自己在瀏覽器貼三次網址、自己讀 JSON 判斷對不對。
+
+先去 <https://developers.facebook.com/tools/explorer/> 按 Generate
+拿一把短效 token（照上一節設定），**拿到就馬上跑這個**（它只有一小時）：
+
+```bash
+python3 tools/meta-token.py
+```
+
+它會問三樣東西：**應用程式編號**、**應用程式密鑰**（App 後台 → 設定 → 基本）、
+還有剛拿到的**短效 token**。後兩樣輸入時不會顯示在畫面上。
+
+然後它會：
+
+1. 換成長效 token
+2. 一項一項檢查五個必要權限，缺哪個直接告訴你
+3. 找到 Rootedfutures 的粉專 token
+4. **真的去讀一次成效** —— 這關過了才算數
+5. 檢查 IG 有沒有連上
+6. 把粉專 token 寫進 `.meta-token.txt`（權限 600，已在 `.gitignore`）
+
+任何一關過不了它會停下來講清楚缺什麼，不會讓你帶著壞掉的 token
+一路做到 Cloudflare 才發現。
+
+> token 寫成檔案而不是印在畫面上，是為了下一步可以
+> `wrangler secret put FB_PAGE_TOKEN < .meta-token.txt` ——
+> 不經過剪貼簿，也不會留在指令歷史裡。
+
+---
+
+### 或者手動走（想知道每一步在做什麼再看）
+
 ### 第一步 · 拿使用者 token
 
 開 <https://developers.facebook.com/tools/explorer/>。
@@ -196,45 +231,36 @@ https://graph.facebook.com/v23.0/debug_token?input_token=粉專那串&access_tok
 
 ## 3 · 放進 Cloudflare
 
+`tools/wrangler.toml` 已經寫好了，所以不用 `wrangler init`，
+也不用選任何選項。
+
 ```bash
 npm i -g wrangler
 wrangler login
-wrangler init tanju-publish
-```
-
-選 "Hello World" worker，然後把 `tools/publish-worker.js` 整份內容
-貼進 `src/index.js`，蓋掉原本的。
-
-```bash
-wrangler secret put FB_PAGE_ID
-wrangler secret put FB_PAGE_TOKEN
-wrangler secret put TANJU_KEY
+cd tools
+wrangler secret put FB_PAGE_ID        # 貼 1211431805397689
+wrangler secret put FB_PAGE_TOKEN < ../.meta-token.txt
+wrangler secret put TANJU_KEY         # 自己隨便打一串
 wrangler deploy
 ```
 
-- `FB_PAGE_ID` → `1211431805397689`（**不是**網址上的 `61594043096404`，見下面）
-- `FB_PAGE_TOKEN` → 第三步那把粉專 token
-- `TANJU_KEY` → 自己隨便打一串，用來擋路過的人
 - `IG_USER_ID` → **不用設**，後端自己查
 - `GRAPH_VERSION` → **不用設**，Meta 哪天淘汰 v23 再設
 
 deploy 完會給你一個網址，像 `https://tanju-publish.你的帳號.workers.dev`。
-
-最後改 `assets/config.js` 兩行：
+填進 `assets/config.js` 兩行：
 
 ```js
 const PUBLISH_ENDPOINT = 'https://tanju-publish.你的帳號.workers.dev';
 const PUBLISH_KEY = '你剛剛設的 TANJU_KEY';
 ```
 
-然後 `./deploy.sh`。
+然後 `./deploy.sh`。最後把 `.meta-token.txt` 刪掉 —— Cloudflare 已經有一份。
 
 > `PUBLISH_KEY` 還是在前端，所以它只擋得住隨手掃網址的人，
 > 擋不住有心人。真正的做法是讓後端去驗登入者的身分 ——
 > 等 `AUTH_MODE` 換成 `'supabase'` 之後再改，
 > `publish-worker.js` 最後面寫了怎麼改。
-
----
 
 ## 4 · 驗收
 

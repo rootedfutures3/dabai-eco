@@ -1,0 +1,20 @@
+# TANJU 社群後端的 Cloudflare 設定
+# ------------------------------------------------------------
+# 有了這個檔就不用跑 wrangler init、也不用選任何選項。
+# 在這個資料夾底下直接：
+#
+#     wrangler secret put FB_PAGE_ID        # 1211431805397689
+#     wrangler secret put FB_PAGE_TOKEN < ../.meta-token.txt
+#     wrangler secret put TANJU_KEY         # 自己隨便打一串
+#     wrangler deploy
+#
+# 金鑰全部走 secret，存在 Cloudflare，不會進這個 repo。
+# 這個檔案本身沒有機密，可以進 git。
+# ------------------------------------------------------------
+
+name = "tanju-publish"
+main = "publish-worker.js"
+
+# Workers 的執行環境版本。往前調會改變 Node API 的行為，
+# 沒有特別理由不要動。
+compatibility_date = "2026-09-09"

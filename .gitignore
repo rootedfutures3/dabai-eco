@@ -1,2 +1,6 @@
 .claude/
 .DS_Store
+
+# Meta 的 token。tools/meta-token.py 會把粉專 token 寫在這裡，
+# 它等於粉專的鑰匙（能發文、刪文、讀私訊），絕對不能進 git。
+.meta-token.txt
