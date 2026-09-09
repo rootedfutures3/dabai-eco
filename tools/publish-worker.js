@@ -20,7 +20,6 @@
  *   4. 設定金鑰（會存在 Cloudflare，不會進 git）：
  *        wrangler secret put FB_PAGE_ID
  *        wrangler secret put FB_PAGE_TOKEN
- *        wrangler secret put IG_USER_ID
  *        wrangler secret put YT_CLIENT_ID
  *        wrangler secret put YT_CLIENT_SECRET
  *        wrangler secret put YT_REFRESH_TOKEN
@@ -117,13 +116,16 @@ async function postFacebook(env, text) {
 /* IG 一定要有圖片 —— 純文字發不出去，這是平台的限制，不是我們的。
    流程是兩步：先建 media container，再 publish。 */
 async function postInstagram(env, text, imageUrl) {
-  need(env, ['IG_USER_ID', 'FB_PAGE_TOKEN']);
+  need(env, ['FB_PAGE_TOKEN']);
   if (!imageUrl) {
     throw new Error('Instagram 一定要附圖片網址（imageUrl）。純文字貼文 IG 不支援。');
   }
+  /* IG_USER_ID 沒設就用粉專 token 去查。文件上寫「不用設」，
+     這裡如果硬性要求，照著文件做的人會撞上「後端還沒設定 IG_USER_ID」。 */
+  const ig = env.IG_USER_ID || await resolveIgUserId(env);
 
   const create = await fetch(
-    `https://graph.facebook.com/${graphVer(env)}/${env.IG_USER_ID}/media`, {
+    `https://graph.facebook.com/${graphVer(env)}/${ig}/media`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -134,14 +136,24 @@ async function postInstagram(env, text, imageUrl) {
   if (!create.ok) throw new Error(fbError(c));
 
   const publish = await fetch(
-    `https://graph.facebook.com/${graphVer(env)}/${env.IG_USER_ID}/media_publish`, {
+    `https://graph.facebook.com/${graphVer(env)}/${ig}/media_publish`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ creation_id: c.id, access_token: env.FB_PAGE_TOKEN }),
     });
   const p = await publish.json();
   if (!publish.ok) throw new Error(fbError(p));
-  return { id: p.id, link: '' };
+
+  /* 發完再問一次網址。IG 的 media_publish 只回 id，
+     沒有網址的話發文紀錄那一欄點不開，等於發完就找不到了。
+     查不到不當成失敗 —— 文已經發出去了。 */
+  let link = '';
+  try {
+    const d = await graph(env, p.id, { fields: 'permalink' });
+    link = d.permalink || '';
+  } catch (e) { /* 沒拿到網址不影響已發布的貼文 */ }
+
+  return { id: p.id, link };
 }
 
 /* ---------- YouTube ---------- */
