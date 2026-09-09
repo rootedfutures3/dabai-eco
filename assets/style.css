@@ -515,7 +515,17 @@ footer{background:var(--black);color:rgba(255,251,255,.62);padding:44px 24px;fon
 /* 漸層的最亮端也必須撐得住白字：Taupe 原色只有 3.6:1，故收在 --taupe-deep */
 .orchard-top.dabai{background:linear-gradient(135deg,#000500,#362417)}
 .orchard-top.durian{background:linear-gradient(135deg,#56453A,#76655C)}
-.orchard-top h3{font-size:1.12rem;margin-bottom:2px}
+/* 標題固定佔兩行的高度，不管實際幾行。
+   三張卡片並排時，抬頭高度不一樣的話，下面的狀態徽章、規格欄、
+   顧問評級、果農區塊會整排往下錯開 —— 橫著掃就比較不了。
+   英文的果園名字常常兩行（Rumah Panjai Upriver Orchard），
+   中文多半一行，所以不能靠內容自然對齊。 */
+.orchard-top h3{
+  font-size:1.12rem;line-height:1.32;margin-bottom:2px;
+  min-height:2.64em;                 /* 兩行 */
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;
+  overflow:hidden;
+}
 .orchard-top .loc{font-size:.89rem;opacity:.82}
 .orchard-top .crop{flex-shrink:0;display:flex;color:var(--almond);opacity:.9}
 .status{
