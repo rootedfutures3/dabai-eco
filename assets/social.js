@@ -387,6 +387,7 @@ async function copy(text) {
 let POSTS_DRAFT = {};   // channel -> 目前顯示的文案
 
 function renderSocial() {
+  renderPerf();
   const wrap = document.getElementById('po-cards');
   if (!wrap) return;
 
@@ -562,6 +563,84 @@ async function onCardClick(e) {
   } finally {
     btn.disabled = false;
   }
+}
+
+/* ============================================================
+   成效指標
+   ------------------------------------------------------------
+   觸及、互動、點擊、CTR 這些數字只有平台自己知道，要接上
+   Meta / YouTube 的 API 才拿得到。API 還在審核，所以這裡先把
+   欄位和版面做好，接上就自動有數字。
+
+   刻意不塞示範數字進去：成效數據是拿去對外講的東西，
+   看板上出現一個 3.2% 的 CTR，隔天就可能被寫進提案書裡。
+   沒有就顯示沒有。
+   ============================================================ */
+const PERF_FIELDS = [
+  { k:'reach',       label:'觸及',   fmt:n => qtyN(n) },
+  { k:'impressions', label:'曝光',   fmt:n => qtyN(n) },
+  { k:'engagements', label:'互動',   fmt:n => qtyN(n) },
+  { k:'clicks',      label:'點擊',   fmt:n => qtyN(n) },
+];
+const qtyN = n => Number(n || 0).toLocaleString('en-MY');
+
+/** 有沒有任何一篇帶回成效數字。全部沒有就是還沒接上。 */
+function hasPerf(posts) {
+  return posts.some(p => PERF_FIELDS.some(f => Number(p[f.k]) > 0));
+}
+
+function renderPerf() {
+  const box = document.getElementById('perf-kpis');
+  const tbl = document.getElementById('t-perf');
+  if (!box || !tbl) return;
+
+  const posts = (Store.read().posts || []).filter(p => p.status === '已發布');
+  const on = hasPerf(posts);
+
+  if (!on) {
+    box.innerHTML = `
+      <div class="perf-off">
+        <b>尚未連接成效資料</b>
+        <span>觸及、互動、點擊與 CTR 由 Meta 與 YouTube 的 API 提供。
+              API 接上之後這裡會自動出現數字 —— 在那之前不顯示任何數值，
+              以免把估計值當成實際成效帶進提案。</span>
+      </div>`;
+    tbl.innerHTML = '';
+    return;
+  }
+
+  const sum = k => posts.reduce((s, p) => s + (Number(p[k]) || 0), 0);
+  const reach = sum('reach'), clicks = sum('clicks'), eng = sum('engagements');
+  const ctr = reach ? (clicks / reach * 100) : 0;
+  const er  = reach ? (eng / reach * 100) : 0;
+
+  box.innerHTML = [
+    ['觸及', qtyN(reach), `${qtyN(posts.length)} 篇已發布`],
+    ['互動', qtyN(eng),   `互動率 ${er.toFixed(1)}%`],
+    ['點擊', qtyN(clicks), `CTR ${ctr.toFixed(2)}%`],
+    ['曝光', qtyN(sum('impressions')), '含重複曝光'],
+  ].map(([k, v, sub]) =>
+    `<div class="kpi-card"><span class="k">${k}</span><b>${v}</b><small>${sub}</small></div>`).join('');
+
+  const rows = [...posts].reverse().slice(0, 12).map(p => {
+    const r = Number(p.reach) || 0, c = Number(p.clicks) || 0;
+    return [
+      p.at,
+      `<span class="pill">${(CHANNELS[p.channel] || {}).name || p.channel}</span>`,
+      `<b>${(p.title || '—').slice(0, 30)}</b>`,
+      { n:r, html: qtyN(r) },
+      { n:Number(p.engagements) || 0, html: qtyN(p.engagements) },
+      { n:c, html: qtyN(c) },
+      { n:r ? c / r * 100 : 0, html: r ? (c / r * 100).toFixed(2) + '%' : '—' },
+    ];
+  });
+  tbl.innerHTML = table([
+    '時間', '平台', '標題',
+    { h:'觸及', num:true, sum:true },
+    { h:'互動', num:true, sum:true },
+    { h:'點擊', num:true, sum:true },
+    { h:'CTR',  num:true },
+  ], rows);
 }
 
 function renderPostLog() {

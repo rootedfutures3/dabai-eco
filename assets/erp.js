@@ -955,8 +955,9 @@ function renderCommission() {
     const s = Store.split(o);
     const done = s.pending <= 0.005;
     return [
-      `<b>${o.no}</b>`,
-      `<span class="pill">${o.treeId}</span>`,
+      /* 訂單編號和樹的編號講的是同一筆交易，併成一格 ——
+         多一個備註欄之後，十欄放不進內容區，右邊會被切掉。 */
+      `<b>${o.no}</b><span class="sub-line">${o.treeId}</span>`,
       o.customer,
       num(s.amount),
       { n: s.fee,    html: `<span class="fee">${money(s.fee)}</span>` },
@@ -977,7 +978,7 @@ function renderCommission() {
      { key:'passthrough', label:'代撥果農', cls:'t-2' }]);
 
   document.getElementById('t-commission').innerHTML = table([
-    '訂單編號', 'Tree ID', '認養人',
+    '訂單 / Tree ID', '認養人',
     { h:'合約總額', num:true, sum:true },
     { h:`平台佣金 ${rate}%`, num:true, sum:true },
     { h:`果農應得 ${fmt(100 - rate)}%`, num:true, sum:true },
