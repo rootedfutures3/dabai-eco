@@ -78,7 +78,7 @@ export default {
     try {
       let result;
       switch (channel) {
-        case 'facebook':  result = await postFacebook(env, text); break;
+        case 'facebook':  result = await postFacebook(env, text, imageUrl); break;
         case 'instagram': result = await postInstagram(env, text, imageUrl); break;
         case 'youtube':   result = await postYouTube(env, text); break;
         case 'rednote':
@@ -99,8 +99,31 @@ export default {
 /* ---------- Facebook 粉專 ---------- */
 /* 需要：FB_PAGE_ID、FB_PAGE_TOKEN（長效 Page Access Token）
    權限：pages_manage_posts，且 App 要過 Review */
-async function postFacebook(env, text) {
+async function postFacebook(env, text, imageUrl) {
   need(env, ['FB_PAGE_ID', 'FB_PAGE_TOKEN']);
+
+  /* 有圖就發圖文，沒圖才發純文字。
+     /feed 只吃文字 —— 傳圖片網址給它會被安靜地忽略，
+     貼文照樣發出去，只是沒有圖。要圖文一起，端點是 /photos。 */
+  if (imageUrl) {
+    const r = await fetch(
+      `https://graph.facebook.com/${graphVer(env)}/${env.FB_PAGE_ID}/photos`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          url: imageUrl, caption: text, published: true,
+          access_token: env.FB_PAGE_TOKEN,
+        }),
+      });
+    const d = await r.json();
+    /* 這裡故意不退回純文字重發。圖沒帶上就整篇失敗，
+       比默默發出一篇沒有圖的貼文好 —— 後者要自己去粉專刪。 */
+    if (!r.ok) throw new Error(fbError(d));
+    /* /photos 回兩個 id：id 是照片，post_id 才是動態上那一篇。 */
+    const id = d.post_id || d.id;
+    return { id, link: `https://www.facebook.com/${id}` };
+  }
+
   const r = await fetch(
     `https://graph.facebook.com/${graphVer(env)}/${env.FB_PAGE_ID}/feed`, {
       method: 'POST',
