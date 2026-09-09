@@ -684,6 +684,7 @@ function renderConnections() {
       </div>`;
   }).join('');
 
+  if (!note) return;                 // 說明文字已從版面上拿掉
   note.innerHTML = ep
     ? `目前的發布後端：<code>${ep}</code>。
        按「一鍵發布」會把文案送到那裡，由後端拿著金鑰去呼叫各平台的 API。`

@@ -202,14 +202,23 @@ function initGoogle() {
     const box = document.createElement('div');
     box.id = 'gsi-btn';
     btn.replaceWith(box);                       // 用 Google 官方按鈕取代自家那顆
-    GAuth.render(box,
-      user => handoff(user),
-      msg  => { if (err) err.textContent = msg; });
+    /* 沒通過審核的不放行。舊的示範帳號沒有 approved 欄位，
+       視同已通過 —— 不然一改上去大家都被關在外面。 */
+    const enter = user => {
+      if (user.approved === false) {
+        if (err) err.textContent =
+          `已收到 ${user.email} 的登入申請，等管理員在後台通過之後就可以進來。`;
+        GAuth.signOut();
+        return;
+      }
+      handoff(user);
+    };
+    GAuth.render(box, enter, msg => { if (err) err.textContent = msg; });
 
     /* 換語言時 Google 按鈕的文字要跟著換 —— 它是 Google 畫的，
        我們的 i18n 碰不到裡面，只能請它重畫一次。 */
     document.addEventListener('i18n:change', () => {
-      GAuth.render(box, u => handoff(u), m => { if (err) err.textContent = m; });
+      GAuth.render(box, enter, m => { if (err) err.textContent = m; });
     });
     return;
   }

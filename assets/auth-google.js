@@ -96,6 +96,12 @@ const GAuth = {
       pass:  '',                       // 沒有密碼，登入完全靠 Google
       role:  isSuper ? 'admin'  : 'farmer',
       perm:  isSuper ? 'super'  : 'farmer',
+      /* 新的人一律要等後台通過才進得來。
+         只有 Google 的 Test users 名單擋在前面是不夠的 ——
+         那份名單是為了讓人「能嘗試登入」，不是「可以看到資料」。
+         SUPER_EMAILS 上的信箱自動通過，否則第一個人也進不去。 */
+      approved: isSuper,
+      joined: new Date().toISOString().slice(0, 16).replace('T', ' '),
       name:  claim.name || email.split('@')[0],
       org:   '',
       phone: '',

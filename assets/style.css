@@ -3176,3 +3176,34 @@ body.admin td .pill{ white-space:normal }
   .eye{min-width:44px;min-height:44px;display:inline-flex;align-items:center;justify-content:center}
   .memo{max-width:none;-webkit-line-clamp:4}
 }
+
+/* 表格排序 */
+.admin-body th[data-sort-idx]{cursor:pointer;user-select:none;position:relative}
+.admin-body th[data-sort-idx]:hover{color:var(--ink)}
+.admin-body th[data-sort-idx]:focus-visible{outline:2px solid var(--gold-deep);outline-offset:-2px}
+.sort-mark{
+  display:inline-block;width:0;height:0;margin-left:6px;vertical-align:middle;
+  border-left:4px solid transparent;border-right:4px solid transparent;
+  border-top:5px solid currentColor;opacity:.28;transition:.15s;
+}
+th[data-dir="asc"] .sort-mark{transform:rotate(180deg);opacity:1}
+th[data-dir="desc"] .sort-mark{opacity:1}
+.admin-body th.sorted{color:var(--ink)}
+
+/* 手機上的排序選單。桌機用點表頭，不需要它。 */
+.tbl-sort{display:none}
+@media(max-width:1240px), (pointer:coarse){
+  .tbl-sort{
+    display:block;caption-side:top;text-align:left;
+    padding:0 0 12px;
+  }
+  .tbl-sort label{
+    display:inline-flex;align-items:center;gap:8px;
+    font-size:.88rem;color:var(--ink-soft);font-weight:600;
+  }
+  .tbl-sort select{
+    min-height:44px;padding:8px 12px;border-radius:8px;
+    border:1px solid var(--line);background:var(--snow);
+    font-family:inherit;font-size:.92rem;color:var(--ink);
+  }
+}

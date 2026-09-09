@@ -154,13 +154,37 @@ function table(cols, rows) {
     return `<tbody><tr><td colspan="${spec.length}" style="text-align:center;padding:34px" class="dim">目前沒有資料</td></tr></tbody>`;
   }
 
-  const head = `<thead><tr>${spec.map(c =>
-    `<th${c.num ? ' class="num"' : ''}>${c.h}</th>`).join('')}</tr></thead>`;
+  /* 每個有標題的欄位都可以點著排序。空標題的（操作按鈕那欄）不給點。 */
+  const head = `<thead><tr>${spec.map((c, i) =>
+    c.h
+      ? `<th${c.num ? ' class="num"' : ''} data-sort-idx="${i}"
+             ${c.num ? 'data-sort-num="1"' : ''} tabindex="0" role="button"
+             aria-sort="none" title="點一下排序">${c.h}<i class="sort-mark"></i></th>`
+      : `<th></th>`).join('')}</tr></thead>`;
+
+  /* 窄螢幕上表頭是藏起來的（表格變成卡片），所以另外給一個排序選單。
+     放在 <caption> 裡是因為 table() 只能產出 table 內部的東西。 */
+  const sortBar = spec.some(c => c.h)
+    ? `<caption class="tbl-sort">
+         <label>排序
+           <select data-sort-pick>
+             <option value="">預設順序</option>
+             ${spec.map((c, i) => c.h
+               ? `<option value="${i}:asc">${c.h} ↑</option>
+                  <option value="${i}:desc">${c.h} ↓</option>` : '').join('')}
+           </select>
+         </label>
+       </caption>`
+    : '';
 
   const body = `<tbody>${rows.map(r => `<tr>${r.map((c, i) => {
     const sp   = spec[i] || {};
-    const html = (c && typeof c === 'object' && 'html' in c) ? c.html : c;
-    return `<td data-label="${esc(sp.h || '')}"${sp.num ? ' class="num"' : ''}>${html}</td>`;
+    const isObj = c && typeof c === 'object' && 'html' in c;
+    const html = isObj ? c.html : c;
+    /* 排序用的原始值。數字欄位存數字，不然「RM 1,180.00」會被當字串比，
+       排出來 RM 900 會排在 RM 1,180 後面。 */
+    const sortVal = isObj && 'n' in c ? ` data-sort="${c.n}"` : '';
+    return `<td data-label="${esc(sp.h || '')}"${sp.num ? ' class="num"' : ''}${sortVal}>${html}</td>`;
   }).join('')}</tr>`).join('')}</tbody>`;
 
   // 合計列：只在真的有欄位要加總時才出現
@@ -175,8 +199,75 @@ function table(cols, rows) {
       }).join('')}</tr></tfoot>`
     : '';
 
-  return head + body + foot;
+  return sortBar + head + body + foot;
 }
+
+/* ============================================================
+   表格排序
+   ------------------------------------------------------------
+   直接排 DOM 裡的 <tr>，不重新產生表格 —— 這樣不必知道每張表的資料
+   長什麼樣，所有表格自動都能排，之後新增的表也一樣。
+
+   比較的值優先看 td 的 data-sort（數字欄位會帶），沒有就用文字。
+   合計列在 <tfoot>，不會被動到。
+   ============================================================ */
+function sortTable(tbl, idx, dir) {
+  const body = tbl.tBodies[0];
+  if (!body) return;
+  const rows = [...body.rows];
+  if (rows.length < 2) return;
+
+  const val = (tr) => {
+    const td = tr.cells[idx];
+    if (!td) return '';
+    const raw = td.getAttribute('data-sort');
+    if (raw !== null) return Number(raw);
+    const t = td.textContent.trim();
+    // 純數字或帶千分位的金額也照數值比
+    const n = Number(t.replace(/[^\d.-]/g, ''));
+    return (t && Number.isFinite(n) && /\d/.test(t)) ? n : t.toLowerCase();
+  };
+
+  rows.sort((a, b) => {
+    const x = val(a), y = val(b);
+    const c = (typeof x === 'number' && typeof y === 'number')
+      ? x - y
+      : String(x).localeCompare(String(y), 'zh-Hant');
+    return dir === 'desc' ? -c : c;
+  });
+  rows.forEach(r => body.appendChild(r));
+
+  tbl.querySelectorAll('th[data-sort-idx]').forEach(th => {
+    const on = Number(th.dataset.sortIdx) === idx;
+    th.setAttribute('aria-sort', on ? (dir === 'desc' ? 'descending' : 'ascending') : 'none');
+    th.classList.toggle('sorted', on);
+    th.dataset.dir = on ? dir : '';
+  });
+}
+
+/** 點表頭排序；再點一次換方向。 */
+document.addEventListener('click', e => {
+  const th = e.target.closest('th[data-sort-idx]');
+  if (!th) return;
+  const tbl = th.closest('table');
+  const idx = Number(th.dataset.sortIdx);
+  sortTable(tbl, idx, th.dataset.dir === 'asc' ? 'desc' : 'asc');
+});
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Enter' && e.key !== ' ') return;
+  const th = e.target.closest?.('th[data-sort-idx]');
+  if (!th) return;
+  e.preventDefault();
+  th.click();
+});
+
+/** 手機上的排序選單。 */
+document.addEventListener('change', e => {
+  const sel = e.target.closest('[data-sort-pick]');
+  if (!sel || !sel.value) return;
+  const [idx, dir] = sel.value.split(':');
+  sortTable(sel.closest('table'), Number(idx), dir);
+});
 
 function renderAll() {
   /* 一個區塊出錯不該把整個後台畫不出來。
@@ -1261,12 +1352,31 @@ function renderUsers() {
   /* 帳號清單。只有具 edit.users 的人看得到下拉選單，其他人看到純文字。 */
   const editable = Perm.can('edit.users');
   const meU = (Perm.me() || {}).u;
+  const all = Store.read().users || [];
+
+  /* 待審核：用 Google 登入過但還沒放行的。
+     approved 欄位不存在的是舊的示範帳號，視同已通過。 */
+  const pend = document.getElementById('t-pending');
+  if (pend) {
+    const waiting = all.filter(u => u.approved === false);
+    pend.innerHTML = table(
+      ['Email', '姓名', '申請時間', ''],
+      waiting.map(u => [
+        `<b>${u.email || u.u}</b>`,
+        u.name || '—',
+        u.joined || '<span class="dim">—</span>',
+        editable
+          ? `<button class="mini-btn primary" data-approve="${u.u}">通過</button>`
+            + `<button class="mini-btn" data-reject="${u.u}">退回</button>`
+          : '<span class="dim">等管理員處理</span>',
+      ]));
+  }
 
   /* 欄位以 Email 為主 —— 改用 Google 登入之後，識別一個人的是他的
      Gmail，不是我們給的帳號代號。代號降成第二行。 */
   document.getElementById('t-users').innerHTML = table(
     ['Email / 帳號', '姓名 / 單位', '登入方式', 'ERP 權限', '前台身分', ''],
-    (Store.read().users || []).map(u => {
+    all.map(u => {
       const cur = u.perm || (u.role === 'admin' ? 'super' : u.role);
       const picker = editable
         ? `<select class="perm-pick" data-u="${u.u}"${u.u === meU ? ' disabled title="不能改自己的權限，避免把自己鎖在門外"' : ''}>
@@ -1293,6 +1403,19 @@ function renderUsers() {
         { admin:'管理', farmer:'果農', buyer:'收購商' }[u.role] || u.role,
         editable ? `<button class="mini-btn" data-user-edit="${u.u}">編輯</button>` : '',
       ];
+    }));
+
+  document.querySelectorAll('[data-approve],[data-reject]').forEach(b =>
+    b.addEventListener('click', () => {
+      if (!Perm.can('edit.users')) return;
+      const u = b.dataset.approve || b.dataset.reject;
+      if (b.dataset.approve) {
+        Store.setUserApproved(u, true);
+      } else {
+        if (!confirm(`退回 ${u} 的申請？這會把這個帳號刪掉，對方要重新登入才會再出現。`)) return;
+        Store.removeUser(u);
+      }
+      renderUsers();
     }));
 
   document.querySelectorAll('.perm-pick').forEach(sel =>

@@ -256,6 +256,29 @@ const Store = {
     return true;
   },
 
+  /** 通過或退回一個待審核的帳號。 */
+  setUserApproved(u, ok) {
+    const db = Store.read();
+    const user = (db.users || []).find(x => x.u === u);
+    if (!user) return false;
+    user.approved = !!ok;
+    Store.write(db);
+    patchRow('users', 'u', u, { approved: !!ok });
+    return true;
+  },
+
+  /** 刪掉一個帳號（用來退回申請）。 */
+  removeUser(u) {
+    const db = Store.read();
+    const i = (db.users || []).findIndex(x => x.u === u);
+    if (i < 0) return false;
+    db.users.splice(i, 1);
+    Store.write(db);
+    if (SB.on) SB.remove('users', 'u', u)
+      .catch(e => console.warn('[雲端刪除失敗] users', e.message));
+    return true;
+  },
+
   /** 改一個帳號的 ERP 權限角色。 */
   setUserPerm(u, perm) {
     const db = Store.read();
@@ -329,29 +352,47 @@ const Store = {
     else push('settings', { key, value: String(value), note: '' });
   },
 
-  /* ---------- 客戶備註 ---------- */
-  /* 認養人是從訂單聚合出來的，沒有自己的資料表。備註全部塞在
-     settings 的一列 JSON 裡（key = customer_notes），用 Email 當索引 ——
-     這樣不必改資料表結構，而且跟其他設定一起同步到雲端。
+  /* ---------- 備註 ---------- */
+  /* 認養人是從訂單聚合出來的、拆帳是算出來的，兩者都沒有自己的資料表。
+     備註全部塞在 settings 的一列 JSON 裡（key = memos），
+     索引是「類型:識別碼」，例如 customer:a@b.com、order:RF-2026-0001。
+     這樣不必為了加備註去改資料表結構，也跟其他設定一起同步到雲端。
      筆數是幾十到幾百，一列 JSON 綽綽有餘。 */
-  customerNotes() {
-    try { return JSON.parse(Store.setting('customer_notes', '{}')) || {}; }
+  memos() {
+    try { return JSON.parse(Store.setting('memos', '{}')) || {}; }
     catch (e) { return {}; }
   },
 
-  customerNote(email) {
-    return Store.customerNotes()[String(email || '').trim().toLowerCase()] || '';
+  memoKey(type, id) {
+    return `${type}:${String(id || '').trim().toLowerCase()}`;
   },
 
-  saveCustomerNote(email, text) {
-    const key = String(email || '').trim().toLowerCase();
-    if (!key) return false;
-    const all = Store.customerNotes();
+  memo(type, id) {
+    return Store.memos()[Store.memoKey(type, id)] || '';
+  },
+
+  saveMemo(type, id, text) {
+    const key = Store.memoKey(type, id);
+    if (!id) return false;
+    const all = Store.memos();
     const t = String(text || '').trim();
     if (t) all[key] = t; else delete all[key];
-    Store.saveSetting('customer_notes', JSON.stringify(all));
+    Store.saveSetting('memos', JSON.stringify(all));
     return true;
   },
+
+  /* 舊名保留：客戶備註原本存在 customer_notes，這裡一併讀進來，
+     不然先前寫的備註會憑空消失。 */
+  customerNote(email) {
+    const now = Store.memo('customer', email);
+    if (now) return now;
+    try {
+      const old = JSON.parse(Store.setting('customer_notes', '{}')) || {};
+      return old[String(email || '').trim().toLowerCase()] || '';
+    } catch (e) { return ''; }
+  },
+
+  saveCustomerNote(email, text) { return Store.saveMemo('customer', email, text); },
 
   /* ---------- 佣金拆帳 ---------- */
 
@@ -500,6 +541,16 @@ const SB = {
       body: JSON.stringify(patch),
     });
     if (!r.ok) throw new Error(`更新 ${tableName} 失敗（${r.status}）`);
+  },
+
+  /* 刪除。目前只有「退回註冊申請」會用到 ——
+     訂單、撥款那種代表真實交易的資料一律不從前端刪。 */
+  async remove(tableName, pk, pkVal) {
+    const r = await fetch(`${SB.url}/rest/v1/${tableName}?${pk}=eq.${encodeURIComponent(pkVal)}`, {
+      method: 'DELETE',
+      headers: SB.head({ Prefer: 'return=minimal' }, await SB.bearer()),
+    });
+    if (!r.ok) throw new Error(`刪除 ${tableName} 失敗（${r.status}）`);
   },
 };
 
