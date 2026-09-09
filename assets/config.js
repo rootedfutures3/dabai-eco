@@ -37,7 +37,7 @@ const CLOUD_ON = Boolean(SUPABASE_URL && SUPABASE_ANON_KEY);
    等你架好後端（Cloudflare Workers、Vercel Functions 都可以），
    把網址填進來，按鈕就會自動改走代發。
    ------------------------------------------------------------ */
-const PUBLISH_ENDPOINT = '';
+const PUBLISH_ENDPOINT = 'https://tanju-publish.rootedfutures3.workers.dev';
 
 /* ------------------------------------------------------------
    登入模式
@@ -101,7 +101,7 @@ const SUPER_EMAILS = [
    Supabase 的登入 token —— 等 AUTH_MODE 切成 'supabase' 之後再換，
    publish-worker.js 的最後面有寫怎麼改。
    ------------------------------------------------------------ */
-const PUBLISH_KEY = '';
+const PUBLISH_KEY = 'tanju_RR2yvHpYv61cBt0v2B2hN1oN1iHtrc1A';
 
 /* ------------------------------------------------------------
    已經開好的社群帳號

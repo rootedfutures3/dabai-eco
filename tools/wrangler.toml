@@ -18,3 +18,8 @@ main = "publish-worker.js"
 # Workers 的執行環境版本。往前調會改變 Node API 的行為，
 # 沒有特別理由不要動。
 compatibility_date = "2026-09-09"
+
+# 每次 deploy 除了正式網址，Cloudflare 預設還會多開一組「預覽網址」。
+# 我們用不到，而它們是公開的 —— 等於同一支程式多了幾個對外的入口。
+# 少一個入口就少一個要顧的地方。
+preview_urls = false
