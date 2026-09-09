@@ -1,0 +1,4 @@
+[{"key":"currency","value":"RM","note":"幣別","updated_at":"2026-08-22T02:29:50.143353+00:00"}, 
+ {"key":"custom_roles","value":"{}","note":"","updated_at":"2026-08-22T02:56:25.512465+00:00"}, 
+ {"key":"commission_rate","value":"20","note":"平台佣金％ —— 向收購商／認養人收取，其餘給果農","updated_at":"2026-08-22T02:29:50.143353+00:00"}, 
+ {"key":"deposit_share","value":"55","note":"果農在開花前先拿到的％（佔合約總額）","updated_at":"2026-08-22T02:29:50.143353+00:00"}]

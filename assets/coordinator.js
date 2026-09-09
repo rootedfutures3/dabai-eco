@@ -224,9 +224,9 @@ function renderJobs() {
 
   if (title) title.textContent = '今日派工單';
   const jobs = [
-    { id:'WO-0312', area:'Song 支流果園',      task:'開花期巡檢 + 追肥確認', trees:'DB-009, DB-010', due:'今日 12:00' },
-    { id:'WO-0313', area:'Sibu 近郊示範園',    task:'幼果疏果與過磅',        trees:'DB-015, DB-016', due:'今日 16:00' },
-    { id:'WO-0314', area:'Rumah Panjai 上游',  task:'認養樹掛牌 + 拍照存證',  trees:'DB-001, DB-002, DB-003', due:'明日 09:00' },
+    { id:'WO-0312', area:'Song 支流果園',      task:'開花期巡檢 + 追肥確認', trees:'DB-000009, DB-000010', due:'今日 12:00' },
+    { id:'WO-0313', area:'Sibu 近郊示範園',    task:'幼果疏果與過磅',        trees:'DB-000015, DB-000016', due:'今日 16:00' },
+    { id:'WO-0314', area:'Rumah Panjai 上游',  task:'認養樹掛牌 + 拍照存證',  trees:'DB-000001, DB-000002, DB-000003', due:'明日 09:00' },
   ];
   box.innerHTML = jobs.map(j => `
     <div class="job">

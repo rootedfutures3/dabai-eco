@@ -1,0 +1,4 @@
+[{"id":1,"date":"2026-01-28","company":"南洋食品工業","contact":"李采薇","title":"永續採購經理","email":"esg@example.com","need":"ESG 綠色包樹 100 棵","budget":"RM 80,000–120,000","stage":"提案中","created_at":"2026-08-21T17:51:05.558994+00:00"}, 
+ {"id":2,"date":"2026-02-06","company":"Borneo Fresh Export","contact":"Tan Chee Meng","title":"採購總監","email":"sourcing@example.com","need":"榴槤契作包銷（3 年）","budget":"RM 300,000+","stage":"洽談中","created_at":"2026-08-21T17:51:43.040603+00:00"}, 
+ {"id":3,"date":"2026-02-18","company":"綠盾保險","contact":"張書維","title":"CSR 專員","email":"csr@example.com","need":"員工認養禮 50 棵","budget":"RM 25,000–40,000","stage":"待回覆","created_at":"2026-08-21T17:51:43.040603+00:00"}, 
+ {"id":4,"date":"2026-03-01","company":"Sarawak Hotel Group","contact":"Adeline Lau","title":"營運副總","email":"ops@example.com","need":"餐飲食材直採 + 故事行銷","budget":"洽談中","stage":"初次接觸","created_at":"2026-08-21T17:51:43.040603+00:00"}]

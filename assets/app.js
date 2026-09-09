@@ -351,7 +351,9 @@ function nextTreeId(crop) {
   const pre = { dabai:'DB', durian:'DR', rambutan:'RB' }[crop];
   const nums = allTrees().filter(t => t.id.startsWith(pre))
     .map(t => +t.id.slice(3)).filter(n => !isNaN(n));
-  return `${pre}-${String(Math.max(0, ...nums) + 1).padStart(3, '0')}`;
+  /* 六位數。三位數只到 999 棵就用完了 —— 一個果園動輒上百棵，
+     真的推廣起來很快會撞到上限，而編號一旦印在標籤與合約上就不好改了。 */
+  return `${pre}-${String(Math.max(0, ...nums) + 1).padStart(6, '0')}`;
 }
 
 /* ---------- 果農：認養狀況 ---------- */

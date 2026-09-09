@@ -1,0 +1,7 @@
+[{"u":"farmer","pass":"admin","role":"farmer","name":"Ak. Jelani","org":"Rumah Panjai 上游果園","phone":"+60 13-220 1188","email":"jelani@example.com","area":"Sibu","created_at":"2026-08-21T17:53:50.99368+00:00","perm":"farmer"}, 
+ {"u":"amelia","pass":"tanju2026","role":"admin","name":"Amelia","org":"ROOTED FUTURES","phone":"","email":"amelia@example.com","area":"","created_at":"2026-08-22T02:40:25.483257+00:00","perm":"super"}, 
+ {"u":"buyer","pass":"admin","role":"buyer","name":"李采薇","org":"南洋食品工業","phone":"+60 82-334 999","email":"procurement@nanyang.com.my","area":"Kuching","created_at":"2026-08-21T17:53:50.99368+00:00","perm":"buyer"}, 
+ {"u":"admin","pass":"admin","role":"admin","name":"平台管理員","org":"ROOTED FUTURES","phone":"+60 82-000 000","email":"admin@rootedfutures.my","area":"Song","created_at":"2026-08-21T17:53:50.99368+00:00","perm":"super"}, 
+ {"u":"amily","pass":"amily","role":"admin","name":"amily","org":"","phone":"+60 13-567 3995","email":"rootedfutures3@gmail.com","area":"Song","created_at":"2026-08-22T03:08:18.857269+00:00","perm":"super"}, 
+ {"u":"coord","pass":"coord2026","role":"admin","name":"Anding","org":"溝通者 · Song","phone":"+60 13-880 4412","email":"coord@rootedfutures.my","area":"Song","created_at":"2026-08-29T04:49:24.345973+00:00","perm":"coord"}, 
+ {"u":"idrawer1217","pass":"","role":"admin","name":"HOU","org":"","phone":"","email":"idrawer1217@gmail.com","area":"","created_at":"2026-09-09T03:15:57.650642+00:00","perm":"super"}]

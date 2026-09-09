@@ -27,14 +27,14 @@ const SEED = {
 
   /* 撥款紀錄 —— 實際付給果農的每一筆錢 */
   payouts: [
-    { ref:'PO-2026-0001', date:'2026-01-15', orderNo:'RF-2026-0001', treeId:'DB-002', farmer:'Lim 氏果園（第二代）', kind:'deposit', amount:220, method:'DuitNow 轉帳', status:'已撥款', note:'開花前訂金' },
-    { ref:'PO-2026-0002', date:'2026-01-20', orderNo:'RF-2026-0002', treeId:'DR-002', farmer:'Nyawai 家族',          kind:'deposit', amount:649, method:'DuitNow 轉帳', status:'已撥款', note:'開花前訂金' },
-    { ref:'PO-2026-0003', date:'2026-02-12', orderNo:'RF-2026-0004', treeId:'DB-008', farmer:'Rumah Ugap 合作社',    kind:'deposit', amount:247.5, method:'銀行匯款', status:'已撥款', note:'企業包樹訂金' },
+    { ref:'PO-2026-0001', date:'2026-01-15', orderNo:'RF-2026-0001', treeId:'DB-000002', farmer:'Lim 氏果園（第二代）', kind:'deposit', amount:220, method:'DuitNow 轉帳', status:'已撥款', note:'開花前訂金' },
+    { ref:'PO-2026-0002', date:'2026-01-20', orderNo:'RF-2026-0002', treeId:'DR-000002', farmer:'Nyawai 家族',          kind:'deposit', amount:649, method:'DuitNow 轉帳', status:'已撥款', note:'開花前訂金' },
+    { ref:'PO-2026-0003', date:'2026-02-12', orderNo:'RF-2026-0004', treeId:'DB-000008', farmer:'Rumah Ugap 合作社',    kind:'deposit', amount:247.5, method:'銀行匯款', status:'已撥款', note:'企業包樹訂金' },
   ],
 
   /* 社群貼文 */
   posts: [
-    { id:1, at:'2026-03-04 09:10', channel:'facebook',  topic:'tree',    topicId:'DB-001', lang:'zh', title:'DB-001 開花了', body:'Song 上游果園的 DB-001 今年花況密集，溝通者 Anding 剛回報完第一次追肥。這棵樹已經被認養，收成會直接寄到認養人手上。', tags:'#Dabai #砂拉越 #包樹認養 #TANJU', status:'已發布', link:'', scheduled:'' },
+    { id:1, at:'2026-03-04 09:10', channel:'facebook',  topic:'tree',    topicId:'DB-000001', lang:'zh', title:'DB-000001 開花了', body:'Song 上游果園的 DB-000001 今年花況密集，溝通者 Anding 剛回報完第一次追肥。這棵樹已經被認養，收成會直接寄到認養人手上。', tags:'#Dabai #砂拉越 #包樹認養 #TANJU', status:'已發布', link:'', scheduled:'' },
     { id:2, at:'2026-03-06 18:40', channel:'instagram', topic:'product', topicId:'kuaci', lang:'en', title:'Dabai Kuaci', body:'The seed everyone used to throw away. Roasted, salted, addictive. Zero-waste snacking from the Borneo rainforest.', tags:'#dabai #sarawak #zerowaste #borneo #TANJU', status:'草稿', link:'', scheduled:'' },
   ],
   /* 使用者帳號（示範）—— 密碼一律為 admin，僅供 demo */
@@ -51,18 +51,18 @@ const SEED = {
   ],
 
   messages: [
-    { id:1, treeId:'DB-002', from:'buyer', to:'farmer', at:'2026-01-15 10:22', text:'你好，想確認這棵樹今年的開花狀況，方便拍幾張照片嗎？' },
-    { id:2, treeId:'DB-002', from:'farmer', to:'buyer', at:'2026-01-15 14:05', text:'沒問題，明天早上溝通者會去現場，我請他多拍幾張上傳。' },
+    { id:1, treeId:'DB-000002', from:'buyer', to:'farmer', at:'2026-01-15 10:22', text:'你好，想確認這棵樹今年的開花狀況，方便拍幾張照片嗎？' },
+    { id:2, treeId:'DB-000002', from:'farmer', to:'buyer', at:'2026-01-15 14:05', text:'沒問題，明天早上溝通者會去現場，我請他多拍幾張上傳。' },
   ],
 
   orders: [
-    { no:'RF-2026-0001', date:'2026-01-14', treeId:'DB-002', crop:'dabai',    customer:'陳品妤', email:'ping@example.com', phone:'+60 12-330 8821', amount:400,  paid:200, channel:'FPX 網路銀行', status:'已付訂金' },
-    { no:'RF-2026-0002', date:'2026-01-19', treeId:'DR-002', crop:'durian',   customer:'Ong Wei Sheng', email:'ws.ong@example.com', phone:'+60 16-772 1140', amount:1180, paid:1180, channel:'信用卡', status:'已付全額' },
-    { no:'RF-2026-0003', date:'2026-02-02', treeId:'RB-003', crop:'rambutan', customer:'林嘉恩', email:'jiaen@example.com', phone:'+60 11-2098 4471', amount:230,  paid:115,  channel:'DuitNow QR', status:'已付訂金' },
-    { no:'RF-2026-0004', date:'2026-02-11', treeId:'DB-008', crop:'dabai',    customer:'南洋食品工業', email:'esg@example.com', phone:'+60 82-334 900', amount:450, paid:450, channel:'企業匯款', status:'已付全額', buyer:'buyer' },
-    { no:'RF-2026-0005', date:'2026-02-23', treeId:'DR-010', crop:'durian',   customer:'Nurul Aisyah', email:'aisyah@example.com', phone:'+60 13-448 7712', amount:960, paid:480, channel:'FPX 網路銀行', status:'已付訂金' },
-    { no:'RF-2026-0007', date:'2026-03-08', treeId:'DB-002', crop:'dabai',    customer:'南洋食品工業', email:'esg@example.com', phone:'+60 82-334 900', amount:400, paid:200, channel:'企業匯款', status:'已付訂金', buyer:'buyer' },
-    { no:'RF-2026-0006', date:'2026-03-05', treeId:'DB-014', crop:'dabai',    customer:'黃俊傑', email:'jj.wong@example.com', phone:'+60 17-556 2093', amount:410, paid:410, channel:'信用卡', status:'已付全額' },
+    { no:'RF-2026-0001', date:'2026-01-14', treeId:'DB-000002', crop:'dabai',    customer:'陳品妤', email:'ping@example.com', phone:'+60 12-330 8821', amount:400,  paid:200, channel:'FPX 網路銀行', status:'已付訂金' },
+    { no:'RF-2026-0002', date:'2026-01-19', treeId:'DR-000002', crop:'durian',   customer:'Ong Wei Sheng', email:'ws.ong@example.com', phone:'+60 16-772 1140', amount:1180, paid:1180, channel:'信用卡', status:'已付全額' },
+    { no:'RF-2026-0003', date:'2026-02-02', treeId:'RB-000003', crop:'rambutan', customer:'林嘉恩', email:'jiaen@example.com', phone:'+60 11-2098 4471', amount:230,  paid:115,  channel:'DuitNow QR', status:'已付訂金' },
+    { no:'RF-2026-0004', date:'2026-02-11', treeId:'DB-000008', crop:'dabai',    customer:'南洋食品工業', email:'esg@example.com', phone:'+60 82-334 900', amount:450, paid:450, channel:'企業匯款', status:'已付全額', buyer:'buyer' },
+    { no:'RF-2026-0005', date:'2026-02-23', treeId:'DR-000010', crop:'durian',   customer:'Nurul Aisyah', email:'aisyah@example.com', phone:'+60 13-448 7712', amount:960, paid:480, channel:'FPX 網路銀行', status:'已付訂金' },
+    { no:'RF-2026-0007', date:'2026-03-08', treeId:'DB-000002', crop:'dabai',    customer:'南洋食品工業', email:'esg@example.com', phone:'+60 82-334 900', amount:400, paid:200, channel:'企業匯款', status:'已付訂金', buyer:'buyer' },
+    { no:'RF-2026-0006', date:'2026-03-05', treeId:'DB-000014', crop:'dabai',    customer:'黃俊傑', email:'jj.wong@example.com', phone:'+60 17-556 2093', amount:410, paid:410, channel:'信用卡', status:'已付全額' },
   ],
 
   leads: [
@@ -73,15 +73,15 @@ const SEED = {
   ],
 
   reports: [
-    { at:'2026-03-02 09:14', treeId:'DB-001', by:'溝通者 · Anding', stage:'開花期', health:'良好', note:'花況密集，預估產量優於去年。已完成第一次追肥。', photos:1 },
-    { at:'2026-03-02 10:41', treeId:'DR-004', by:'溝通者 · Anding', stage:'幼果期', health:'良好', note:'落果率正常，已疏果一次。', photos:2 },
-    { at:'2026-03-03 15:08', treeId:'DR-007', by:'溝通者 · Melissa', stage:'幼果期', health:'需注意', note:'發現少量果實蠅危害，已通報顧問安排防治。', photos:3 },
-    { at:'2026-03-05 08:52', treeId:'RB-004', by:'溝通者 · Melissa', stage:'成熟期', health:'良好', note:'預計兩週後可採收，已預約過磅。', photos:1 },
+    { at:'2026-03-02 09:14', treeId:'DB-000001', by:'溝通者 · Anding', stage:'開花期', health:'良好', note:'花況密集，預估產量優於去年。已完成第一次追肥。', photos:1 },
+    { at:'2026-03-02 10:41', treeId:'DR-000004', by:'溝通者 · Anding', stage:'幼果期', health:'良好', note:'落果率正常，已疏果一次。', photos:2 },
+    { at:'2026-03-03 15:08', treeId:'DR-000007', by:'溝通者 · Melissa', stage:'幼果期', health:'需注意', note:'發現少量果實蠅危害，已通報顧問安排防治。', photos:3 },
+    { at:'2026-03-05 08:52', treeId:'RB-000004', by:'溝通者 · Melissa', stage:'成熟期', health:'良好', note:'預計兩週後可採收，已預約過磅。', photos:1 },
   ],
 
   wages: [
-    { month:'2026-02', person:'Ak. Jelani 一家',      role:'果農',   base:1800, bonus:420,  note:'DB-001~003 認養分潤' },
-    { month:'2026-02', person:'Nyawai 家族',          role:'果農',   base:1600, bonus:980,  note:'DR-001~003 認養分潤' },
+    { month:'2026-02', person:'Ak. Jelani 一家',      role:'果農',   base:1800, bonus:420,  note:'DB-000001~003 認養分潤' },
+    { month:'2026-02', person:'Nyawai 家族',          role:'果農',   base:1600, bonus:980,  note:'DR-000001~003 認養分潤' },
     { month:'2026-02', person:'Anding',               role:'溝通者', base:1400, bonus:180,  note:'現場回報 42 筆' },
     { month:'2026-02', person:'Melissa',              role:'溝通者', base:1400, bonus:150,  note:'現場回報 35 筆' },
     { month:'2026-02', person:'Rumah Ugap 採收班',    role:'摘果者', base:2200, bonus:0,    note:'Betong 果園採收 8 日' },

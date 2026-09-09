@@ -757,7 +757,7 @@ function buildCalendar() {
     /* 用目前的介面語言產生，而不是寫死中文。
        寫死的話，排程表的預覽永遠是中文，切到英文之後翻譯器只能對
        「截斷過」的字串做比對 —— 比對不到整句，就變成
-       「DB-001 — a 34-year-old Dabai 黑橄欖…」這種半中半英。
+       「DB-000001 — a 34-year-old Dabai 黑橄欖…」這種半中半英。
        文案本來就有三種語言，直接產對的那一種就好。 */
     const lang = (typeof I18N !== 'undefined' && ['zh', 'en', 'ms'].includes(I18N.lang))
       ? I18N.lang : 'zh';
