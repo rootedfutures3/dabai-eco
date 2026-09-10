@@ -71,7 +71,7 @@ const SITE = 'https://rootedfutures3.github.io/dabai-eco/';
 /* 產品題材（對應 products.html 的品項） */
 const PRODUCTS = [
   { id:'fresh',  zh:'產季限定生鮮 Dabai', en:'Fresh seasonal Dabai',  ms:'Dabai segar bermusim',
-    zhBody:'產季限定，長屋契作直採，冷鏈配送。附上「泡 60–70°C 熱水 10 分鐘」的正確吃法指南，第一次吃也不會踩雷。',
+    zhBody:'產季限定，長屋契作直採，冷鏈配送。附上正確吃法指南（60–70°C 熱水泡到軟，約 10–30 分鐘），第一次吃也不會踩雷。',
     enBody:'Season-limited, sourced straight from longhouse growers, cold-chain delivered. Comes with the soaking guide so your first Dabai tastes the way it should.',
     msBody:'Terhad ikut musim, terus daripada penanam rumah panjang, penghantaran rantaian sejuk. Disertakan panduan rendam supaya rasa pertama anda betul.' },
   { id:'kuaci',  zh:'Dabai Kuaci 果核零嘴', en:'Dabai Kuaci roasted seeds', ms:'Dabai Kuaci biji panggang',
@@ -311,9 +311,12 @@ const TONES = {
     hook: { zh:'很多人沒吃過 Dabai，先講清楚它是什麼。',
             en:'Most people have never eaten Dabai. Here is what it actually is.',
             ms:'Ramai belum pernah makan Dabai. Ini sebenarnya apa dia.' },
-    close: { zh:'吃法：60–70°C 的熱水泡 10 分鐘，果肉會軟得像酪梨。',
-             en:'How to eat it: soak in 60–70°C water for 10 minutes and the flesh softens like avocado.',
-             ms:'Cara makan: rendam dalam air 60–70°C selama 10 minit, isinya lembut seperti avokado.' },
+    /* 時間是團隊實際泡過之後改的 —— 原本寫死 10 分鐘，
+       但 15 分鐘還硬、30 分鐘才好的情況很常見。
+       可靠的判準是手感，不是時鐘。 */
+    close: { zh:'吃法：60–70°C 的熱水泡到按下去會軟，大約 10–30 分鐘，果肉會軟得像酪梨。',
+             en:'How to eat it: soak in 60–70°C water until it gives under your finger — usually 10 to 30 minutes — and the flesh softens like avocado.',
+             ms:'Cara makan: rendam dalam air 60–70°C sehingga lembut ditekan — biasanya 10 hingga 30 minit — isinya jadi lembut seperti avokado.' },
   },
   season: {
     label: { zh:'產季限定', en:'In season now', ms:'Bermusim sekarang' },
