@@ -14,12 +14,18 @@ const LANGS = {
   zh: { label: '中文',          htmlLang: 'zh-Hant', dict: null },
   en: { label: 'ENGLISH',       htmlLang: 'en',      dict: () => window.LANG_EN },
   ms: { label: 'BAHASA MELAYU', htmlLang: 'ms',      dict: () => window.LANG_MS },
-  iba:{ label: 'JAKU IBAN',     htmlLang: 'iba',     dict: () => window.LANG_IBA },
+  /* Iban 的字典還在建置，目前只有導覽和常用字。
+     fallback 指定 ms 的意思是：查不到的句子退到馬來文，不是退到中文。
+     Song 當地的 Iban 使用者讀得懂馬來文，讀不懂中文 ——
+     退到中文等於這個選項對他們沒有用。 */
+  iba:{ label: 'JAKU IBAN', htmlLang: 'iba', dict: () => window.LANG_IBA,
+        fallback: 'ms', partial: true },
 };
 
 const I18N = {
   lang: 'zh',
   dict: null,
+  fallbackDict: null,
   observer: null,
 
   /** 目前語言的字典（中文時為 null） */
@@ -34,6 +40,13 @@ const I18N = {
     // 1) 完全比對
     const t = this.dict[key];
     if (t !== undefined) return t;
+
+    /* 這個語言的字典還不完整時，先問備援語言，再放棄。
+       放棄的結果是原樣回傳，也就是中文。 */
+    if (this.fallbackDict) {
+      const f = this.fallbackDict[key];
+      if (f !== undefined) return f;
+    }
 
     // 2) 數字樣板：把數字抽成 {n} 再查，例如
     //    「36 棵」→ 樣板「{n} 棵」；「上架 36 棵」→「上架 {n} 棵」
@@ -253,6 +266,9 @@ const I18N = {
     this.lang = lang;
     const cfg = LANGS[lang];
     this.dict = cfg.dict ? (cfg.dict() || null) : null;
+    /* 字典不完整的語言，查不到就退到備援語言（見 LANGS.iba）。 */
+    const fb = cfg.fallback && LANGS[cfg.fallback];
+    this.fallbackDict = (fb && fb.dict) ? (fb.dict() || null) : null;
 
     document.documentElement.lang = cfg.htmlLang;
     try { localStorage.setItem(I18N_KEY, lang); } catch (e) {}
@@ -314,7 +330,10 @@ const I18N = {
       </button>
       <div class="lang-menu" role="menu">
         ${Object.entries(LANGS).map(([k, v]) =>
-          `<button class="lang-btn" data-lang="${k}" type="button" role="menuitem">${v.label}</button>`).join('')}
+          /* 字典還沒補完的語言要標出來。不標的話使用者切過去看到滿頁
+             別的語言，會以為網站壞了，而不是「這個語言還在做」。 */
+          `<button class="lang-btn" data-lang="${k}" type="button" role="menuitem">${v.label}${
+             v.partial ? '<small class="lang-wip">sema digaga · 建置中</small>' : ''}</button>`).join('')}
       </div>`;
 
     const cta = nav.querySelector('.nav-cta');

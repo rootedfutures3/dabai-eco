@@ -3503,3 +3503,13 @@ th[data-dir="desc"] .sort-mark::before{content:"↓"}
   margin-top:12px;padding-top:12px;border-top:1px solid var(--line);
   font-size:.86rem;
 }
+
+/* 語言選單裡「建置中」的標記。
+   Iban 的字典只有導覽和常用字，切過去大部分會退到馬來文 ——
+   先說清楚，比讓人以為網站壞掉好。 */
+.lang-wip{
+  display:block;margin-top:2px;
+  font-size:.68rem;font-weight:400;letter-spacing:.02em;
+  color:var(--ink-soft, #6b6255);opacity:.85;
+}
+.lang-btn.on .lang-wip{opacity:.7}
