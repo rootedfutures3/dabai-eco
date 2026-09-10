@@ -91,15 +91,41 @@ const I18N = {
    * 開頁連上雲端後改寫狀態列），快取就過期了 —— 一切語言就會跳回舊句子。
    * 呼叫這個把快取清掉並重譯，畫面才會跟著新內容走。
    */
+  /**
+   * 這一塊的內容被程式改過了，重新翻一次。
+   *
+   * 清記錄之前一定要先把原文放回去。順序顛倒的話會出事：
+   * 畫面上當下是英文，清掉記錄再重新掃一遍，引擎就把「Sign In」
+   * 當成原文記下來 —— 這一塊從此卡在英文，切回中文也回不來，
+   * 而且看起來像壞掉而不是像沒翻譯。登入卡片就是這樣壞的。
+   */
   refresh(el) {
     if (!el) return;
-    el.querySelectorAll('[data-o-full],[data-o-html],[data-o-text]').forEach(n => {
-      delete n.dataset.oFull; delete n.dataset.oHtml; delete n.dataset.oText;
+
+    /* 先還原。祖先在前（querySelectorAll 是文件順序），
+       還原祖先的 innerHTML 會連同底下整段標記一起換回來，
+       所以之後遇到已經脫離文件的子節點就跳過。 */
+    const marked = [el, ...el.querySelectorAll('[data-o-full],[data-o-html],[data-o-text]')];
+    marked.forEach(n => {
+      if (!n.isConnected || !n.dataset) return;
+      if (n.dataset.oHtml !== undefined)      n.innerHTML   = n.dataset.oHtml;
+      else if (n.dataset.oText !== undefined) n.textContent = n.dataset.oText;
     });
-    delete el.dataset.oFull; delete el.dataset.oHtml; delete el.dataset.oText;
-    // 文字節點的原文記在 __o 上，一併清掉
+
+    /* 剩下沒有被整段還原到的文字節點，用 __o 各自還原 */
     const w = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
-    let n; while ((n = w.nextNode())) delete n.__o;
+    const texts = []; let n;
+    while ((n = w.nextNode())) texts.push(n);
+    texts.forEach(t => { if (t.__o !== undefined) t.nodeValue = t.__o; });
+
+    /* 記錄清乾淨，讓 apply 重新以「真正的原文」建檔 */
+    [el, ...el.querySelectorAll('[data-o-full],[data-o-html],[data-o-text]')].forEach(m => {
+      if (!m.dataset) return;
+      delete m.dataset.oFull; delete m.dataset.oHtml; delete m.dataset.oText;
+    });
+    const w2 = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+    let n2; while ((n2 = w2.nextNode())) delete n2.__o;
+
     this.apply(el);
   },
 
