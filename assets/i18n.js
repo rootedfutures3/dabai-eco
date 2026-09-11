@@ -105,18 +105,30 @@ const I18N = {
     /* 先還原。祖先在前（querySelectorAll 是文件順序），
        還原祖先的 innerHTML 會連同底下整段標記一起換回來，
        所以之後遇到已經脫離文件的子節點就跳過。 */
+    /* 只還原「還是我們自己翻出來的那個結果」的節點。
+       呼叫 refresh 的人常常是剛剛才把新字寫進去（麵包屑就是這樣），
+       無條件還原會把那個新字換成上一次的舊原文。 */
+    const mine = (now, orig) => now === orig || now === this.translate(orig);
+
     const marked = [el, ...el.querySelectorAll('[data-o-full],[data-o-html],[data-o-text]')];
     marked.forEach(n => {
       if (!n.isConnected || !n.dataset) return;
-      if (n.dataset.oHtml !== undefined)      n.innerHTML   = n.dataset.oHtml;
-      else if (n.dataset.oText !== undefined) n.textContent = n.dataset.oText;
+      if (n.dataset.oHtml !== undefined) {
+        if (mine(this.norm(n.textContent), n.dataset.oFull ?? this.norm(n.textContent))) {
+          n.innerHTML = n.dataset.oHtml;
+        }
+      } else if (n.dataset.oText !== undefined) {
+        if (mine(n.textContent, n.dataset.oText)) n.textContent = n.dataset.oText;
+      }
     });
 
     /* 剩下沒有被整段還原到的文字節點，用 __o 各自還原 */
     const w = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
     const texts = []; let n;
     while ((n = w.nextNode())) texts.push(n);
-    texts.forEach(t => { if (t.__o !== undefined) t.nodeValue = t.__o; });
+    texts.forEach(t => {
+      if (t.__o !== undefined && mine(t.nodeValue, t.__o)) t.nodeValue = t.__o;
+    });
 
     /* 記錄清乾淨，讓 apply 重新以「真正的原文」建檔 */
     [el, ...el.querySelectorAll('[data-o-full],[data-o-html],[data-o-text]')].forEach(m => {
