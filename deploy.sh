@@ -30,8 +30,22 @@ if command -v node >/dev/null; then
     echo "❌ 先把上面的名稱衝突解決，不然那一頁會整個壞掉。"; exit 1; }
 fi
 
+# 這個網站只住在一個地方。
+# 原本是拿「目前登入的 gh 帳號」去組 remote 網址 —— 但 gh 會自己切帳號，
+# 切掉之後 deploy.sh 會安靜地把 remote 改指到別人的 repo，推上去、顯示成功，
+# 而線上網站完全沒有更新。實際發生過，查了很久才發現。
+OWNER="rootedfutures3"
 USER_NAME=$(gh api user --jq .login)
 echo "👤 GitHub 帳號：$USER_NAME"
+
+if [ "$USER_NAME" != "$OWNER" ]; then
+  echo "⚠️  目前登入的是 $USER_NAME，但這個網站屬於 $OWNER。正在切換…"
+  gh auth switch --user "$OWNER" >/dev/null 2>&1 || {
+    echo "❌ 切不過去。請先執行：gh auth switch --user $OWNER"; exit 1; }
+  USER_NAME=$(gh api user --jq .login)
+  [ "$USER_NAME" = "$OWNER" ] || { echo "❌ 還是 $USER_NAME，停止。"; exit 1; }
+  echo "✅ 已切換為 $USER_NAME"
+fi
 
 # git 身分（若尚未設定）
 git config user.name  >/dev/null 2>&1 || git config user.name  "$USER_NAME"
@@ -63,6 +77,13 @@ fi
 git branch -M main
 git push -u origin main
 echo "✅ 已推送到 GitHub"
+
+# 確認推上去的真的是這個網站的 repo，不是同名的別人的
+REMOTE_NOW=$(git remote get-url origin)
+case "$REMOTE_NOW" in
+  *"$OWNER/$REPO_NAME"*) ;;
+  *) echo "❌ remote 指向 $REMOTE_NOW，不是 $OWNER/$REPO_NAME。網站不會更新。"; exit 1;;
+esac
 
 # 開啟 GitHub Pages（從 main 分支根目錄）
 echo "🌐 設定 GitHub Pages…"
