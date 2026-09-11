@@ -561,13 +561,13 @@ function initTreeModal(grid) {
       </div>
       <dl class="cert-rows">
         <div><dt>認養人</dt><dd>${order.customer}</dd></div>
-        <div><dt>果樹</dt><dd>${CROP_NAME[current.crop]}　${current.variety}</dd></div>
-        <div><dt>果園</dt><dd>${current.orchard}，${current.area}</dd></div>
-        <div><dt>果農</dt><dd>${current.farmer}</dd></div>
+        <div><dt>果樹</dt><dd>${tv(CROP_NAME[current.crop])}　${tv(current.variety)}</dd></div>
+        <div><dt>果園</dt><dd>${tv(current.orchard)}，${tv(current.area)}</dd></div>
+        <div><dt>果農</dt><dd>${tv(current.farmer)}</dd></div>
         <div><dt>認養期間</dt><dd>${today} 起 12 個月</dd></div>
         <div><dt>訂單編號</dt><dd>${order.no}</dd></div>
-        <div><dt>付款方式</dt><dd>${channel}</dd></div>
-        <div><dt>本次支付</dt><dd><b>RM ${paid}</b>${amtMode === 'full' ? '（全額）' : ` / RM ${current.price}（訂金）`}</dd></div>
+        <div><dt>付款方式</dt><dd>${tv(channel)}</dd></div>
+        <div><dt>本次支付</dt><dd><b>RM ${paid}</b>${amtMode === 'full' ? tv('（全額）') : ` / RM ${current.price}${tv('（訂金）')}`}</dd></div>
       </dl>
       <p class="cert-sim">🧪 模擬交易 — 未發生任何實際扣款</p>`;
 
@@ -585,6 +585,11 @@ function initTreeModal(grid) {
     if (e.key === 'Escape' && modal.classList.contains('open')) close();
   });
 }
+
+/* 證書上的品種、果園這些值是用中文存的，套進英文版面就會
+   變成「Tree: Dabai 黑橄欖 在地原生種」—— 標籤英文、內容中文。
+   字典裡本來就有這些名字，組的時候查一下就好。 */
+const tv = v => (typeof I18N !== 'undefined' && v) ? I18N.translate(String(v)) : v;
 
 /* ============================================================
    平台切換

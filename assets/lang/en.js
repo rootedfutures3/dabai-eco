@@ -25,7 +25,7 @@ window.LANG_EN = {
   '榴槤': 'Durian',
   '紅毛丹': 'Rambutan',
   '原鄉三寶': 'The Three Treasures',
-  '在地原生種': 'Native variety',
+  '在地原生種': 'native variety',
   '全部作物': 'All crops',
   '全部三寶': 'All three fruits',
   '作物': 'Crop',
@@ -2539,4 +2539,7 @@ window.LANG_EN = {
   '產季限定，長屋契作直採，冷鏈配送。附上正確吃法指南（60–70°C 熱水泡到軟，約 10–30 分鐘），第一次吃也不會踩雷。': 'Season-limited, sourced straight from longhouse growers, cold-chain delivered. Comes with the eating guide — 60–70°C water until soft, roughly 10 to 30 minutes — so your first Dabai tastes the way it should.',
   '通過': 'Approve',
   '退回': 'Reject',
+  '（全額）': ' (paid in full)',
+  '（訂金）': ' (deposit)',
+  '🧪 模擬交易 — 未發生任何實際扣款': '🧪 Simulated transaction — no money has actually moved',
 };
