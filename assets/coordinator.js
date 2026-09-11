@@ -450,6 +450,10 @@ function renderDue() {
       document.getElementById('report-form').scrollIntoView({ behavior:'smooth', block:'center' });
       document.getElementById('r-note').focus({ preventScroll:true });
     }));
+  /* 這一區是事後才畫出來的，i18n 在頁面載入時做的標題去重
+     來不及涵蓋它 —— 不補這一下，英文模式會出現
+     「Needs a visit　Needs a visit」。 */
+  if (typeof I18N !== 'undefined') I18N.dedupeHeadings(block);
 }
 
 

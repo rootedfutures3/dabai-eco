@@ -333,10 +333,18 @@ const I18N = {
    */
   dedupeHeadings(root) {
     const norm = t => String(t || '').toLowerCase().replace(/[\s·&,.\-—/]+/g, '');
-    (root || document).querySelectorAll('.panel-h small, .sub-h small').forEach(sm => {
+    /* panel-h / sub-h 之外，還有一種是「大字放在 span 裡」的寫法
+       （溝通者平台的「該去看看了」就是），一樣要去重。 */
+    (root || document).querySelectorAll('.panel-h small, .sub-h small, h2 small, h3 small').forEach(sm => {
       const h = sm.parentElement;
-      const main = [...h.childNodes]
+      /* 主標可能是純文字節點，也可能包在 <span> 裡 —— 兩種都要抓到，
+         否則「Needs a visit / Needs a visit」這種重複會漏掉。 */
+      let main = [...h.childNodes]
         .filter(n => n.nodeType === 3).map(n => n.textContent).join('').trim();
+      if (!main) {
+        main = [...h.children].filter(c => c !== sm)
+          .map(c => c.textContent).join(' ').trim();
+      }
       sm.hidden = this.lang !== 'zh' && !!main && norm(main) === norm(sm.textContent);
     });
   },
