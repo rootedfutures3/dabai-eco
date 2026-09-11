@@ -200,11 +200,14 @@ const I18N = {
       // 已被祖先整段處理過就跳過
       for (let a = el.parentElement; a; a = a.parentElement) if (handled.has(a)) return;
       // 品牌字標不翻譯
-      /* .post-card 是要發出去的社群文案。它的語言是使用者在卡片上
+      /* .post-body 是要發出去的社群文案本身。它的語言是使用者在卡片上
          自己選的（中文給華人社群、馬來文給在地、英文給海外），
          跟後台介面用什麼語言是兩回事。讓 i18n 去翻它，
          中文文案裡會冒出「a 34-year-old」這種半截英文，
          而使用者複製出去就是壞的。
+
+         只排除文案那一格，不是整張卡 —— 卡片上的按鈕與提示
+         還是要跟著介面語言走。
 
          .doc-sheet 是發票與合約。那兩份自己就有三種語言版本（見 docs.js），
          整份一起產出。不能讓逐句翻譯碰它 —— 字典裡剛好有的詞會被換掉、
@@ -213,7 +216,7 @@ const I18N = {
       /* .side-avatar 放的是名字的第一個字，不是一個詞。
          「平台管理員」的「平」剛好在字典裡（'平' → 'Flat'），
          於是英文版的頭像變成 Flat、馬來文版變成 Rata。 */
-      if (el.closest('script,style,code,pre,.lang-menu,.lang-toggle,.logo,.foot-brand b,.doc-sheet,.post-card,.side-avatar')) return;
+      if (el.closest('script,style,code,pre,.lang-menu,.lang-toggle,.logo,.foot-brand b,.doc-sheet,.post-body,.side-avatar')) return;
       /* 整段替換是用 textContent 寫回去的，會把子元素整個抹掉。
          所以只要元素裡有「不是純文字」的東西，就不能整段處理：
 
@@ -279,7 +282,7 @@ const I18N = {
       acceptNode(n) {
         const p = n.parentElement;
         if (!p) return NodeFilter.FILTER_REJECT;
-        if (p.closest('script,style,code,pre,.lang-menu,.lang-toggle,.doc-sheet,.post-card,.side-avatar')) return NodeFilter.FILTER_REJECT;
+        if (p.closest('script,style,code,pre,.lang-menu,.lang-toggle,.doc-sheet,.post-body,.side-avatar')) return NodeFilter.FILTER_REJECT;
         if (p.tagName === 'OPTION') return NodeFilter.FILTER_REJECT;
         for (let a = p; a; a = a.parentElement) if (handled.has(a)) return NodeFilter.FILTER_REJECT;
         return n.nodeValue.trim() ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT;
