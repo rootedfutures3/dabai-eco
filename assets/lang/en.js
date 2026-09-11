@@ -2495,7 +2495,7 @@ window.LANG_EN = {
   '待審核': 'Pending approval',
   '帳號密碼': 'Password',
   '🔒 固定超管': '🔒 Fixed super admin',
-  '怎麼把人加進來': 'How to add people',
+  '怎麼把人加進來': 'Adding people',
   '用 Google 登入過、但還沒被放行的申請。通過之後對方才進得來， 預設角色是果農，可以在下面的清單再改。': 'People who have signed in with Google but are not approved yet. They cannot get in until you approve them. New accounts start as Farmer; change the role in the list below.',
   '{n} 張 · 無圖檔': '{n} photos · no files',
   '待付款': 'Awaiting payment',
@@ -2537,4 +2537,6 @@ window.LANG_EN = {
   '產季限定，長屋契作直採，冷鏈配送。隨盒附上正確食用指南（泡熱水泡到軟，約 10–30 分鐘），第一次吃也不會踩雷。': 'Season-limited, sourced straight from longhouse growers, cold-chain delivered. Each box carries the eating guide — soak in hot water until soft, roughly 10 to 30 minutes — so a first Dabai tastes the way it should.',
   'Dabai（砂拉越黑橄欖，Canarium odontophyllum）的由來、正確吃法與多元用途。泡熱水泡到軟，就能吃到像酪梨般綿密的雨林風味。': 'Where Dabai (Sarawak black olive, Canarium odontophyllum) comes from, how to eat it properly, and what it is used for. Soak it in hot water until soft and you get a creamy rainforest flavour close to avocado.',
   '產季限定，長屋契作直採，冷鏈配送。附上正確吃法指南（60–70°C 熱水泡到軟，約 10–30 分鐘），第一次吃也不會踩雷。': 'Season-limited, sourced straight from longhouse growers, cold-chain delivered. Comes with the eating guide — 60–70°C water until soft, roughly 10 to 30 minutes — so your first Dabai tastes the way it should.',
+  '通過': 'Approve',
+  '退回': 'Reject',
 };

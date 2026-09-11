@@ -2496,7 +2496,7 @@ window.LANG_MS = {
   '待審核': 'Menunggu kelulusan',
   '帳號密碼': 'Kata laluan',
   '🔒 固定超管': '🔒 Super admin tetap',
-  '怎麼把人加進來': 'Cara menambah orang',
+  '怎麼把人加進來': 'Adding people',
   '用 Google 登入過、但還沒被放行的申請。通過之後對方才進得來， 預設角色是果農，可以在下面的清單再改。': 'Orang yang telah log masuk dengan Google tetapi belum diluluskan. Mereka tidak boleh masuk sehingga anda luluskan. Akaun baharu bermula sebagai Petani; tukar peranan dalam senarai di bawah.',
   '{n} 張 · 無圖檔': '{n} foto · tiada fail',
   '待付款': 'Menunggu bayaran',
@@ -2538,4 +2538,6 @@ window.LANG_MS = {
   '產季限定，長屋契作直採，冷鏈配送。隨盒附上正確食用指南（泡熱水泡到軟，約 10–30 分鐘），第一次吃也不會踩雷。': 'Terhad ikut musim, terus daripada penanam rumah panjang, penghantaran rantaian sejuk. Setiap kotak disertakan panduan makan — rendam dalam air panas sampai lembut, kira-kira 10 hingga 30 minit — supaya Dabai pertama anda terasa sebagaimana sepatutnya.',
   'Dabai（砂拉越黑橄欖，Canarium odontophyllum）的由來、正確吃法與多元用途。泡熱水泡到軟，就能吃到像酪梨般綿密的雨林風味。': 'Asal usul Dabai (buah zaitun hitam Sarawak, Canarium odontophyllum), cara memakannya dengan betul, dan kegunaannya. Rendam dalam air panas sampai lembut untuk rasa hutan hujan yang berkrim seperti avokado.',
   '產季限定，長屋契作直採，冷鏈配送。附上正確吃法指南（60–70°C 熱水泡到軟，約 10–30 分鐘），第一次吃也不會踩雷。': 'Terhad ikut musim, terus daripada penanam rumah panjang, penghantaran rantaian sejuk. Disertakan panduan makan — air 60–70°C sampai lembut, kira-kira 10 hingga 30 minit — supaya Dabai pertama anda terasa sebagaimana sepatutnya.',
+  '通過': 'Luluskan',
+  '退回': 'Tolak',
 };

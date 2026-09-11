@@ -292,7 +292,12 @@ const tw = s => (typeof I18N !== 'undefined' && s) ? I18N.translate(String(s)) :
    在 DOM 已經生成之後改不了，只能重來一次。 */
 document.addEventListener('i18n:change', () => {
   if (!document.getElementById('month-kpis')) return;
-  try { renderAll(); } catch (e) { console.error('[TANJU] 換語言重畫失敗', e); }
+  try {
+    renderAll();
+    /* 重畫會生出新的 <small> 副標，要再去重一次 ——
+       set() 裡那一次是在重畫之前跑的，來不及。 */
+    I18N.dedupeHeadings(document.body);
+  } catch (e) { console.error('[TANJU] 換語言重畫失敗', e); }
 });
 
 /* 使用者填的東西進到 HTML 之前一定要過這裡。
