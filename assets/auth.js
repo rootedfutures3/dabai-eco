@@ -73,6 +73,9 @@ Store.onReady(() => {
     const user = Store.findUser(
       document.getElementById('g-user').value,
       document.getElementById('g-pass').value);
+    if (user && user.disabled) {
+      return fail('這個帳號目前為停用狀態，請聯絡平台管理員開啟後再登入。');
+    }
     if (!user) return fail('帳號或密碼不正確，請再確認一次。');
     err.style.display = 'none';
     handoff(user);
@@ -252,10 +255,13 @@ function applyAuthMode() {
      這裡用安全存取，少了也不會整段停掉。 */
   const $ = id => document.getElementById(id) || { style:{}, dataset:{}, classList:{ toggle(){} } };
 
-  $('fld-email').hidden = !on;
-  $('fld-user').hidden  = on;
-  $('g-email').required = on;
-  $('g-user').required  = !on;
+  /* Supabase 模式用 email 登入,其餘（示範模式、Google 模式的
+     團隊/評審帳號密碼路徑）用「帳號」欄。 */
+  const useEmail = sb;
+  $('fld-email').hidden = !useEmail;
+  $('fld-user').hidden  = useEmail;
+  $('g-email').required = useEmail;
+  $('g-user').required  = !useEmail;
   $('fld-reg-email').hidden = !on;
   $('r-email').required = on;
   $('r-pass-hint').hidden = !on;
@@ -279,11 +285,23 @@ function applyAuthMode() {
     if (gHint.style) gHint.textContent = gi
       ? '第一次登入會自動建立帳號，角色由管理員指派。'
       : '登入後由管理員指派你的角色。';
-    if (orLine.style) orLine.hidden = true;
-    $('login-form').hidden = true;
     $('demo-cred').hidden = true;
     const back = document.querySelector('[data-goto="register"]');
     if (back) back.hidden = true;      // Google 登入不需要另外註冊
+
+    if (gi) {
+      /* Google 模式下保留帳號密碼登入,給「無法用 Google 的人」——
+         例如 Demo 現場的評審或主辦單位,他們用不了我們的 Gmail,
+         也來不及被加進 Google 測試名單。這條路走 admin-1 之類的
+         帳號密碼帳號,由超管在後台開關。 */
+      $('login-form').hidden = false;
+      if (orLine.style) orLine.hidden = false;
+      const orTxt = document.querySelector('#or-line span');
+      if (orTxt) orTxt.textContent = '或用團隊帳號登入';
+    } else {
+      if (orLine.style) orLine.hidden = true;
+      $('login-form').hidden = true;
+    }
   } else {
     if (gHint.style) gHint.textContent =
       'Google 登入尚未設定完成。設定步驟見專案的 GOOGLE-LOGIN.md，'

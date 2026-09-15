@@ -1666,7 +1666,10 @@ function renderUsers() {
      approved 欄位不存在的是舊的示範帳號，視同已通過。 */
   const pend = document.getElementById('t-pending');
   if (pend) {
-    const waiting = all.filter(u => u.approved === false);
+    /* 待審清單只放「用 Google 登入、還沒放行」的申請。
+       帳號密碼帳號（例如停用中的 admin-1）不是待審,它的開關
+       在下面的帳號清單裡,不要混進來。 */
+    const waiting = all.filter(u => u.approved === false && u.via === 'google');
     pend.innerHTML = table(
       ['Email', '姓名', '申請時間', ''],
       waiting.map(u => [
@@ -1709,7 +1712,19 @@ function renderUsers() {
         picker + (autoSuper
           ? '<span class="sub-line" title="寫在 config.js 的 SUPER_EMAILS 裡">🔒 固定超管</span>' : ''),
         { admin:'管理', farmer:'果農', buyer:'收購商' }[u.role] || u.role,
-        editable ? `<button class="mini-btn" data-user-edit="${u.u}">編輯</button>` : '',
+        (() => {
+          if (!editable) return '';
+          /* 帳號密碼帳號（例如給評審臨時登入的 admin-1）可以隨時開關。
+             approved:false = 停用,登入會被擋下。這是 RF 超管控制外部
+             帳號的地方 —— Demo 用完按「停用」就進不來了。
+             Google 帳號的放行/退回在上面的待審清單處理,這裡不重複。 */
+          const canToggle = !viaGoogle && u.u !== meU;
+          const off = u.approved === false;
+          const toggle = canToggle
+            ? `<button class="mini-btn ${off ? 'primary' : ''}" data-user-toggle="${u.u}">${off ? '啟用' : '停用'}</button>`
+            : '';
+          return toggle + `<button class="mini-btn" data-user-edit="${u.u}">編輯</button>`;
+        })(),
       ];
     }));
 
@@ -1732,6 +1747,18 @@ function renderUsers() {
       Store.setUserPerm(sel.dataset.u, sel.value);
       renderUsers();
       gateMenu();
+    }));
+
+  document.querySelectorAll('[data-user-toggle]').forEach(b =>
+    b.addEventListener('click', () => {
+      if (!Perm.can('edit.users')) return;
+      const u  = b.dataset.userToggle;
+      const cur = (Store.read().users || []).find(x => x.u === u);
+      const turnOn = cur && cur.approved === false;   // 現在停用 → 要啟用
+      if (!turnOn && !confirm(`停用帳號「${u}」？停用後這個帳號就登入不了,`
+                            + `要再按「啟用」才會恢復。`)) return;
+      Store.setUserApproved(u, turnOn);
+      renderUsers();
     }));
 
   document.querySelectorAll('[data-user-edit]').forEach(b =>
