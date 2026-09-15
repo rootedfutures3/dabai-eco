@@ -43,6 +43,12 @@ Store.onReady(() => {
   const saved = sessionStorage.getItem(SESSION);
   const user = saved ? Store.read().users.find(x => x.u === saved) : null;
   if (!user) { location.replace('app.html'); return; }
+  /* 帳號被停用就等同沒登入 —— 超管停用後,對方重整就會被導回登入頁。 */
+  if (user.approved === false) {
+    sessionStorage.removeItem(SESSION);
+    location.replace('app.html');
+    return;
+  }
 
   /* 果農在溝通者平台工作，不走這一頁。
      TANJU Portal 是獨立的管理後台，只有管理端進得去；

@@ -22,6 +22,20 @@ Store.onReady((info) => {
 
   step('資料庫狀態', () => showDbStatus(info));
   step('權限',       () => Perm.load());
+
+  /* 登入閘門。踩到的洞：訪客直接打開 erp.html 就能看到整個後台 ——
+     樹況、認養金、客戶、佣金全部攤開。coordinator 與 dashboard 早就
+     會把未登入的人導回登入頁,只有這頁沒擋。
+     沒登入、角色不能進後台、或帳號被停用,一律回登入頁,後台不畫。
+     這道閘要在 renderAll 之前,不然畫都畫出來了才跳走,還是閃得到。 */
+  const gateUser = Perm.me();
+  const gatePerm = Perm.role();
+  const PORTAL = ['super', 'admin', 'finance', 'editor'];
+  if (!gateUser || gateUser.approved === false || !PORTAL.includes(gatePerm)) {
+    location.replace('app.html?next=erp.html');
+    return;
+  }
+
   step('畫面',       renderAll);
 
   // 左側功能列

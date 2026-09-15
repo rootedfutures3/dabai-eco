@@ -65,6 +65,14 @@ Store.onReady(() => {
   const user  = saved ? (Store.read().users || []).find(x => x.u === saved) : null;
   const perm  = user && (user.perm || (user.role === 'admin' ? 'super' : user.role));
 
+  /* 帳號被停用（approved:false）就當作沒登入 —— 超管在後台一按停用,
+     對方已經開著的頁面下次載入就會被請回登入頁。 */
+  if (user && user.approved === false) {
+    sessionStorage.removeItem(SESSION_KEY);
+    location.replace('app.html?next=coordinator.html');
+    return;
+  }
+
   if (user && COORD_ROLES.includes(perm)) {
     ME = { ...user, perm };
 
