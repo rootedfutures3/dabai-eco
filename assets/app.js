@@ -58,6 +58,8 @@ Store.onReady(() => {
     location.replace('coordinator.html');
     return;
   }
+  /* 通過守門,把 head 預設藏起來的畫面顯示出來 */
+  document.documentElement.classList.remove('gate-pending');
 
 
   document.getElementById('logout').addEventListener('click', () => {

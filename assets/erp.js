@@ -35,6 +35,8 @@ Store.onReady((info) => {
     location.replace('app.html?next=erp.html');
     return;
   }
+  /* 通過了才把畫面顯示出來（head 的守門預設把整頁藏著）。 */
+  document.documentElement.classList.remove('gate-pending');
 
   step('畫面',       renderAll);
 

@@ -94,15 +94,23 @@ Store.onReady(() => {
       roleEl.textContent = { farmer:'果農', coord:'現場溝通者' }[perm] || '管理端';
     }
     enter(user.name || user.u);
+    /* 通過守門才顯示（head 預設把整頁藏著）。 */
+    document.documentElement.classList.remove('gate-pending');
   } else {
+    /* 沒登入、或 session 指向一個已不存在的帳號 —— 全程隱藏,直接導去登入頁,
+       連空殼都不要閃。 */
+    if (!user) {
+      location.replace('app.html?next=coordinator.html');
+      return;
+    }
+    /* 登入了但這個角色沒有現場回報權限:顯示提示（不是保護資料,可以看到）。 */
     const err  = document.getElementById('login-err');
     const note = document.getElementById('coord-note');
-    if (user) {
-      err.textContent = `「${user.name || user.u}」這個帳號沒有現場回報的權限，`
-                      + '請管理員在 TANJU Portal 的「帳號與權限」把角色改成溝通者。';
-      err.style.display = 'block';
-      if (note) note.hidden = true;
-    }
+    err.textContent = `「${user.name || user.u}」這個帳號沒有現場回報的權限，`
+                    + '請管理員在 TANJU Portal 的「帳號與權限」把角色改成溝通者。';
+    err.style.display = 'block';
+    if (note) note.hidden = true;
+    document.documentElement.classList.remove('gate-pending');
   }
 
   document.getElementById('logout').addEventListener('click', () => {
