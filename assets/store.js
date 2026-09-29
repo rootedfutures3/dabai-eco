@@ -52,7 +52,7 @@ const SEED = {
        Google 登入需要對方的 Gmail 先加進測試名單，現場來不及 ——
        這個帳號任何電腦都能登入。approved:false 代表預設「停用」,
        由 RF 的超管帳號在後台「帳號與權限」按一下開啟,Demo 完再關掉。 */
-    { u:'admin-1', pass:'admin-1', role:'admin', perm:'admin', name:'示範帳號 Demo', org:'ROOTED FUTURES', phone:'', email:'', area:'Song', approved:false, via:'demo' },
+    { u:'admin-1', pass:'admin-1', role:'admin', perm:'admin', name:'Demo Account', org:'ROOTED FUTURES', phone:'', email:'', area:'Song', approved:false, via:'demo' },
   ],
 
   messages: [
