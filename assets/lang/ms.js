@@ -2639,4 +2639,5 @@ window.LANG_MS = {
   '取消': 'Batal',
   '儲存': 'Simpan',
   '現在可以在上面的帳號清單把人指派成這個角色了。': 'Anda kini boleh menetapkan orang kepada peranan ini dalam senarai akaun di atas.',
+  '帳號代號是主鍵，不開放修改。ERP 權限請用清單上的下拉選單改。': 'Kod akaun ialah kunci utama dan tidak boleh diubah. Tukar kebenaran ERP dengan menu lungsur dalam senarai.',
 };

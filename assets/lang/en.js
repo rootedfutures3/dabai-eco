@@ -2638,4 +2638,5 @@ window.LANG_EN = {
   '取消': 'Cancel',
   '儲存': 'Save',
   '現在可以在上面的帳號清單把人指派成這個角色了。': 'You can now assign people to this role in the account list above.',
+  '帳號代號是主鍵，不開放修改。ERP 權限請用清單上的下拉選單改。': 'The account code is the primary key and cannot be changed. Change ERP permissions with the dropdown in the list.',
 };

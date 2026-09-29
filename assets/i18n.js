@@ -160,8 +160,14 @@ const I18N = {
         if (hit) { slots.push(hit[1]); return hit[1] === 'n' ? '(-?\\d[\\d,.]*)' : '(.+?)'; }
         return part.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
       }).join('');
-      list.push([new RegExp('^' + re + '$'), this.dict[k], slots]);
+      // 記下「字面文字」長度:佔位符越少、固定文字越多 = 越具體
+      const literal = k.replace(/\{[a-z]\}/g, '').length;
+      list.push([new RegExp('^' + re + '$'), this.dict[k], slots, literal]);
     }
+    /* 具體的樣板要先試。否則像 '{a} · {b}' 這種幾乎全是萬用字元的樣板
+       會先攔下 '備註 · 訂單 RF-2026-0001',把「備註」「訂單…」各自亂拆,
+       而不是讓更專門的 '備註 · 訂單 {a}' 命中。按字面長度由多到少排序。 */
+    list.sort((a, b) => b[3] - a[3]);
     this._pats = list;
     this._patsLang = this.lang;
     return list;
