@@ -37,50 +37,49 @@ const I18N = {
     if (!this.dict) return s;
     const key = this.norm(s);
 
-    // 1) 完全比對
-    const t = this.dict[key];
-    if (t !== undefined) return t;
+    // 先在目前語言的字典裡完整查一遍（精確 → 數字樣板 → 自由樣板）
+    const hit = this.lookup(this.dict, key);
+    if (hit !== undefined) return hit;
 
-    /* 這個語言的字典還不完整時，先問備援語言，再放棄。
-       放棄的結果是原樣回傳，也就是中文。 */
+    /* 這個語言的字典還不完整時（例如 Iban），退到備援語言再查一遍 ——
+       一樣要走完整流程,不能只做精確比對,否則帶數字的字串（「共 {n} 座」）
+       退不過去,會掉回中文。放棄的最後結果才是原樣回傳（中文）。 */
     if (this.fallbackDict) {
-      const f = this.fallbackDict[key];
-      if (f !== undefined) return f;
+      const fb = this.lookup(this.fallbackDict, key);
+      if (fb !== undefined) return fb;
+    }
+    return s;
+  },
+
+  /** 在指定字典裡查一個 key:精確 → 數字樣板 → 自由樣板。查不到回 undefined。 */
+  lookup(dict, key) {
+    if (!dict) return undefined;
+
+    // 1) 完全比對
+    if (dict[key] !== undefined) return dict[key];
+
+    // 2) 數字樣板:把數字抽成 {n} 再查（「36 棵」→「{n} 棵」）
+    const nums = [];
+    const tpl = key.replace(/-?\d[\d,.]*/g, m => { nums.push(m); return '{n}'; });
+    if (nums.length && dict[tpl] !== undefined) {
+      let i = 0;
+      return dict[tpl].replace(/\{n\}/g, () => nums[i++] ?? '');
     }
 
-    // 2) 數字樣板：把數字抽成 {n} 再查，例如
-    //    「36 棵」→ 樣板「{n} 棵」；「上架 36 棵」→「上架 {n} 棵」
-    //    這樣帶數字的動態字串不必逐一列進字典。
-    const nums = [];
-    // 負號要一起吃掉，否則「淨利率 -13.7%」會被拆成「-{n}%」而查不到字典
-    const tpl = key.replace(/-?\d[\d,.]*/g, m => { nums.push(m); return '{n}'; });
-    if (nums.length) {
-      const tt = this.dict[tpl];
-      if (tt !== undefined) {
-        let i = 0;
-        return tt.replace(/\{n\}/g, () => nums[i++] ?? '');
-      }
-    }
-    // 3) 自由樣板：字典 key 裡寫 {a}、{b} 之類的佔位符，
-    //    用來對付程式產生、中間夾著人名地名的字串，例如
-    //      '{a}, Sarawak · 果農：{b}'
-    //    這樣就不必把每一個果農的名字都列進字典。
+    // 3) 自由樣板:key 裡寫 {a}、{b} 佔位符,對付夾著人名地名的動態字串
     for (const [re, out, slots] of this.patterns()) {
       const m = key.match(re);
       if (!m) continue;
-      // 依名字對應，不能照順序填 —— 譯文的語序常常和中文不一樣，
-      // 例如 '{a}｜{b} 年生的{c}' 的馬來文是 '{a} — pokok {c} berusia {b} tahun'。
       const val = {};
-      // 擷取到的片段自己也可能查得到字典 —— 例如 '{a}, Sarawak · 果農：{b}'
-      // 裡的 {b} 是「Ak. Jelani 一家」，字典裡有它，就一起翻掉。
       slots.forEach((name, i) => {
         const raw = m[i + 1] ?? '';
-        val[name] = this.dict[this.norm(raw)] ?? raw;
+        // 擷取到的片段自己也可能在字典裡（含備援字典）,一起翻掉
+        val[name] = dict[this.norm(raw)] ?? (this.fallbackDict && this.fallbackDict[this.norm(raw)]) ?? raw;
       });
       return out.replace(/\{([a-z])\}/g, (_, name) => val[name] ?? '');
     }
 
-    return s;
+    return undefined;
   },
 
   /**
