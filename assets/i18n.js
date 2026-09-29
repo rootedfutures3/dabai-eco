@@ -67,7 +67,7 @@ const I18N = {
     }
 
     // 3) 自由樣板:key 裡寫 {a}、{b} 佔位符,對付夾著人名地名的動態字串
-    for (const [re, out, slots] of this.patterns()) {
+    for (const [re, out, slots] of this.patterns(dict)) {
       const m = key.match(re);
       if (!m) continue;
       const val = {};
@@ -140,11 +140,17 @@ const I18N = {
     this.apply(el);
   },
 
-  /** 把字典裡含佔位符的 key 編成正則。每個語言只算一次。 */
-  patterns() {
-    if (this._pats && this._patsLang === this.lang) return this._pats;
+  /** 把「指定字典」裡含佔位符的 key 編成正則。每本字典只算一次。
+      一定要吃參數,不能寫死 this.dict —— 伊班語退到馬來文時,
+      查的是馬來文字典,樣板也必須是馬來文字典的樣板。寫死的話
+      '{a} · {b}' 這類樣板永遠退不過去,「開花期 · 良好」就卡在中文。 */
+  patterns(dict = this.dict) {
+    if (!dict) return [];
+    this._patCache = this._patCache || new WeakMap();
+    const hit = this._patCache.get(dict);
+    if (hit) return hit;
     const list = [];
-    for (const k of Object.keys(this.dict)) {
+    for (const k of Object.keys(dict)) {
       if (!/\{[a-z]\}/.test(k)) continue;
       /* 只含 {n} 的 key 交給上面的數字樣板處理,不要進自由樣板 ——
          否則 '{n} 人' 會被編成貪婪的 ^(.+?) 人$,把「務農 28 年 · 家戶 6 人」
@@ -162,14 +168,13 @@ const I18N = {
       }).join('');
       // 記下「字面文字」長度:佔位符越少、固定文字越多 = 越具體
       const literal = k.replace(/\{[a-z]\}/g, '').length;
-      list.push([new RegExp('^' + re + '$'), this.dict[k], slots, literal]);
+      list.push([new RegExp('^' + re + '$'), dict[k], slots, literal]);
     }
     /* 具體的樣板要先試。否則像 '{a} · {b}' 這種幾乎全是萬用字元的樣板
        會先攔下 '備註 · 訂單 RF-2026-0001',把「備註」「訂單…」各自亂拆,
        而不是讓更專門的 '備註 · 訂單 {a}' 命中。按字面長度由多到少排序。 */
     list.sort((a, b) => b[3] - a[3]);
-    this._pats = list;
-    this._patsLang = this.lang;
+    this._patCache.set(dict, list);
     return list;
   },
 

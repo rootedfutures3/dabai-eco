@@ -81,11 +81,11 @@ Store.onReady((info) => {
   document.getElementById('rate-save').addEventListener('click', () => {
     const c = parseFloat(document.getElementById('rate-commission').value);
     const d = parseFloat(document.getElementById('rate-deposit').value);
-    if (!Number.isFinite(c) || c < 0 || c > 100) return alert('佣金％請填 0–100 之間的數字。');
-    if (!Number.isFinite(d) || d < 0 || d > 100) return alert('訂金％請填 0–100 之間的數字。');
-    if (c + d > 100) return alert(`佣金 ${c}% ＋ 訂金 ${d}% 超過 100%，果農的尾款會變成負數。`);
+    if (!Number.isFinite(c) || c < 0 || c > 100) return alert(tw('佣金％請填 0–100 之間的數字。'));
+    if (!Number.isFinite(d) || d < 0 || d > 100) return alert(tw('訂金％請填 0–100 之間的數字。'));
+    if (c + d > 100) return alert(tw(`佣金 ${c}% ＋ 訂金 ${d}% 超過 100%，果農的尾款會變成負數。`));
     const t = parseFloat(document.getElementById('rate-sst').value);
-    if (!Number.isFinite(t) || t < 0 || t > 100) return alert('SST％請填 0–100 之間的數字。');
+    if (!Number.isFinite(t) || t < 0 || t > 100) return alert(tw('SST％請填 0–100 之間的數字。'));
     Store.saveSetting('commission_rate', c);
     Store.saveSetting('deposit_share', d);
     Store.saveSetting('sst_rate', t);
@@ -125,7 +125,7 @@ Store.onReady((info) => {
   });
 
   document.getElementById('db-reset').addEventListener('click', () => {
-    if (confirm('確定要清除本機的示範資料，回到初始狀態嗎？')) {
+    if (confirm(tw('確定要清除本機的示範資料，回到初始狀態嗎？'))) {
       Store.reset();
       renderAll();
       /* 重設會把 users 一起換掉，側邊欄那格要重新對一次身分 ——
@@ -310,6 +310,7 @@ document.addEventListener('i18n:change', () => {
   if (!document.getElementById('month-kpis')) return;
   try {
     renderAll();
+    showMe();          // 側欄頭像字跟著名字的翻譯走
     /* 重畫會生出新的 <small> 副標，要再去重一次 ——
        set() 裡那一次是在重畫之前跑的，來不及。 */
     I18N.dedupeHeadings(document.body);
@@ -1062,7 +1063,7 @@ function makePayout(orderNo) {
 
   const tree   = Store.treeList().find(t => t.id === o.treeId) || {};
   const label  = kind === 'deposit' ? '開花前訂金' : '採收後尾款';
-  if (!confirm(`要撥 ${money(amount)} 給「${tree.farmer || o.treeId}」嗎？\n（${o.no} · ${label}）`)) return;
+  if (!confirm(tw(`要撥 ${money(amount)} 給「${tree.farmer || o.treeId}」嗎？\n（${o.no} · ${label}）`))) return;
 
   Store.addPayout({
     ref: Store.nextPayoutRef(new Date().getFullYear()),
@@ -1156,7 +1157,7 @@ function showMe() {
     roleEl.textContent = (typeof Perm !== 'undefined' && Perm.me())
       ? Perm.roleLabel()
       : ({ admin:'平台管理員', farmer:'果農', buyer:'收購商' }[me.role] || me.role);
-    avEl.textContent = (me.name || me.u).trim().charAt(0).toUpperCase();
+    avEl.textContent = tw(me.name || me.u).trim().charAt(0).toUpperCase();
     setLabel('登出');
     outBtn.onclick = () => {
       sessionStorage.removeItem('rf_app_session');
@@ -1619,7 +1620,7 @@ function trendChart(box, months, series, fmt = money) {
       return `<rect class="${sp.cls}" x="${(cx + off0 + k * (bw + 2) - bw / 2).toFixed(1)}"
                     y="${y(Math.abs(v)).toFixed(1)}" width="${bw.toFixed(1)}"
                     height="${h.toFixed(1)}" rx="2">
-                <title>${m.ym}｜${tw(sp.label)}：${fmt(v)}</title></rect>`;
+                <title>${m.ym}｜${tw(sp.label)}：${tw(fmt(v))}</title></rect>`;
     }).join('')
     + `<text class="x-lab" x="${cx.toFixed(1)}" y="${H - PAD_B + 17}" text-anchor="middle">${m.ym.slice(5)}</text>`
     + (i === 0 || m.ym.slice(5) === '01'
@@ -1719,7 +1720,7 @@ function renderUsers() {
         .includes(String(u.email || '').trim().toLowerCase());
 
       return [
-        `${u.email ? `<a href="mailto:${u.email}">${u.email}</a>` : '<span class="dim">未填 Email</span>'}`
+        `${u.email ? `<a href="mailto:${u.email}">${u.email}</a>` : `<span class="dim">${tw('未填 Email')}</span>`}`
           + `<span class="sub-line">${u.u}${u.u === meU ? ' · 你' : ''}</span>`,
         `${u.name || '—'}<span class="sub-line">${u.org || ''}</span>`,
         viaGoogle
@@ -1734,7 +1735,10 @@ function renderUsers() {
              approved:false = 停用,登入會被擋下。這是 RF 超管控制外部
              帳號的地方 —— Demo 用完按「停用」就進不來了。
              Google 帳號的放行/退回在上面的待審清單處理,這裡不重複。 */
-          const canToggle = !viaGoogle && u.u !== meU;
+          /* 只有「有密碼、會用帳號密碼登入」的帳號才需要開關（admin-1 那種）。
+             沒有密碼的帳號本來就登不進來；而 Google 帳號與固定超管
+             若被停用,RF 會把自己鎖在門外 —— 那兩種一律不給開關。 */
+          const canToggle = !viaGoogle && !!u.pass && !autoSuper && u.u !== meU;
           const off = u.approved === false;
           const toggle = canToggle
             ? `<button class="mini-btn ${off ? 'primary' : ''}" data-user-toggle="${u.u}">${off ? '啟用' : '停用'}</button>`
@@ -1751,7 +1755,7 @@ function renderUsers() {
       if (b.dataset.approve) {
         Store.setUserApproved(u, true);
       } else {
-        if (!confirm(`退回 ${u} 的申請？這會把這個帳號刪掉，對方要重新登入才會再出現。`)) return;
+        if (!confirm(tw(`退回 ${u} 的申請？這會把這個帳號刪掉，對方要重新登入才會再出現。`))) return;
         Store.removeUser(u);
       }
       renderUsers();
@@ -1771,8 +1775,8 @@ function renderUsers() {
       const u  = b.dataset.userToggle;
       const cur = (Store.read().users || []).find(x => x.u === u);
       const turnOn = cur && cur.approved === false;   // 現在停用 → 要啟用
-      if (!turnOn && !confirm(`停用帳號「${u}」？停用後這個帳號就登入不了,`
-                            + `要再按「啟用」才會恢復。`)) return;
+      if (!turnOn && !confirm(tw(`停用帳號「${u}」？停用後這個帳號就登入不了，`
+                               + `要再按「啟用」才會恢復。`))) return;
       Store.setUserApproved(u, turnOn);
       renderUsers();
     }));
@@ -1943,9 +1947,9 @@ function initRoleEditor() {
 
       if (del) {
         const key = del.dataset.roleDel;
-        if (!confirm(`確定要刪除角色「${PERMS[key].label}」嗎？`)) return;
+        if (!confirm(tw(`確定要刪除角色「${PERMS[key].label}」嗎？`))) return;
         const msg = Perm.deleteRole(key);
-        if (msg) { alert(msg); return; }
+        if (msg) { alert(tw(msg)); return; }
         drawRoles();
         renderUsers();
         gateMenu();

@@ -853,7 +853,8 @@ async function onCardClick(e) {
   }
 
   if (d.text.length > CHANNELS[key].limit
-      && !confirm(`文案超過 ${CHANNELS[key].name} 的 ${CHANNELS[key].limit} 字上限，還是要繼續嗎？`)) return;
+      && !confirm((typeof I18N !== 'undefined' ? I18N.translate.bind(I18N) : x => x)(
+        `文案超過 ${CHANNELS[key].name} 的 ${CHANNELS[key].limit} 字上限，還是要繼續嗎？`))) return;
 
   const post = {
     at: stamp(), channel: key, topic: d.topic, topicId: d.topicId, lang: d.lang,
@@ -975,8 +976,11 @@ function buildCalendar() {
        「截斷過」的字串做比對 —— 比對不到整句，就變成
        「DB-000001 — a 34-year-old Dabai 黑橄欖…」這種半中半英。
        文案本來就有三種語言，直接產對的那一種就好。 */
-    const lang = (typeof I18N !== 'undefined' && ['zh', 'en', 'ms'].includes(I18N.lang))
-      ? I18N.lang : 'zh';
+    /* 文案產生器只會寫 zh/en/ms。伊班語介面要退到馬來文 —— 跟全站的
+       備援策略一致。原本退回中文,結果中文預覽被截斷成「…」之後,
+       字典對不上,伊班語的排程表就整排卡在中文。 */
+    const ui = (typeof I18N !== 'undefined') ? I18N.lang : 'zh';
+    const lang = ['zh', 'en', 'ms'].includes(ui) ? ui : (ui === 'iba' ? 'ms' : 'zh');
     const m = material(p.kind, p.id, lang);
     const text = m ? compose('facebook', m, lang, 'warm') : '';
     return {

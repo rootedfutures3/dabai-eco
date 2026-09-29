@@ -15,8 +15,12 @@
    沒有的留著。用在合約上就會變成「甲方 · Platform」「Variety…所在果園」
    ——一份半中半英的法律文件。單據要嘛整份中文、要嘛整份英文，
    所以整份一起產出，i18n 那邊也把 .doc-sheet 排除掉了。 */
-const docLang = () => (typeof I18N !== 'undefined' && ['zh', 'en', 'ms'].includes(I18N.lang))
-  ? I18N.lang : 'zh';
+/* 單據只寫了 zh/en/ms 三份。伊班語介面退到馬來文(跟全站的備援策略一致),
+   不是退回中文 —— 否則切到伊班語,整張發票與合約都會變回中文。 */
+const docLang = () => {
+  const ui = (typeof I18N !== 'undefined') ? I18N.lang : 'zh';
+  return ['zh', 'en', 'ms'].includes(ui) ? ui : (ui === 'iba' ? 'ms' : 'zh');
+};
 
 const D = {
   invoice:      { zh:'發票',       en:'Invoice',            ms:'Invois' },
