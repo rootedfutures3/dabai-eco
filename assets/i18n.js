@@ -146,12 +146,18 @@ const I18N = {
     const list = [];
     for (const k of Object.keys(this.dict)) {
       if (!/\{[a-z]\}/.test(k)) continue;
+      /* 只含 {n} 的 key 交給上面的數字樣板處理,不要進自由樣板 ——
+         否則 '{n} 人' 會被編成貪婪的 ^(.+?) 人$,把「務農 28 年 · 家戶 6 人」
+         整段吞進 {n},吐出「務農 28 年 · 家戶 6 iku」這種中英夾雜。
+         自由樣板只服務帶 {a}~{m}/{o}~{z} 的 key（人名地名那種）。 */
+      if (!/\{[a-mo-z]\}/.test(k)) continue;
       // 先把非佔位符的部分逐字轉義，再把佔位符換成擷取群組
       // slots 記下佔位符在「原文」裡出現的順序，之後才能對回名字
       const slots = [];
       const re = k.split(/(\{[a-z]\})/).map(part => {
         const hit = part.match(/^\{([a-z])\}$/);
-        if (hit) { slots.push(hit[1]); return '(.+?)'; }
+        // {n} 一律只吃數字,不能吃一般文字(避免貪婪吞字)
+        if (hit) { slots.push(hit[1]); return hit[1] === 'n' ? '(-?\\d[\\d,.]*)' : '(.+?)'; }
         return part.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
       }).join('');
       list.push([new RegExp('^' + re + '$'), this.dict[k], slots]);
