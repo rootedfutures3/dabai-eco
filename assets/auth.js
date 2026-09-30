@@ -289,11 +289,11 @@ function applyAuthMode() {
     const back = document.querySelector('[data-goto="register"]');
     if (back) back.hidden = true;      // Google 登入不需要另外註冊
 
-    if (gi) {
-      /* Google 模式下保留帳號密碼登入,給「無法用 Google 的人」——
-         例如 Demo 現場的評審或主辦單位,他們用不了我們的 Gmail,
-         也來不及被加進 Google 測試名單。這條路走 admin-1 之類的
-         帳號密碼帳號,由超管在後台開關。 */
+    const teamLogin = gi && typeof TEAM_LOGIN !== 'undefined' && TEAM_LOGIN;
+    if (teamLogin) {
+      /* Google 模式下另開一條帳號密碼登入,給「無法用 Google 的人」——
+         例如活動現場的評審,他們的 Gmail 不在測試名單上。
+         由 config.js 的 TEAM_LOGIN 控制,平常關著。 */
       $('login-form').hidden = false;
       if (orLine.style) orLine.hidden = false;
       const orTxt = document.querySelector('#or-line span');

@@ -48,11 +48,6 @@ const SEED = {
     { u:'coord',   pass:'admin', role:'admin',  perm:'coord',   name:'Anding', org:'溝通者', phone:'+60 13-880 4412', email:'anding@example.com', area:'Song' },
     { u:'farmer',  pass:'admin', role:'farmer', perm:'farmer',  name:'Ak. Jelani', org:'Rumah Panjai 上游果園', phone:'+60 13-220 1188', email:'jelani@example.com', area:'Sibu' },
     { u:'buyer',   pass:'admin', role:'buyer',  perm:'buyer',   name:'李采薇', org:'南洋食品工業', phone:'+60 82-334 900', email:'esg@example.com', area:'Kuching' },
-    /* 給評審/主辦單位從他們自己電腦登入用的帳號密碼帳號。
-       Google 登入需要對方的 Gmail 先加進測試名單，現場來不及 ——
-       這個帳號任何電腦都能登入。approved:false 代表預設「停用」,
-       由 RF 的超管帳號在後台「帳號與權限」按一下開啟,Demo 完再關掉。 */
-    { u:'admin-1', pass:'admin-1', role:'admin', perm:'admin', name:'Demo Account', org:'ROOTED FUTURES', phone:'', email:'', area:'Song', approved:false, via:'demo' },
   ],
 
   messages: [
@@ -152,7 +147,7 @@ const Store = {
       x.u.toLowerCase() === String(u).trim().toLowerCase() && x.pass === pass);
     if (!hit) return null;
     /* approved:false 當「帳號停用」。帳號密碼帳號多半是給外部臨時登入的
-       （例如 Demo 帳號 admin-1）,停用後就進不來 —— 超管可以在後台隨時開關。 */
+       （例如給活動現場評審臨時用的帳號）,停用後就進不來 —— 超管可以在後台隨時開關。 */
     if (hit.approved === false) return { disabled: true };
     return hit;
   },
