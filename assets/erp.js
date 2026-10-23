@@ -1679,12 +1679,25 @@ function renderUsers() {
   const meU = (Perm.me() || {}).u;
   const all = Store.read().users || [];
 
+  /* 有密碼的超管帳號（superadmin）和固定超管（config.js 的 SUPER_EMAILS,
+     也就是 RF 的 Gmail）只有固定超管自己能動 —— 開關、編輯、改權限都是。
+     superadmin 的密碼是猜得到的那種,不能讓別的超管把它改掉,
+     也不能讓登進 superadmin 的人回頭去動 RF 的 Gmail 帳號。 */
+  const fixedMails = (typeof SUPER_EMAILS !== 'undefined' ? SUPER_EMAILS : [])
+    .map(e => String(e).trim().toLowerCase());
+  const isFixed = x => !!x && !!x.email
+    && fixedMails.includes(String(x.email).trim().toLowerCase());
+  const meFixed = isFixed(Perm.me());
+  const rfOnly = x => x.via !== 'google' && !!x.pass
+    && (x.perm || (x.role === 'admin' ? 'super' : x.role)) === 'super';
+  const hands = x => !!x && ((!rfOnly(x) && !isFixed(x)) || meFixed);
+
   /* 待審核：用 Google 登入過但還沒放行的。
      approved 欄位不存在的是舊的示範帳號，視同已通過。 */
   const pend = document.getElementById('t-pending');
   if (pend) {
     /* 待審清單只放「用 Google 登入、還沒放行」的申請。
-       帳號密碼帳號（例如停用中的 admin-1）不是待審,它的開關
+       帳號密碼帳號（例如 superadmin）不是待審,它的開關
        在下面的帳號清單裡,不要混進來。 */
     const waiting = all.filter(u => u.approved === false && u.via === 'google');
     pend.innerHTML = table(
@@ -1706,8 +1719,12 @@ function renderUsers() {
     ['Email / 帳號', '姓名 / 單位', '登入方式', 'ERP 權限', '前台身分', ''],
     all.map(u => {
       const cur = u.perm || (u.role === 'admin' ? 'super' : u.role);
+      const lockWhy = u.u === meU ? '不能改自己的權限，避免把自己鎖在門外'
+        : isFixed(u) ? '寫在 config.js 的 SUPER_EMAILS 裡，固定是超級管理員'
+        : !hands(u) ? '只有 RF 的固定超管能改這個帳號'
+        : '';
       const picker = editable
-        ? `<select class="perm-pick" data-u="${u.u}"${u.u === meU ? ' disabled title="不能改自己的權限，避免把自己鎖在門外"' : ''}>
+        ? `<select class="perm-pick" data-u="${u.u}"${lockWhy ? ` disabled title="${lockWhy}"` : ''}>
              ${Object.entries(PERMS).map(([k, v]) =>
                `<option value="${k}"${k === cur ? ' selected' : ''}>${v.label}${v.custom ? ' ✎' : ''}</option>`).join('')}
            </select>`
@@ -1715,9 +1732,7 @@ function renderUsers() {
       /* 登入方式：via='google' 是自己用 Google 登入建立的；
          其餘是示範資料留下來的帳號密碼帳號。 */
       const viaGoogle = u.via === 'google';
-      const autoSuper = (typeof SUPER_EMAILS !== 'undefined' ? SUPER_EMAILS : [])
-        .map(e => String(e).trim().toLowerCase())
-        .includes(String(u.email || '').trim().toLowerCase());
+      const autoSuper = isFixed(u);
 
       return [
         `${u.email ? `<a href="mailto:${u.email}">${u.email}</a>` : `<span class="dim">${tw('未填 Email')}</span>`}`
@@ -1731,18 +1746,19 @@ function renderUsers() {
         { admin:'管理', farmer:'果農', buyer:'收購商' }[u.role] || u.role,
         (() => {
           if (!editable) return '';
-          /* 帳號密碼帳號（例如給評審臨時登入的 admin-1）可以隨時開關。
+          /* 帳號密碼帳號（例如 superadmin）可以隨時開關。
              approved:false = 停用,登入會被擋下。這是 RF 超管控制外部
              帳號的地方 —— Demo 用完按「停用」就進不來了。
              Google 帳號的放行/退回在上面的待審清單處理,這裡不重複。 */
-          /* 只有「有密碼、會用帳號密碼登入」的帳號才需要開關（admin-1 那種）。
+          /* 只有「有密碼、會用帳號密碼登入」的帳號才需要開關（superadmin 那種）。
              沒有密碼的帳號本來就登不進來；而 Google 帳號與固定超管
              若被停用,RF 會把自己鎖在門外 —— 那兩種一律不給開關。 */
-          const canToggle = !viaGoogle && !!u.pass && !autoSuper && u.u !== meU;
+          const canToggle = !viaGoogle && !!u.pass && !autoSuper && u.u !== meU && hands(u);
           const off = u.approved === false;
           const toggle = canToggle
             ? `<button class="mini-btn ${off ? 'primary' : ''}" data-user-toggle="${u.u}">${off ? '啟用' : '停用'}</button>`
             : '';
+          if (!hands(u)) return toggle + '<span class="dim">🔒 RF 專用</span>';
           return toggle + `<button class="mini-btn" data-user-edit="${u.u}">編輯</button>`;
         })(),
       ];
@@ -1764,6 +1780,8 @@ function renderUsers() {
   document.querySelectorAll('.perm-pick').forEach(sel =>
     sel.addEventListener('change', () => {
       if (!Perm.can('edit.users')) return;
+      const row = (Store.read().users || []).find(x => x.u === sel.dataset.u);
+      if (!hands(row) || isFixed(row) || row.u === meU) return renderUsers();
       Store.setUserPerm(sel.dataset.u, sel.value);
       renderUsers();
       gateMenu();
@@ -1774,6 +1792,7 @@ function renderUsers() {
       if (!Perm.can('edit.users')) return;
       const u  = b.dataset.userToggle;
       const cur = (Store.read().users || []).find(x => x.u === u);
+      if (!hands(cur)) return;
       const turnOn = cur && cur.approved === false;   // 現在停用 → 要啟用
       if (!turnOn && !confirm(tw(`停用帳號「${u}」？停用後這個帳號就登入不了，`
                                + `要再按「啟用」才會恢復。`))) return;
@@ -1784,7 +1803,7 @@ function renderUsers() {
   document.querySelectorAll('[data-user-edit]').forEach(b =>
     b.addEventListener('click', () => {
       const u = (Store.read().users || []).find(x => x.u === b.dataset.userEdit);
-      if (u) editUser(u);
+      if (u && hands(u)) editUser(u);
     }));
 }
 
@@ -1816,6 +1835,15 @@ function editUser(u) {
         const clash = (Store.read().users || []).find(x =>
           x.u !== u.u && String(x.email || '').trim().toLowerCase() === mail);
         if (clash) return `這個 Email 已經被「${clash.u}」用了。`;
+        /* 固定超管是看 Email 認人的。不是固定超管的人不能把 Email
+           改成名單上的信箱,不然等於自己把自己升成固定超管。 */
+        const fixedMails = (typeof SUPER_EMAILS !== 'undefined' ? SUPER_EMAILS : [])
+          .map(e => String(e).trim().toLowerCase());
+        const meMail = String((Perm.me() || {}).email || '').trim().toLowerCase();
+        if (fixedMails.includes(mail) && !fixedMails.includes(meMail)
+            && String(u.email || '').trim().toLowerCase() !== mail) {
+          return '這個 Email 是固定超管，只有 RF 的固定超管能指定。';
+        }
       }
       Store.updateUser(u.u, { ...v, email: mail });
       renderUsers();

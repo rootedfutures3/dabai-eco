@@ -87,8 +87,13 @@ const GOOGLE_CLIENT_ID = '908132991198-s1ls4f6hkl9q1sac3r5t2setfkn9elf1.apps.goo
 
    用完記得改回 false。帳號密碼在這個示範階段是明文存的,
    表單開著就等於多一道門。
+
+   TEAM_LOGIN_LINK 是私人入口：登入頁平常看起來一樣只有 Google,
+   只有網址帶著這個參數（app.html?team）才會出現帳號密碼表單。
+   給 RF 自己在別台電腦用 superadmin 登入。改成 '' 就連私人入口也關掉。
    ------------------------------------------------------------ */
 const TEAM_LOGIN = false;
+const TEAM_LOGIN_LINK = 'team';
 
 /* 哪些 Google 帳號一登入就是超級管理員。
    把你自己的 Gmail 放進來 —— 不然第一次用 Google 登入會拿到

@@ -289,7 +289,10 @@ function applyAuthMode() {
     const back = document.querySelector('[data-goto="register"]');
     if (back) back.hidden = true;      // Google 登入不需要另外註冊
 
-    const teamLogin = gi && typeof TEAM_LOGIN !== 'undefined' && TEAM_LOGIN;
+    /* 私人入口：網址帶 ?team 才開表單,公開的登入頁維持只有 Google。 */
+    const link = typeof TEAM_LOGIN_LINK !== 'undefined' && TEAM_LOGIN_LINK;
+    const viaLink = !!link && new URLSearchParams(location.search).has(link);
+    const teamLogin = gi && ((typeof TEAM_LOGIN !== 'undefined' && TEAM_LOGIN) || viaLink);
     if (teamLogin) {
       /* Google 模式下另開一條帳號密碼登入,給「無法用 Google 的人」——
          例如活動現場的評審,他們的 Gmail 不在測試名單上。
