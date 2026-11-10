@@ -88,6 +88,11 @@ const SEED = {
   ],
 };
 
+/* 營運數據的事件紀錄（assets/track.js）。沒載入那支的頁面就不記。 */
+const trackEv = (name, detail) => {
+  if (typeof Track !== 'undefined') Track.ev(name, detail);
+};
+
 /* ---------- 存取層 ---------- */
 const Store = {
   read() {
@@ -117,6 +122,7 @@ const Store = {
     db.orders.push(order);
     Store.write(db);
     push('orders', order);
+    trackEv('order', `${order.no} ${order.treeId || ''}`.trim());
     return db.orders;
   },
 
@@ -125,6 +131,7 @@ const Store = {
     db.reports.unshift(report);
     Store.write(db);
     push('reports', report);
+    trackEv('report', report.treeId);
     return db.reports;
   },
 
@@ -133,6 +140,7 @@ const Store = {
     db.leads.unshift(lead);
     Store.write(db);
     push('leads', lead);
+    trackEv('lead');
     return db.leads;
   },
 
@@ -489,6 +497,7 @@ const Store = {
     db.payouts.push(p);
     Store.write(db);
     push('payouts', p);
+    trackEv('payout', p.ref);
     return p;
   },
 
@@ -501,6 +510,7 @@ const Store = {
     db.posts.push(post);
     Store.write(db);
     push('posts', post);
+    trackEv('post', post.channel);
     return post;
   },
 

@@ -18,7 +18,7 @@ import io, os, re, sys, subprocess, json
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 FILES = ['erp.js', 'social.js', 'coordinator.js', 'app.js', 'docs.js',
-         'store.js', 'perm.js', 'site.js', 'auth.js', 'auth-google.js']
+         'store.js', 'perm.js', 'site.js', 'auth.js', 'auth-google.js', 'analytics.js']
 CJK = re.compile(r'[一-鿿]')
 
 

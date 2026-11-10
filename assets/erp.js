@@ -68,6 +68,7 @@ Store.onReady((info) => {
   // 網址帶 #commission 之類的就直接開那一頁，方便加書籤與分享
   const want = location.hash.replace('#', '');
   if (want && document.querySelector(`.side-item[data-tab="${want}"]`)) show(want);
+  else if (typeof Track !== 'undefined') Track.ev('tab', 'overview');
 
   step('使用者區塊', showMe);
   step('選單權限',   gateMenu);
@@ -347,6 +348,7 @@ function renderAll() {
   draw('社群發文',   renderSocial);
   draw('營運總覽',   renderOverview);
   draw('帳號與權限', renderUsers);
+  if (typeof An !== 'undefined') draw('營運數據', () => An.render());
   initRoleEditor();
 }
 
@@ -1122,6 +1124,8 @@ function show(tab) {
   }
 
   history.replaceState(null, '', '#' + tab);
+  if (typeof Track !== 'undefined') Track.ev('tab', tab);
+  if (tab === 'analytics' && typeof An !== 'undefined') An.ensure();
   document.querySelector('.admin-body').scrollTop = 0;
   window.scrollTo(0, 0);
 }

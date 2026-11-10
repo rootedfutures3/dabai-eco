@@ -134,6 +134,7 @@ const ROLE_WORD = { admin: '平台管理員', farmer: '果農', buyer: '收購�
 
 function handoff(user, isNew) {
   sessionStorage.setItem(SESSION, user.u);
+  if (typeof Track !== 'undefined') Track.ev('login', user.via === 'google' ? 'google' : 'password');
 
   const box = document.getElementById('handoff');
   document.getElementById('handoff-text').textContent =

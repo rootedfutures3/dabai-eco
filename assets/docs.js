@@ -206,6 +206,7 @@ function invoiceFor(orderNo) {
   const db = Store.read();
   const o  = (db.orders || []).find(x => x.no === orderNo);
   if (!o) return;
+  if (typeof Track !== 'undefined') Track.ev('invoice', orderNo);
 
   const tree = Store.treeList().find(t => t.id === o.treeId) || {};
   const sst  = Store.settingNum('sst_rate', 0);
@@ -292,6 +293,7 @@ function contractFor(treeId) {
   const db   = Store.read();
   const tree = Store.treeList().find(t => t.id === treeId);
   if (!tree) return;
+  if (typeof Track !== 'undefined') Track.ev('contract', treeId);
 
   const order = (db.orders || []).find(o => o.treeId === treeId);
   const rate  = Store.settingNum('commission_rate', 20);

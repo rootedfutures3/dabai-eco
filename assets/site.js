@@ -498,6 +498,7 @@ function initTreeModal(grid) {
     errBox.style.display = 'none';
     form.style.display = 'grid';
     goStep(1);
+    if (typeof Track !== 'undefined') Track.ev('adopt_open', t.id);
     modal.classList.add('open');
     document.body.style.overflow = 'hidden';
     form.querySelector('input[name="name"]').focus();

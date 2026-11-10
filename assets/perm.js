@@ -80,6 +80,7 @@ const PERMS = {
 /* 每個 ERP 功能頁需要的權限。列在這裡才會出現在左側選單。 */
 const PAGE_PERM = {
   overview:   'view.all',
+  analytics:  'view.all',
   orders:     'view.orders',
   trees:      'view.trees',
   customers:  'view.all',
