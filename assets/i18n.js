@@ -407,7 +407,7 @@ const I18N = {
              v.partial ? '<small class="lang-wip">sema digaga · 建置中</small>' : ''}</button>`).join('')}
       </div>`;
 
-    const cta = nav.querySelector('.nav-cta');
+    const cta = nav.querySelector('.nav-cta, .btn-signout.top');   // 語言放在按鈕前面，登出固定在最右邊
     cta ? nav.insertBefore(box, cta) : nav.appendChild(box);
 
     const toggle = box.querySelector('.lang-toggle');

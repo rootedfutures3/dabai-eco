@@ -3627,3 +3627,19 @@ th[data-dir="desc"] .sort-mark::before{content:"↓"}
   .an-custom{width:100%;margin-left:0}
   .an-custom input{flex:1 1 0;min-width:0}
 }
+
+/* ---------- 後台頂欄右上角的登出 ---------- */
+/* 從側邊欄搬到頂欄最右邊：大部分網站登出都在右上角，
+   而且側邊欄在手機上是收起來的，要先打開抽屜才找得到。 */
+nav.admin-top .btn-signout.top{
+  flex:0 0 auto;padding:7px 14px;font-size:.88rem;
+  background:transparent;
+}
+nav.admin-top .btn-signout.top:hover{background:rgba(148,44,44,.06)}
+/* 手機頂欄很擠：只留 ⏻ 圖示，字藏起來（螢幕閱讀器仍讀得到） */
+@media(max-width:560px){
+  nav.admin-top .btn-signout.top{padding:9px 12px;min-width:44px}
+  nav.admin-top .btn-signout.top .signout-label{
+    position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;
+  }
+}
